@@ -1,6 +1,8 @@
 package com.pig4cloud.pig.auth.support.base;
 
 import cn.hutool.extra.spring.SpringUtil;
+import java.util.Locale;
+import org.springframework.context.i18n.LocaleContextHolder;
 import com.pig4cloud.pig.common.security.util.OAuth2ErrorCodesExpand;
 import com.pig4cloud.pig.common.security.util.ScopeException;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +25,6 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-
 import java.security.Principal;
 import java.time.Instant;
 import java.util.*;
@@ -231,39 +232,40 @@ public abstract class OAuth2ResourceOwnerBaseAuthenticationProvider<T extends OA
 	 */
 	private OAuth2AuthenticationException oAuth2AuthenticationException(Authentication authentication,
 			AuthenticationException authenticationException) {
+		Locale clientLocale = LocaleContextHolder.getLocale();
 		if (authenticationException instanceof UsernameNotFoundException) {
 			return new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodesExpand.USERNAME_NOT_FOUND,
 					this.messages.getMessage("JdbcDaoImpl.notFound", new Object[] { authentication.getName() },
-							"Username {0} not found"),
+							"Username {0} not found", clientLocale),
 					""));
 		}
 		if (authenticationException instanceof BadCredentialsException) {
 			return new OAuth2AuthenticationException(
 					new OAuth2Error(OAuth2ErrorCodesExpand.BAD_CREDENTIALS, this.messages.getMessage(
-							"AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"), ""));
+							"AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials", clientLocale), ""));
 		}
 		if (authenticationException instanceof LockedException) {
 			return new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodesExpand.USER_LOCKED, this.messages
-				.getMessage("AbstractUserDetailsAuthenticationProvider.locked", "User account is locked"), ""));
+				.getMessage("AbstractUserDetailsAuthenticationProvider.locked", "User account is locked", clientLocale), ""));
 		}
 		if (authenticationException instanceof DisabledException) {
 			return new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodesExpand.USER_DISABLE,
-					this.messages.getMessage("AbstractUserDetailsAuthenticationProvider.disabled", "User is disabled"),
+					this.messages.getMessage("AbstractUserDetailsAuthenticationProvider.disabled", "User is disabled", clientLocale),
 					""));
 		}
 		if (authenticationException instanceof AccountExpiredException) {
 			return new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodesExpand.USER_EXPIRED, this.messages
-				.getMessage("AbstractUserDetailsAuthenticationProvider.expired", "User account has expired"), ""));
+				.getMessage("AbstractUserDetailsAuthenticationProvider.expired", "User account has expired", clientLocale), ""));
 		}
 		if (authenticationException instanceof CredentialsExpiredException) {
 			return new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodesExpand.CREDENTIALS_EXPIRED,
 					this.messages.getMessage("AbstractUserDetailsAuthenticationProvider.credentialsExpired",
-							"User credentials have expired"),
+							"User credentials have expired", clientLocale),
 					""));
 		}
 		if (authenticationException instanceof ScopeException) {
 			return new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.INVALID_SCOPE,
-					this.messages.getMessage("AbstractAccessDecisionManager.accessDenied", "invalid_scope"), ""));
+					this.messages.getMessage("AbstractAccessDecisionManager.accessDenied", "invalid_scope", clientLocale), ""));
 		}
 		return new OAuth2AuthenticationException(OAuth2ErrorCodesExpand.UN_KNOW_LOGIN_ERROR);
 	}

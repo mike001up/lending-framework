@@ -1,0 +1,30 @@
+{
+  "groups": [
+    {
+      "name": "security",
+      "type": "com.pig4cloud.pig.auth.support.filter.AuthSecurityConfigProperties",
+      "sourceType": "com.pig4cloud.pig.auth.support.filter.AuthSecurityConfigProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "security.encode-key",
+      "type": "java.lang.String",
+      "description": "网关解密登录前端密码 秘钥",
+      "sourceType": "com.pig4cloud.pig.auth.support.filter.AuthSecurityConfigProperties"
+    },
+    {
+      "name": "security.ignore-clients",
+      "type": "java.util.List<java.lang.String>",
+      "description": "网关不需要校验验证码的客户端",
+      "sourceType": "com.pig4cloud.pig.auth.support.filter.AuthSecurityConfigProperties"
+    },
+    {
+      "name": "security.is-micro",
+      "type": "java.lang.Boolean",
+      "description": "是否是微服务架构",
+      "sourceType": "com.pig4cloud.pig.auth.support.filter.AuthSecurityConfigProperties"
+    }
+  ],
+  "hints": []
+}

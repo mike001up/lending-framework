@@ -9,17 +9,15 @@ spring:
       username: @nacos.username@
       password: @nacos.password@
       discovery:
-        server-addr: ${NACOS_HOST:127.0.0.1}:${NACOS_PORT:8848}
+        server-addr: ${NACOS_HOST:192.168.0.201}:${NACOS_PORT:8848}
+        namespace: 5d42b64c-af69-4a94-8189-c7e890784c35
         watch:
           enabled: true
         watch-delay: 1000
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        namespace: 5d42b64c-af69-4a94-8189-c7e890784c35
   config:
     import:
       - optional:nacos:application-@profiles.active@.yml
       - optional:nacos:${spring.application.name}-@profiles.active@.yml
-
-
-
-

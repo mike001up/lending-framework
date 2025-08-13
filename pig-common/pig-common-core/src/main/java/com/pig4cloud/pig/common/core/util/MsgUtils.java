@@ -2,8 +2,8 @@ package com.pig4cloud.pig.common.core.util;
 
 import lombok.experimental.UtilityClass;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 
-import java.util.Locale;
 
 /**
  * i18n 工具类
@@ -21,7 +21,7 @@ public class MsgUtils {
 	 */
 	public String getMessage(String code) {
 		MessageSource messageSource = SpringContextHolder.getBean("messageSource");
-		return messageSource.getMessage(code, null, Locale.CHINA);
+		return messageSource.getMessage(code, null, LocaleContextHolder.getLocale());
 	}
 
 	/**
@@ -31,7 +31,7 @@ public class MsgUtils {
 	 */
 	public String getMessage(String code, Object... objects) {
 		MessageSource messageSource = SpringContextHolder.getBean("messageSource");
-		return messageSource.getMessage(code, objects, Locale.CHINA);
+		return messageSource.getMessage(code, objects, LocaleContextHolder.getLocale());
 	}
 
 	/**
@@ -41,7 +41,7 @@ public class MsgUtils {
 	 */
 	public String getSecurityMessage(String code, Object... objects) {
 		MessageSource messageSource = SpringContextHolder.getBean("securityMessageSource");
-		return messageSource.getMessage(code, objects, Locale.CHINA);
+		return messageSource.getMessage(code, objects, LocaleContextHolder.getLocale());
 	}
 
 }

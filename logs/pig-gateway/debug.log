@@ -1,0 +1,1 @@
+:2025-08-13 11:25:49.331  WARN boundedElastic-16 o.s.c.l.c.RoundRobinLoadBalancer: No servers available for service: pig-auth

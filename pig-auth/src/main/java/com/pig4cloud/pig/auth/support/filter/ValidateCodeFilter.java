@@ -10,7 +10,9 @@ package com.pig4cloud.pig.auth.support.filter;
 import cn.hutool.core.util.StrUtil;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
+import com.pig4cloud.pig.common.core.exception.ErrorCodes;
 import com.pig4cloud.pig.common.core.exception.ValidateCodeException;
+import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.SpringContextHolder;
 import com.pig4cloud.pig.common.core.util.WebUtils;
 import jakarta.servlet.FilterChain;
@@ -70,7 +72,7 @@ public class ValidateCodeFilter extends OncePerRequestFilter {
 
 		// 校验验证码 1. 客户端开启验证码 2. 短信模式
 		try {
-			checkCode();
+			//checkCode();
 			filterChain.doFilter(request, response);
 		}
 		catch (ValidateCodeException validateCodeException) {
@@ -86,7 +88,8 @@ public class ValidateCodeFilter extends OncePerRequestFilter {
 		String code = request.get().getParameter("code");
 
 		if (StrUtil.isBlank(code)) {
-			throw new ValidateCodeException("验证码不能为空");
+			//throw new ValidateCodeException("验证码不能为空");
+			throw new ValidateCodeException(MsgUtils.getMessage("validateCode.is.not.empty"));
 		}
 
 		String randomStr = request.get().getParameter("randomStr");
@@ -100,24 +103,28 @@ public class ValidateCodeFilter extends OncePerRequestFilter {
 		String key = CacheConstants.DEFAULT_CODE_KEY + randomStr;
 		RedisTemplate<String, String> redisTemplate = SpringContextHolder.getBean(RedisTemplate.class);
 		if (Boolean.FALSE.equals(redisTemplate.hasKey(key))) {
-			throw new ValidateCodeException("验证码不合法");
+			//throw new ValidateCodeException("验证码不合法");
+			throw new ValidateCodeException(MsgUtils.getMessage("validateCode.is.illegal"));
 		}
 
 		Object codeObj = redisTemplate.opsForValue().get(key);
 
 		if (codeObj == null) {
-			throw new ValidateCodeException("验证码不合法");
+			//throw new ValidateCodeException("验证码不合法");
+			throw new ValidateCodeException(MsgUtils.getMessage("validateCode.is.illegal"));
 		}
 
 		String saveCode = codeObj.toString();
 		if (StrUtil.isBlank(saveCode)) {
 			redisTemplate.delete(key);
-			throw new ValidateCodeException("验证码不合法");
+			//throw new ValidateCodeException("验证码不合法");
+			throw new ValidateCodeException(MsgUtils.getMessage("validateCode.is.illegal"));
 		}
 
 		if (!StrUtil.equals(saveCode, code)) {
 			redisTemplate.delete(key);
-			throw new ValidateCodeException("验证码不合法");
+			//throw new ValidateCodeException("验证码不合法");
+			throw new ValidateCodeException(MsgUtils.getMessage("validateCode.is.illegal"));
 		}
 
 		redisTemplate.delete(key);
