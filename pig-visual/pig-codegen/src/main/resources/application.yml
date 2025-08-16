@@ -10,8 +10,10 @@ spring:
       password: @nacos.password@
       discovery:
         server-addr: ${NACOS_HOST:192.168.0.201}:${NACOS_PORT:8848}
+        namespace: 5d42b64c-af69-4a94-8189-c7e890784c35
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        namespace: 5d42b64c-af69-4a94-8189-c7e890784c35
   config:
     import:
       - nacos:application-@profiles.active@.yml
