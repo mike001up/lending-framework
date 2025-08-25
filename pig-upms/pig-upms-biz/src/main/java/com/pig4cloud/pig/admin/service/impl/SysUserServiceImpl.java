@@ -450,7 +450,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 		if (!ENCODER.matches(password, sysUser.getPassword())) {
 			log.info("原密码错误");
-			return R.failed("密码输入错误");
+			return R.failed(MsgUtils.getMessage("sys.password.wrong"));
 		}
 		else {
 			return R.ok();
