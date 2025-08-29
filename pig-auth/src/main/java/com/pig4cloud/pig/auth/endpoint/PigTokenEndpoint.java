@@ -198,6 +198,19 @@ public class PigTokenEndpoint {
 		return R.ok();
 	}
 
+
+	@SneakyThrows
+	@GetMapping("/token/getUser")
+	@Inner
+	public Map<String, Object> getUser(@RequestParam("token") String token) {
+		log.info("------------------------------进入getUser----------------------------");
+		token = token.replaceFirst("Bearer ", "");
+		OAuth2Authorization authorization = authorizationService.findByToken(token, OAuth2TokenType.ACCESS_TOKEN);
+		Map<String, Object> claims = authorization.getAccessToken().getClaims();
+		log.info("user: {}", claims.get("username").toString());
+		return claims;
+	}
+
 	/**
 	 * 令牌列表
 	 * @param params 参数
