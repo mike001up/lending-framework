@@ -3,8 +3,10 @@ package com.pig4cloud.pig.gateway.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pig4cloud.pig.gateway.filter.PigRequestGlobalFilter;
 import com.pig4cloud.pig.gateway.handler.GlobalExceptionHandler;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 /**
  * 网关配置
@@ -32,5 +34,11 @@ public class GatewayConfiguration {
 	public GlobalExceptionHandler globalExceptionHandler(ObjectMapper objectMapper) {
 		return new GlobalExceptionHandler(objectMapper);
 	}
+
+	@Bean
+	public HttpMessageConverters customConverters() {
+		return new HttpMessageConverters(new MappingJackson2HttpMessageConverter());
+	}
+
 
 }

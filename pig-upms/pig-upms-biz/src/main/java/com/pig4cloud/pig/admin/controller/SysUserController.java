@@ -111,7 +111,7 @@ public class SysUserController {
 	@GetMapping("/details")
 	public R getDetails(@ParameterObject SysUser query) {
 		SysUser sysUser = userService.getOne(Wrappers.query(query), false);
-		return R.ok(sysUser == null ? null : CommonConstants.SUCCESS);
+		return R.ok(sysUser == null ? null : sysUser);
 	}
 
 	/**
