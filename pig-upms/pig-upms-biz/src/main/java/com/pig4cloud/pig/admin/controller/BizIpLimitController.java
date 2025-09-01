@@ -2,6 +2,7 @@ package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -52,6 +53,9 @@ public class BizIpLimitController {
     @HasPermission("admin_bizIpLimit_view")
     public R getBizIpLimitPage(@ParameterObject Page page, @ParameterObject BizIpLimit bizIpLimit) {
         LambdaQueryWrapper<BizIpLimit> wrapper = Wrappers.lambdaQuery();
+        if (StrUtil.isNotBlank(bizIpLimit.getIp())) {
+            wrapper.eq(BizIpLimit::getIp, bizIpLimit.getIp());
+        }
         return R.ok(bizIpLimitService.page(page, wrapper));
     }
 
