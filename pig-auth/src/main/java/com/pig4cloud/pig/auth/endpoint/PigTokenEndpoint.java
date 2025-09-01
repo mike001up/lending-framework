@@ -206,6 +206,9 @@ public class PigTokenEndpoint {
 		log.info("------------------------------进入getUser----------------------------");
 		token = token.replaceFirst("Bearer ", "");
 		OAuth2Authorization authorization = authorizationService.findByToken(token, OAuth2TokenType.ACCESS_TOKEN);
+		if (authorization == null) {
+			return null;
+		}
 		Map<String, Object> claims = authorization.getAccessToken().getClaims();
 		log.info("user: {}", claims.get("username").toString());
 		return claims;

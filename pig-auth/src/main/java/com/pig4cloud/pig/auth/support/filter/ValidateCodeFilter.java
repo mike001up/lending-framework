@@ -72,7 +72,7 @@ public class ValidateCodeFilter extends OncePerRequestFilter {
 
 		// 校验验证码 1. 客户端开启验证码 2. 短信模式
 		try {
-			//checkCode();
+			checkCode();
 			filterChain.doFilter(request, response);
 		}
 		catch (ValidateCodeException validateCodeException) {

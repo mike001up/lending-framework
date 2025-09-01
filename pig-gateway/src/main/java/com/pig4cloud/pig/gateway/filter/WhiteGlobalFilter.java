@@ -41,6 +41,8 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
         URLS.add("/admin/user/details");
         URLS.add("/auth/code/image");
         URLS.add("/admin/sys-file");
+        URLS.add("/admin/user/info");
+        URLS.add("/admin/user/check");
     }
 
     private static final Logger log = LoggerFactory.getLogger(WhiteGlobalFilter.class);
@@ -80,7 +82,6 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
         // Basic 认证直接取 header
         if (!StringUtils.isEmpty(token) && token.startsWith("Basic")) {
             String username = request.getHeaders().getFirst(KEY_QUERY_PARAM_USER_NAME);
-            log.info("username: {}", username);
             return Mono.just(username);
         }
         // 其他情况需要远程调用
@@ -114,7 +115,7 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
             return Mono.fromCallable(() -> ipLimitService.isValidIP(SecurityConstants.FROM_IN, remoteIP)).subscribeOn(Schedulers.boundedElastic()).flatMap(isValidIP -> {
                 if (!isValidIP) {
                     log.warn("IP 校验失败，拒绝访问: {}", remoteIP);
-                    return writeErrorResponse(exchange, 1, "invalid ip: " + remoteIP, HttpStatus.FORBIDDEN);
+                    return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), "invalid ip: " + remoteIP, HttpStatus.FORBIDDEN);
                 }
                 return Mono.empty();
             }).onErrorResume(ex -> {
