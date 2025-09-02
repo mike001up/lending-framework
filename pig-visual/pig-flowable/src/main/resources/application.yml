@@ -19,4 +19,15 @@ spring:
       - nacos:application-@profiles.active@.yml
       - nacos:${spring.application.name}-@profiles.active@.yml
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"   # 暴露所有端点
+  endpoint:
+    health:
+      show-details: ALWAYS  # health 显示详细信息
+  server:
+    port: ${server.port}    # ⚠️ 建议和 server.port 一致，不要分离
+
 
