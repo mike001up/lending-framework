@@ -1,0 +1,74 @@
+package com.pig4cloud.pig.flowable.controller;
+
+import com.pig4cloud.pig.common.core.util.R;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
+import org.flowable.engine.RepositoryService;
+import org.flowable.engine.RuntimeService;
+import org.flowable.engine.TaskService;
+import org.flowable.task.api.Task;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+
+@RestController
+@AllArgsConstructor
+@RequestMapping("/flow")
+@Tag(description = "flow", name = "工作流测试")
+@SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
+public class FlowableController {
+
+    private final RepositoryService repositoryService;
+    private final RuntimeService runtimeService;
+    private final TaskService taskService;
+
+    @PostMapping("/deploy")
+    public R<?> deploy(@RequestParam("file") MultipartFile file) throws IOException {
+        repositoryService.createDeployment().addInputStream(file.getOriginalFilename(), file.getInputStream()).deploy();
+        return R.ok();
+    }
+
+    @PostMapping("/start/{processKey}")
+    public R<?> start(@PathVariable String processKey) {
+        runtimeService.startProcessInstanceByKey(processKey);
+        return R.ok();
+    }
+
+    @GetMapping("/tasks")
+    public R<?> tasks() {
+        List<Task> list = taskService.createTaskQuery().list();
+        // 转换为更友好的格式
+        List<Map<String, Object>> result = list.stream().map(task -> {
+            Map<String, Object> taskInfo = new HashMap<>();
+            taskInfo.put("id", task.getId());
+            taskInfo.put("name", task.getName());
+            taskInfo.put("assignee", task.getAssignee());
+            taskInfo.put("createTime", task.getCreateTime());
+            taskInfo.put("processInstanceId", task.getProcessInstanceId());
+            return taskInfo;
+        }).collect(Collectors.toList());
+        return R.ok(result);
+    }
+
+    @PostMapping("/task/complete/{taskId}")
+    public R<?> complete(@PathVariable String taskId) {
+        taskService.complete(taskId);
+        return R.ok();
+    }
+
+    @GetMapping("/test")
+    public R<?> test() {
+        return R.ok("测试成功 - " + new Date());
+    }
+}
+
+

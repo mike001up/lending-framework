@@ -55,6 +55,7 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        log.info("URL: {}", exchange.getRequest().getURI());
         ServerHttpRequest request = exchange.getRequest();
         // 白名单 URL 不拦截
         if (URLS.stream().anyMatch(path -> request.getURI().getPath().startsWith(path))) return chain.filter(exchange);

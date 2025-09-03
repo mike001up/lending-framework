@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             targetNamespace="http://flowable.org/bpmn20">
+             xmlns:flowable="http://flowable.org/bpmn"
+             targetNamespace="http://flowable.org/test"
+             xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL
+                                 http://www.omg.org/spec/BPMN/20100524/MODEL/BPMN20.xsd">
+
     <process id="leaveProcess" name="请假流程" isExecutable="true">
-        <startEvent id="start" name="发起请假"/>
+        <startEvent id="startEvent" name="开始"/>
+        <userTask id="applyTask" name="提交请假" flowable:assignee="${applyUser}"/>
+        <userTask id="approveTask" name="领导审批" flowable:assignee="${manager}"/>
+        <endEvent id="endEvent" name="结束"/>
+
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="applyTask"/>
+        <sequenceFlow id="flow2" sourceRef="applyTask" targetRef="approveTask"/>
+        <sequenceFlow id="flow3" sourceRef="approveTask" targetRef="endEvent"/>
     </process>
 </definitions>
