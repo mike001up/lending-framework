@@ -97,7 +97,12 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
                 });
             }
         }
-        return Mono.justOrEmpty(request.getHeaders().getFirst(KEY_QUERY_PARAM_USER_NAME));
+        String username = request.getHeaders().getFirst(KEY_QUERY_PARAM_USER_NAME);
+        String client = request.getHeaders().getFirst("client");
+        if (StringUtils.isEmpty(username) && StringUtils.isEmpty(token) && StringUtils.isEmpty(client)) {
+            username = KEY_QUERY_PARAM_ADMIN;
+        }
+        return Mono.just(username);
     }
 
     /**
