@@ -84,6 +84,11 @@ public class BizIpLimitController {
     @PostMapping
     @HasPermission("admin_bizIpLimit_add")
     public R save(@RequestBody BizIpLimit bizIpLimit) {
+        // 先根据 IP 判断数据库中是否存在
+        long count = bizIpLimitService.lambdaQuery()
+                .eq(BizIpLimit::getIp, bizIpLimit.getIp())
+                .count();
+        if (count > 0)  return R.ok();
         return R.ok(bizIpLimitService.save(bizIpLimit));
     }
 
@@ -98,6 +103,12 @@ public class BizIpLimitController {
     @PutMapping
     @HasPermission("admin_bizIpLimit_edit")
     public R updateById(@RequestBody BizIpLimit bizIpLimit) {
+        // 校验是否存在相同 IP，排除自己这条记录
+        long count = bizIpLimitService.lambdaQuery()
+                .eq(BizIpLimit::getIp, bizIpLimit.getIp())
+                .ne(BizIpLimit::getId, bizIpLimit.getId())
+                .count();
+        if (count > 0) return R.ok();
         return R.ok(bizIpLimitService.updateById(bizIpLimit));
     }
 

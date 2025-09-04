@@ -20,19 +20,23 @@
 package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.vo.UserExcelVO;
+import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.admin.service.SysUserService;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
 import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.security.service.PigUser;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -47,6 +51,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author lengleng
@@ -159,7 +164,17 @@ public class SysUserController {
 	 */
 	@GetMapping("/page")
 	public R getUserPage(@ParameterObject Page page, @ParameterObject UserDTO userDTO) {
-		return R.ok(userService.getUsersWithRolePage(page, userDTO));
+		IPage<UserVO> usersWithRolePage = userService.getUsersWithRolePage(page, userDTO);
+		// 只有admin账号才能看到admin账号，才能修改admin
+		PigUser user = SecurityUtils.getUser();
+		if (!user.getUsername().equalsIgnoreCase(SecurityConstants.ADMIN)) {
+			// 过滤掉admin账号，普通用户不可见
+			List<UserVO> filteredRecords = usersWithRolePage.getRecords().stream()
+					.filter(u -> !u.getUsername().equalsIgnoreCase(SecurityConstants.ADMIN))
+					.collect(Collectors.toList());
+			usersWithRolePage.setRecords(filteredRecords);
+		}
+		return R.ok(usersWithRolePage);
 	}
 
 	/**
