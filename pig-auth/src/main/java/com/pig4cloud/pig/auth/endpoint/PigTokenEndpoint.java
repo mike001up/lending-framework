@@ -30,6 +30,7 @@ import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.core.util.RetOps;
 import com.pig4cloud.pig.common.core.util.SpringContextHolder;
+import com.pig4cloud.pig.common.feign.sentinel.handle.GlobalBizExceptionHandler;
 import com.pig4cloud.pig.common.security.annotation.Inner;
 import com.pig4cloud.pig.common.security.util.OAuth2EndpointUtils;
 import com.pig4cloud.pig.common.security.util.OAuth2ErrorCodesExpand;
@@ -207,7 +208,7 @@ public class PigTokenEndpoint {
 		token = token.replaceFirst("Bearer ", "");
 		OAuth2Authorization authorization = authorizationService.findByToken(token, OAuth2TokenType.ACCESS_TOKEN);
 		if (authorization == null) {
-			return null;
+			throw new GlobalBizExceptionHandler.UnauthorizedException("Unauthorized");
 		}
 		Map<String, Object> claims = authorization.getAccessToken().getClaims();
 		log.info("user: {}", claims.get("username").toString());

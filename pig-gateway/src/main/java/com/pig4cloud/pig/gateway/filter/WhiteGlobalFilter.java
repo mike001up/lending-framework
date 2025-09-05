@@ -5,6 +5,7 @@ import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.IpUtil;
 import com.pig4cloud.pig.gateway.fegin.RemoteIPLimitService;
 import com.pig4cloud.pig.gateway.fegin.RemoteUserService;
+import feign.FeignException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,9 +60,9 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         // 白名单 URL 不拦截
         if (URLS.stream().anyMatch(path -> request.getURI().getPath().startsWith(path))) return chain.filter(exchange);
-        return parseUserNameFromReq(request, exchange).flatMap(userName -> {
+        return parseUserNameFromReq(request).flatMap(userName -> {
             if (StrUtil.isNotBlank(userName) && userName.equalsIgnoreCase(TOKEN_DEL)) {
-                return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), "", HttpStatus.FORBIDDEN);
+                return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), "Unauthorized", HttpStatus.FORBIDDEN);
             }
             // 不是 admin 就校验 IP
             if (StrUtil.isEmpty(userName) || !StrUtil.equals(userName, KEY_QUERY_PARAM_ADMIN)) {
@@ -81,7 +82,7 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
      * 从请求里解析 username
      * 可能会调用远程服务，因此切换到 boundedElastic
      */
-    private Mono<String> parseUserNameFromReq(ServerHttpRequest request, ServerWebExchange exchange) {
+    private Mono<String> parseUserNameFromReq(ServerHttpRequest request) {
         String token = request.getHeaders().getFirst("Authorization");
         // Basic 认证直接取 header
         if (!StringUtils.isEmpty(token) && token.startsWith("Basic")) {
@@ -100,17 +101,16 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
                     Map<String, Object> user = userService.getUser(SecurityConstants.FROM_IN, token);
                     return user != null ? user.get(KEY_QUERY_PARAM_USER_NAME).toString() : null;
                 }).subscribeOn(Schedulers.boundedElastic()).onErrorResume(ex -> {
+                    if (ex instanceof FeignException fe && (fe.status() == 403 || fe.status() == 401)) {
+                        log.warn("远程 userService 返回 401");
+                        return Mono.just(TOKEN_DEL);
+                    }
                     log.error("调用 userService.getUser 出错", ex);
-                    return Mono.empty();
+                    return Mono.just(TOKEN_DEL);
                 });
             }
         }
-        String username = request.getHeaders().getFirst(KEY_QUERY_PARAM_USER_NAME);
-        String client = request.getHeaders().getFirst("client");
-        if (StringUtils.isEmpty(username) && StringUtils.isEmpty(token) && StringUtils.isEmpty(client)) {
-            username = KEY_QUERY_PARAM_ADMIN;
-        }
-        return Mono.just(username);
+        return Mono.just(KEY_QUERY_PARAM_ADMIN);
     }
 
     /**
@@ -122,7 +122,6 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
         if (StringUtils.isEmpty(client) || !client.equalsIgnoreCase("bms")) {
             return Mono.empty();
         }
-
         RemoteIPLimitService ipLimitService = remoteIPLimitServiceProvider.getIfAvailable();
         if (ipLimitService != null) {
             return Mono.fromCallable(() -> ipLimitService.isValidIP(SecurityConstants.FROM_IN, remoteIP)).subscribeOn(Schedulers.boundedElastic()).flatMap(isValidIP -> {

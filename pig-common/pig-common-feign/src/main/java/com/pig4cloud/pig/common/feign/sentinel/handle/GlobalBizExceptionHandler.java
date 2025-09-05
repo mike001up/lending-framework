@@ -136,4 +136,20 @@ public class GlobalBizExceptionHandler {
 		return R.failed(exception.getMessage());
 	}
 
+	@ExceptionHandler({ UnauthorizedException.class })
+	@ResponseStatus(HttpStatus.FORBIDDEN)
+	public R unauthorizedExceptionHandler(UnauthorizedException exception) {
+		log.debug("token 失效 403 {}", exception.getMessage());
+		return R.failed(HttpStatus.FORBIDDEN.value(), exception.getMessage());
+	}
+
+
+	@ResponseStatus(HttpStatus.FORBIDDEN)
+	public static class UnauthorizedException extends RuntimeException {
+		public UnauthorizedException(String message) {
+			super(message);
+		}
+	}
+
+
 }
