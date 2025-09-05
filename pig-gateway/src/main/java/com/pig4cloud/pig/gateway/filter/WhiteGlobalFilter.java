@@ -34,6 +34,7 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
 
     private final String KEY_QUERY_PARAM_USER_NAME = "username";
     private final String KEY_QUERY_PARAM_ADMIN = "admin";
+    private final String TOKEN_DEL = "token_del";
     private static final List<String> URLS = new ArrayList<>();
 
     static {
@@ -47,8 +48,7 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(WhiteGlobalFilter.class);
 
-    public WhiteGlobalFilter(ObjectProvider<RemoteUserService> userServiceProvider,
-                             ObjectProvider<RemoteIPLimitService> remoteIPLimitServiceProvider) {
+    public WhiteGlobalFilter(ObjectProvider<RemoteUserService> userServiceProvider, ObjectProvider<RemoteIPLimitService> remoteIPLimitServiceProvider) {
         this.userServiceProvider = userServiceProvider;
         this.remoteIPLimitServiceProvider = remoteIPLimitServiceProvider;
     }
@@ -59,7 +59,10 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         // 白名单 URL 不拦截
         if (URLS.stream().anyMatch(path -> request.getURI().getPath().startsWith(path))) return chain.filter(exchange);
-        return parseUserNameFromReq(request).flatMap(userName -> {
+        return parseUserNameFromReq(request, exchange).flatMap(userName -> {
+            if (StrUtil.isNotBlank(userName) && userName.equalsIgnoreCase(TOKEN_DEL)) {
+                return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), "", HttpStatus.FORBIDDEN);
+            }
             // 不是 admin 就校验 IP
             if (StrUtil.isEmpty(userName) || !StrUtil.equals(userName, KEY_QUERY_PARAM_ADMIN)) {
                 String remoteIP = IpUtil.getIpAddress(request);
@@ -78,11 +81,15 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
      * 从请求里解析 username
      * 可能会调用远程服务，因此切换到 boundedElastic
      */
-    private Mono<String> parseUserNameFromReq(ServerHttpRequest request) {
+    private Mono<String> parseUserNameFromReq(ServerHttpRequest request, ServerWebExchange exchange) {
         String token = request.getHeaders().getFirst("Authorization");
         // Basic 认证直接取 header
         if (!StringUtils.isEmpty(token) && token.startsWith("Basic")) {
             String username = request.getHeaders().getFirst(KEY_QUERY_PARAM_USER_NAME);
+            //针对后台移除token接口马上返回403的处理
+            if (StringUtils.isEmpty(username)) {
+                return Mono.just(TOKEN_DEL);
+            }
             return Mono.just(username);
         }
         // 其他情况需要远程调用
