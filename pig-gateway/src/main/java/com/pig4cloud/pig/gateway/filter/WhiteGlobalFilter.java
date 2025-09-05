@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/** 下面会看到针对 code = 401 或 code = 403 进行处理
+ * 当 code = 401 或者 code = 403 后台VUE 会立刻 跳转登录页进行 登录
+ */
 @Component
 public class WhiteGlobalFilter implements GlobalFilter, Ordered {
 
