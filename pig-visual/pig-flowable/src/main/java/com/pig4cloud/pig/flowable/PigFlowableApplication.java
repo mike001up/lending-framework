@@ -34,7 +34,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnablePigDoc("flowable")
 @EnableDiscoveryClient
 @EnablePigResourceServer
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.pig4cloud.pig.common.core","com.pig4cloud.pig.*"})
 public class PigFlowableApplication {
 
 	public static void main(String[] args) {

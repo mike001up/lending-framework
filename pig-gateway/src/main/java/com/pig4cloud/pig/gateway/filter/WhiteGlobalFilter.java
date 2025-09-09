@@ -39,6 +39,12 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
     private final String KEY_QUERY_PARAM_USER_NAME = "username";
     private final String KEY_QUERY_PARAM_ADMIN = "admin";
     private final String TOKEN_DEL = "token_del";
+    private final String CLIENT = "client";
+    private final String BMS = "bms";
+    private final String BASIC = "Basic";
+    private final String AUTHORIZATION = "Authorization";
+    private final String UNAUTHORIZED = "Unauthorized";
+    private final String APP = "app";
     private static final List<String> URLS = new ArrayList<>();
 
     static {
@@ -59,13 +65,17 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        log.info("URL: {}", exchange.getRequest().getURI());
         ServerHttpRequest request = exchange.getRequest();
+        String client = request.getHeaders().getFirst(CLIENT);
+        //后台必须传一个参数(client:bms), 如果不传默认是 app,不拦截
+        if (StrUtil.isBlank(client)) {
+            return chain.filter(exchange);
+        }
         // 白名单 URL 不拦截
         if (URLS.stream().anyMatch(path -> request.getURI().getPath().startsWith(path))) return chain.filter(exchange);
         return parseUserNameFromReq(request).flatMap(userName -> {
             if (StrUtil.isNotBlank(userName) && userName.equalsIgnoreCase(TOKEN_DEL)) {
-                return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), "Unauthorized", HttpStatus.FORBIDDEN);
+                return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), UNAUTHORIZED, HttpStatus.FORBIDDEN);
             }
             // 不是 admin 就校验 IP
             if (StrUtil.isEmpty(userName) || !StrUtil.equals(userName, KEY_QUERY_PARAM_ADMIN)) {
@@ -86,9 +96,10 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
      * 可能会调用远程服务，因此切换到 boundedElastic
      */
     private Mono<String> parseUserNameFromReq(ServerHttpRequest request) {
-        String token = request.getHeaders().getFirst("Authorization");
+        String token = request.getHeaders().getFirst(AUTHORIZATION);
+        String client = request.getHeaders().getFirst(CLIENT);
         // Basic 认证直接取 header
-        if (!StringUtils.isEmpty(token) && token.startsWith("Basic")) {
+        if (!StringUtils.isEmpty(token) && token.startsWith(BASIC) && client.equalsIgnoreCase(BMS)) {
             String username = request.getHeaders().getFirst(KEY_QUERY_PARAM_USER_NAME);
             //针对后台移除token接口马上返回403的处理
             if (StringUtils.isEmpty(username)) {
@@ -121,8 +132,8 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
      * 远程调用也丢到 boundedElastic
      */
     private Mono<Void> validIp(ServerHttpRequest request, String remoteIP, ServerWebExchange exchange) {
-        String client = request.getHeaders().getFirst("client");
-        if (StringUtils.isEmpty(client) || !client.equalsIgnoreCase("bms")) {
+        String client = request.getHeaders().getFirst(CLIENT);
+        if (StringUtils.isEmpty(client) || !client.equalsIgnoreCase(BMS)) {
             return Mono.empty();
         }
         RemoteIPLimitService ipLimitService = remoteIPLimitServiceProvider.getIfAvailable();

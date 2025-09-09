@@ -1,5 +1,9 @@
 package com.pig4cloud.pig.flowable.controller;
 
+import com.alibaba.fastjson.JSONObject;
+import com.pig4cloud.pig.common.core.constant.MqConstant;
+import com.pig4cloud.pig.common.core.service.mqtt.MqttPublisher;
+import com.pig4cloud.pig.common.core.service.rocketmq.RocketMqUtils;
 import com.pig4cloud.pig.common.core.util.R;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,6 +34,9 @@ public class FlowableController {
     private final RepositoryService repositoryService;
     private final RuntimeService runtimeService;
     private final TaskService taskService;
+    private final RocketMqUtils rocketMqUtils;
+    private final MqttPublisher mqttPublisher;
+
 
     @PostMapping("/deploy")
     public R<?> deploy(@RequestParam("file") MultipartFile file) throws IOException {
@@ -67,6 +74,12 @@ public class FlowableController {
 
     @GetMapping("/test")
     public R<?> test() {
+        JSONObject jsonObject = new JSONObject(true);
+        jsonObject.put("name", "pig");
+        jsonObject.put("age", 20);
+        jsonObject.put("test", "flowable");
+        rocketMqUtils.sendMessage(MqConstant.FLOWABLE_CESHI, jsonObject.toJSONString());
+        mqttPublisher.send("pig/pig-flowable", jsonObject.toJSONString());
         return R.ok("测试成功 - " + new Date());
     }
 }

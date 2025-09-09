@@ -1,4 +1,4 @@
-package com.pig4cloud.pig.common.core.service;
+package com.pig4cloud.pig.common.core.service.mqtt;
 
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.messaging.support.MessageBuilder;
