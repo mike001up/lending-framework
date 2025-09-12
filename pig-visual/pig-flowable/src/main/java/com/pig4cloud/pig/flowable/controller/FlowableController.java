@@ -1,9 +1,11 @@
 package com.pig4cloud.pig.flowable.controller;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.pig4cloud.pig.common.core.constant.MqConstant;
 import com.pig4cloud.pig.common.core.service.mqtt.MqttPublisher;
 import com.pig4cloud.pig.common.core.service.rocketmq.RocketMqUtils;
+import com.pig4cloud.pig.common.core.util.MqttMessage;
 import com.pig4cloud.pig.common.core.util.R;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -78,8 +80,10 @@ public class FlowableController {
         jsonObject.put("name", "pig");
         jsonObject.put("age", 20);
         jsonObject.put("test", "flowable");
+        MqttMessage mqttMessage = new MqttMessage("1", "NOTICE", DateUtil.now(),  "你刚刚登录成功");
+        String payload = JSONObject.toJSONString(mqttMessage);
         rocketMqUtils.sendMessage(MqConstant.FLOWABLE_CESHI, jsonObject.toJSONString());
-        mqttPublisher.send("pig/pig-flowable", jsonObject.toJSONString());
+        mqttPublisher.send("pig/pig-flowable", payload);
         return R.ok("测试成功 - " + new Date());
     }
 }

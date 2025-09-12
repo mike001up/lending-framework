@@ -20,22 +20,16 @@
 package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
-import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.vo.UserExcelVO;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.admin.service.SysUserService;
-import com.pig4cloud.pig.common.core.constant.CommonConstants;
-import com.pig4cloud.pig.common.core.constant.MqConstant;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
-import com.pig4cloud.pig.common.core.service.rocketmq.RocketMqUtils;
-import com.pig4cloud.pig.common.core.util.JsonUtils;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
@@ -54,7 +48,6 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,7 +63,6 @@ import java.util.stream.Collectors;
 public class SysUserController {
 
 	private final SysUserService userService;
-	private final RocketMqUtils rocketMqUtils;
 
 	/**
 	 * 获取指定用户全部信息
@@ -100,9 +92,6 @@ public class SysUserController {
 		if (user == null) {
 			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_QUERY_ERROR));
 		}
-		UserInfo userInfo = userService.findUserInfo(user);
-		JSONObject jsonObject = JsonUtils.toJsonObject(userInfo);
-		rocketMqUtils.sendMessage(MqConstant.CESHI, jsonObject.toJSONString());
 		return R.ok(userService.findUserInfo(user));
 	}
 

@@ -54,6 +54,7 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
         URLS.add("/admin/sys-file");
         URLS.add("/admin/user/info");
         URLS.add("/admin/user/check");
+        URLS.add("/auth/token/check_token");
     }
 
     private static final Logger log = LoggerFactory.getLogger(WhiteGlobalFilter.class);
@@ -66,13 +67,13 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
+        // 白名单 URL 不拦截
+        if (URLS.stream().anyMatch(path -> request.getURI().getPath().startsWith(path))) return chain.filter(exchange);
         String client = request.getHeaders().getFirst(CLIENT);
         //后台必须传一个参数(client:bms), 如果不传默认是 app,不拦截
         if (StrUtil.isBlank(client)) {
             return chain.filter(exchange);
         }
-        // 白名单 URL 不拦截
-        if (URLS.stream().anyMatch(path -> request.getURI().getPath().startsWith(path))) return chain.filter(exchange);
         return parseUserNameFromReq(request).flatMap(userName -> {
             if (StrUtil.isNotBlank(userName) && userName.equalsIgnoreCase(TOKEN_DEL)) {
                 return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), UNAUTHORIZED, HttpStatus.FORBIDDEN);
