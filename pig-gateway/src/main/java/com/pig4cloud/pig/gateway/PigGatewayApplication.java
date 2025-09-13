@@ -28,12 +28,11 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * 网关应用
  */
 @EnableDiscoveryClient
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.pig4cloud.pig.common.core","com.pig4cloud.pig.*"})
 @EnableFeignClients(basePackages = "com.pig4cloud.pig.gateway.fegin")
 public class PigGatewayApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(PigGatewayApplication.class, args);
 	}
-
 }

@@ -98,4 +98,9 @@ public interface ErrorCodes {
 	 */
 	String SYS_APP_PHONE_UNREGISTERED = "sys.app.phone.unregistered";
 
+	/**
+	 * IP不在白名单
+	 */
+	String IP_NOT_EXISTS_SYSTEM = "sys.ip.not.exists";
+
 }

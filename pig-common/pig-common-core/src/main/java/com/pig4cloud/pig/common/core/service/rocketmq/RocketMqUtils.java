@@ -3,6 +3,7 @@ package com.pig4cloud.pig.common.core.service.rocketmq;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 
 
 @Component
+@ConditionalOnClass(RocketMQTemplate.class)
 public class RocketMqUtils {
 
     @Autowired

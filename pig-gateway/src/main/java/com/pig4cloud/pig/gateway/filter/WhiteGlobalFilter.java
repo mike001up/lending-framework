@@ -2,7 +2,9 @@ package com.pig4cloud.pig.gateway.filter;
 
 import cn.hutool.core.util.StrUtil;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
+import com.pig4cloud.pig.common.core.exception.ErrorCodes;
 import com.pig4cloud.pig.common.core.util.IpUtil;
+import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.gateway.fegin.RemoteIPLimitService;
 import com.pig4cloud.pig.gateway.fegin.RemoteUserService;
 import feign.FeignException;
@@ -142,7 +144,12 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
             return Mono.fromCallable(() -> ipLimitService.isValidIP(SecurityConstants.FROM_IN, remoteIP)).subscribeOn(Schedulers.boundedElastic()).flatMap(isValidIP -> {
                 if (!isValidIP) {
                     log.warn("IP 校验失败，拒绝访问: {}", remoteIP);
-                    return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), "invalid ip: " + remoteIP, HttpStatus.FORBIDDEN);
+                    // 1. 从请求头获取语言
+                    String acceptLang = request.getHeaders().getFirst("Accept-Language");
+                    if (acceptLang == null || acceptLang.isEmpty() || acceptLang.equals("zh-cn")) {
+                        acceptLang = "zh_CN"; // 默认语言
+                    }
+                    return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), MsgUtils.getMessageByLang(ErrorCodes.IP_NOT_EXISTS_SYSTEM, acceptLang, remoteIP), HttpStatus.FORBIDDEN);
                 }
                 return Mono.empty();
             }).onErrorResume(ex -> {
