@@ -25,9 +25,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysRoleMenu;
+import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.admin.api.entity.SysUserRole;
 import com.pig4cloud.pig.admin.api.vo.RoleExcelVO;
 import com.pig4cloud.pig.admin.api.vo.RoleVO;
 import com.pig4cloud.pig.admin.mapper.SysRoleMapper;
+import com.pig4cloud.pig.admin.mapper.SysUserRoleMapper;
 import com.pig4cloud.pig.admin.service.SysRoleMenuService;
 import com.pig4cloud.pig.admin.service.SysRoleService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
@@ -59,6 +62,8 @@ import java.util.stream.Collectors;
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
 
 	private SysRoleMenuService roleMenuService;
+
+	private final SysUserRoleMapper sysUserRoleMapper;
 
 	/**
 	 * 通过用户ID，查询角色信息
@@ -160,6 +165,16 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 			BeanUtil.copyProperties(role, roleExcelVO);
 			return roleExcelVO;
 		}).collect(Collectors.toList());
+	}
+
+	@Override
+	public void saveByRoleList(List<Long> roles, SysUser sysUser) {
+		roles.stream().map(roleId -> {
+			SysUserRole userRole = new SysUserRole();
+			userRole.setUserId(sysUser.getUserId());
+			userRole.setRoleId(roleId);
+			return userRole;
+		}).forEach(sysUserRoleMapper::insert);
 	}
 
 	/**

@@ -91,9 +91,15 @@ public interface CommonConstants {
 	 * 请求开始时间
 	 */
 	String REQUEST_START_TIME = "REQUEST-START-TIME";
+
 	/**
-	 * 请求开始时间
+	 * 请求头 语言传参
 	 */
 	String ACCEPT_LANGUAGE = "Accept-Language";
+
+	/**
+	 * 商户角色
+	 */
+	String MERCHANT = "MERCHANT";
 
 }

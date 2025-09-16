@@ -21,6 +21,7 @@ package com.pig4cloud.pig.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
+import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.vo.RoleExcelVO;
 import com.pig4cloud.pig.admin.api.vo.RoleVO;
 import com.pig4cloud.pig.common.core.util.R;
@@ -81,4 +82,5 @@ public interface SysRoleService extends IService<SysRole> {
 	 */
 	List<RoleExcelVO> listRole();
 
+    void saveByRoleList(List<Long> roles, SysUser sysUser);
 }
