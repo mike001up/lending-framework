@@ -49,6 +49,8 @@ import java.util.List;
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
 public class SysMerchantController {
 
+    private static final PasswordEncoder ENCODER = new BCryptPasswordEncoder();
+
     private final SysMerchantService sysMerchantService;
 
     private final SysRoleService sysRoleService;
@@ -84,7 +86,6 @@ public class SysMerchantController {
         return R.ok(sysMerchantService.list(Wrappers.query(sysMerchant)));
     }
 
-    private static final PasswordEncoder ENCODER = new BCryptPasswordEncoder();
 
     /**
      * 新增商户表
@@ -112,6 +113,7 @@ public class SysMerchantController {
         sysUser.setCreateBy(sysMerchant.getPlatName());
         sysUser.setPassword(ENCODER.encode(sysMerchant.getPassword()));
         sysUser.setUsername(sysMerchant.getMerName());
+        sysUser.setUserType(CommonConstants.MERCHANT);
         userService.save(sysUser);
         //维护角色表
         List<Long> roles = new ArrayList<>();

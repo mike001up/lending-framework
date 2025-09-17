@@ -99,6 +99,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         sysUser.setDelFlag(CommonConstants.STATUS_NORMAL);
         sysUser.setCreateBy(userDto.getUsername());
         sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
+        sysUser.setUserType(CommonConstants.SYSTEM);
         baseMapper.insert(sysUser);
         // 保存用户岗位信息
         Optional.ofNullable(userDto.getPost()).ifPresent(posts -> {

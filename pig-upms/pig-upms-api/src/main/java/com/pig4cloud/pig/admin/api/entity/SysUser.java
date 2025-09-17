@@ -175,4 +175,7 @@ public class SysUser implements Serializable {
 	@Schema(description = "邮箱")
 	private String email;
 
+	@Schema(description = "用户类型(SYSTEM 后台用户，FRONTEND APP用户，MERCHANT 商户)")
+	private String userType;
+
 }

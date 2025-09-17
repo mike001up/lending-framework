@@ -101,5 +101,13 @@ public interface CommonConstants {
 	 * 商户角色
 	 */
 	String MERCHANT = "MERCHANT";
+	/**
+	 * 用户类型 SYSTEM 后台用户，FRONTEND APP用户，MERCHANT 商户
+	 */
+	String SYSTEM = "SYSTEM";
+	/**
+	 * 商户角色
+	 */
+	String FRONTEND = "FRONTEND";
 
 }
