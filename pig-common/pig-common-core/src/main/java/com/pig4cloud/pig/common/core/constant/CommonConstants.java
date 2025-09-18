@@ -106,7 +106,7 @@ public interface CommonConstants {
 	 */
 	String SYSTEM = "SYSTEM";
 	/**
-	 * 商户角色
+	 * APP用户
 	 */
 	String FRONTEND = "FRONTEND";
 
