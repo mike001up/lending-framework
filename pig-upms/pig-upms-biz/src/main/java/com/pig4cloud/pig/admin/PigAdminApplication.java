@@ -19,11 +19,13 @@
 
 package com.pig4cloud.pig.admin;
 
+import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceProperties;
 import com.pig4cloud.pig.common.feign.annotation.EnablePigFeignClients;
 import com.pig4cloud.pig.common.security.annotation.EnablePigResourceServer;
 import com.pig4cloud.pig.common.swagger.annotation.EnablePigDoc;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
@@ -36,6 +38,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnablePigFeignClients
 @EnablePigResourceServer
 @EnableDiscoveryClient
+@EnableConfigurationProperties(DynamicDataSourceProperties.class)
 @SpringBootApplication(scanBasePackages = {"com.pig4cloud.pig.common.core","com.pig4cloud.pig.*"})
 public class PigAdminApplication {
 
