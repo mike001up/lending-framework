@@ -23,7 +23,7 @@ public class SysUserKyc extends Model<SysUserKyc> {
 	/**
 	* 自增ID
 	*/
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     @Schema(description="自增ID")
     private Long id;
 

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pig4cloud.pig.admin.mapper.BizCollectionScheduleMapper">
+
+  <resultMap id="bizCollectionScheduleMap" type="com.pig4cloud.pig.admin.api.entity.BizCollectionSchedule">
+        <id property="id" column="id"/>
+        <result property="contractId" column="contract_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="realName" column="real_name"/>
+        <result property="minAmount" column="min_amount"/>
+        <result property="maxAmount" column="max_amount"/>
+        <result property="balance" column="balance"/>
+        <result property="collectionDate" column="collection_date"/>
+        <result property="collectedAmount" column="collected_amount"/>
+        <result property="clientsSignature" column="clients_signature"/>
+        <result property="colStartDate" column="col_start_date"/>
+        <result property="colEndDate" column="col_end_date"/>
+        <result property="operatorSignature" column="operator_signature"/>
+        <result property="slipLink" column="slip_link"/>
+        <result property="incomeTime" column="income_time"/>
+        <result property="incomeAmount" column="income_amount"/>
+        <result property="approveUserId" column="approve_user_id"/>
+        <result property="approveTime" column="approve_time"/>
+        <result property="approveStatus" column="approve_status"/>
+        <result property="rejectReason" column="reject_reason"/>
+        <result property="status" column="status"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+  </resultMap>
+</mapper>

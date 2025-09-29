@@ -5,40 +5,52 @@ import com.baomidou.mybatisplus.extension.activerecord.Model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * 后台IP白名单
+ * 合同执行情况表
  *
  * @author pig
- * @date 2025-08-28 16:57:13
+ * @date 2025-09-29 13:14:01
  */
 @Data
-@TableName("biz_ip_limit")
+@TableName("biz_contract_execution")
 @EqualsAndHashCode(callSuper = true)
-@Schema(description = "后台IP白名单")
-public class BizIpLimit extends Model<BizIpLimit> {
+@Schema(description = "合同执行情况表")
+public class BizContractExecution extends Model<BizContractExecution> {
 
 
 	/**
-	* ID
+	* 主键ID
 	*/
     @TableId(type = IdType.AUTO)
-    @Schema(description="ID")
+    @Schema(description="主键ID")
     private Long id;
 
 	/**
-	* 0 后台;1 app端
+	* 合同ID
 	*/
-    @Schema(description="0 后台;1 app端")
-    private String rangeType;
+    @Schema(description="合同ID")
+    private Long contractId;
 
 	/**
-	* IP 地址
+	* 还款余额
 	*/
-    @Schema(description="IP 地址")
-    private String ip;
+    @Schema(description="还款余额")
+    private BigDecimal balance;
+
+	/**
+	* 汇款进度, 如: 50%
+	*/
+    @Schema(description="汇款进度, 如: 50%")
+    private String repaymentProgress;
+
+	/**
+	* 备注
+	*/
+    @Schema(description="备注")
+    private String remark;
 
 	/**
 	* 创建人
@@ -55,16 +67,16 @@ public class BizIpLimit extends Model<BizIpLimit> {
     private LocalDateTime createTime;
 
 	/**
-	* 更新人
+	* 修改人
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
-    @Schema(description="更新人")
+    @Schema(description="修改人")
     private String updateBy;
 
 	/**
-	* 更新时间
+	* 修改时间
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
-    @Schema(description="更新时间")
+    @Schema(description="修改时间")
     private LocalDateTime updateTime;
 }

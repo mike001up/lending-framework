@@ -21,7 +21,7 @@ public class SysMerchant extends Model<SysMerchant> {
 	/**
 	* 主键ID
 	*/
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     @Schema(description="主键ID")
     private Long id;
 

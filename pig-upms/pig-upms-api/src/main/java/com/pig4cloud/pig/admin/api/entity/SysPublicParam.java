@@ -41,7 +41,7 @@ public class SysPublicParam extends Model<SysPublicParam> {
 	/**
 	 * 编号
 	 */
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.AUTO)
 	@Schema(description = "公共参数编号")
 	private Long publicId;
 

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pig4cloud.pig.admin.mapper.BizCollectionDetailsMapper">
+
+  <resultMap id="bizCollectionDetailsMap" type="com.pig4cloud.pig.admin.api.entity.BizCollectionDetails">
+        <id property="id" column="id"/>
+        <result property="contractId" column="contract_id"/>
+        <result property="repaymentPeriod" column="repayment_period"/>
+        <result property="preBalance" column="pre_balance"/>
+        <result property="postBalance" column="post_balance"/>
+        <result property="remainsPrincipal" column="remains_principal"/>
+        <result property="periodInterest" column="period_interest"/>
+        <result property="remainsInterest" column="remains_interest"/>
+        <result property="collectedPrincipal" column="collected_principal"/>
+        <result property="collectedInterest" column="collected_interest"/>
+        <result property="lateFee" column="late_fee"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+  </resultMap>
+</mapper>

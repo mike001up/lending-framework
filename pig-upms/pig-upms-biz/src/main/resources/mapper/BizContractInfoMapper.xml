@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pig4cloud.pig.admin.mapper.BizContractInfoMapper">
+
+  <resultMap id="bizContractInfoMap" type="com.pig4cloud.pig.admin.api.entity.BizContractInfo">
+        <id property="id" column="id"/>
+        <result property="contractId" column="contract_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="realName" column="real_name"/>
+        <result property="loanTerm" column="loan_term"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="startLateFeeDate" column="start_late_fee_date"/>
+        <result property="periodStartDate" column="period_start_date"/>
+        <result property="periodDays" column="period_days"/>
+        <result property="principal" column="principal"/>
+        <result property="fundAmount" column="fund_amount"/>
+        <result property="feeAmount" column="fee_amount"/>
+        <result property="currency" column="currency"/>
+        <result property="interestRate" column="interest_rate"/>
+        <result property="repaymentType" column="repayment_type"/>
+        <result property="executor" column="executor"/>
+        <result property="projectDirector" column="project_director"/>
+        <result property="remark" column="remark"/>
+        <result property="finishedProgress" column="finished_progress"/>
+        <result property="isRunning" column="is_running"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="guarantor" column="guarantor"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+  </resultMap>
+</mapper>
