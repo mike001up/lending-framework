@@ -7,6 +7,7 @@ import com.pig4cloud.pig.common.core.service.mqtt.MqttPublisher;
 import com.pig4cloud.pig.common.core.service.rocketmq.RocketMqUtils;
 import com.pig4cloud.pig.common.core.util.MqttMessage;
 import com.pig4cloud.pig.common.core.util.R;
+import io.seata.spring.annotation.GlobalTransactional;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
@@ -75,6 +76,7 @@ public class FlowableController {
     }
 
     @GetMapping("/test")
+    @GlobalTransactional
     public R<?> test() {
         JSONObject jsonObject = new JSONObject(true);
         jsonObject.put("name", "pig");

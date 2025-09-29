@@ -35,21 +35,25 @@
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-core</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!--feign 注解依赖-->
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-feign</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!--mybatis 依赖-->
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-mybatis</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!-- excel 导入导出 -->
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-excel</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!-- Flowable 核心流程引擎 -->
         <dependency>
@@ -62,6 +66,11 @@
             <artifactId>dynamic-datasource-spring</artifactId>
             <version>4.3.1</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.pig4cloud</groupId>
+            <artifactId>pig-common-seata</artifactId>
+            <version>3.8.3</version>
         </dependency>
     </dependencies>
 </project>

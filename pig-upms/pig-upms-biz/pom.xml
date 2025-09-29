@@ -34,31 +34,37 @@
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-upms-api</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!--文件管理-->
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-oss</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!--feign 调用-->
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-feign</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!--安全模块-->
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-security</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!--日志处理-->
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-log</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!--接口文档-->
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-swagger</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!-- orm 模块-->
         <dependency>
@@ -88,6 +94,7 @@
         <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-xss</artifactId>
+            <version>3.8.3</version>
         </dependency>
         <!--undertow容器-->
         <dependency>
