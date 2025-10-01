@@ -184,4 +184,5 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="修改时间")
     private Timestamp updateTime;
+
 }

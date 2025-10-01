@@ -2,10 +2,12 @@ package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.collection.CollUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.BizCollectionSchedule;
+import com.pig4cloud.pig.admin.api.vo.BizCollectionScheduleVo;
+import com.pig4cloud.pig.common.core.util.QueryWrapperBuilder;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -48,8 +50,11 @@ public class BizCollectionScheduleController {
     @Operation(summary = "分页查询" , description = "分页查询" )
     @GetMapping("/page" )
     @HasPermission("admin_bizCollectionSchedule_view")
-    public R getBizCollectionSchedulePage(@ParameterObject Page page, @ParameterObject BizCollectionSchedule bizCollectionSchedule) {
-        LambdaQueryWrapper<BizCollectionSchedule> wrapper = Wrappers.lambdaQuery();
+    public R getBizCollectionSchedulePage(@ParameterObject Page page, @ParameterObject BizCollectionScheduleVo bizCollectionSchedule) {
+        String[] likeFields = {"userName"};
+        String[] rangeFields = {"createTimeStart", "createTimeEnd"};
+        QueryWrapper<BizCollectionSchedule> wrapper = QueryWrapperBuilder.build(bizCollectionSchedule, likeFields, rangeFields);
+        wrapper.orderByDesc("create_time");
         return R.ok(bizCollectionScheduleService.page(page, wrapper));
     }
 

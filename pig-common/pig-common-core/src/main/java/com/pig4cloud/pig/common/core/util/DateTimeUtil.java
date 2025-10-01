@@ -54,4 +54,11 @@ public class DateTimeUtil {
         return date.withDayOfMonth(1).atStartOfDay();
     }
 
+    /**
+     * 获取当前时间
+     */
+    public static Timestamp now() {
+        return Timestamp.valueOf(LocalDateTime.now());
+    }
+
 }

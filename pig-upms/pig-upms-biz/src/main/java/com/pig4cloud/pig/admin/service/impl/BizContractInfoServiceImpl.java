@@ -15,7 +15,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -110,6 +109,7 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
             schedule.setStatus(0); // 待收款
             schedule.setLateFee(lateFee);
             schedule.setCreateBy("admin");
+            schedule.setCreateTime(DateTimeUtil.now());
             collectionScheduleService.save(schedule);
         }
     }
