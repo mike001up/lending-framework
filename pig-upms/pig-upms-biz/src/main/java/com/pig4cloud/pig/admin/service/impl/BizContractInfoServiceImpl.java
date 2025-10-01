@@ -93,7 +93,8 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
 
             // 计算本月利息 = 本期本金 * 月利率
             BigDecimal monthlyInterest = FinanceCalcUtil.calculateInterest(minAmount, contract.getInterestRate());
-            BigDecimal maxAmount = minAmount.add(monthlyInterest).setScale(2, RoundingMode.HALF_UP);
+            //最大还款金额 = 本金 + 利息 + 滞纳金
+            BigDecimal maxAmount = minAmount.add(monthlyInterest).add(lateFee).setScale(2, RoundingMode.HALF_UP);
 
             // 构建催款计划
             BizCollectionSchedule schedule = new BizCollectionSchedule();
