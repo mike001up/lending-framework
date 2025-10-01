@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 /**
  * 催款计划信息表
@@ -52,6 +52,9 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
     @Schema(description="真实姓名（冗余设计）")
     private String realName;
 
+	@Schema(description="滞纳金")
+	private BigDecimal lateFee;
+
 	/**
 	* 最小收款金额
 	*/
@@ -74,7 +77,7 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	* 收款日期
 	*/
     @Schema(description="收款日期")
-    private LocalDateTime collectionDate;
+    private Timestamp collectionDate;
 
 	/**
 	* 实际收款金额
@@ -92,13 +95,13 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	* 收款开始时间
 	*/
     @Schema(description="收款开始时间")
-    private LocalDateTime colStartDate;
+    private Timestamp colStartDate;
 
 	/**
 	* 收款结束时间
 	*/
     @Schema(description="收款结束时间")
-    private LocalDateTime colEndDate;
+    private Timestamp colEndDate;
 
 	/**
 	* 收款人签名
@@ -116,7 +119,7 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	* 入款时间
 	*/
     @Schema(description="入款时间")
-    private LocalDateTime incomeTime;
+    private Timestamp incomeTime;
 
 	/**
 	* 入款金额
@@ -134,7 +137,7 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	* 审核时间
 	*/
     @Schema(description="审核时间")
-    private LocalDateTime approveTime;
+    private Timestamp approveTime;
 
 	/**
 	* 审核状态 0 待审核;1 审核不通过;2 审核通过
@@ -166,7 +169,7 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	*/
 	@TableField(fill = FieldFill.INSERT)
     @Schema(description="创建时间")
-    private LocalDateTime createTime;
+    private Timestamp createTime;
 
 	/**
 	* 修改人
@@ -180,5 +183,5 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="修改时间")
-    private LocalDateTime updateTime;
+    private Timestamp updateTime;
 }

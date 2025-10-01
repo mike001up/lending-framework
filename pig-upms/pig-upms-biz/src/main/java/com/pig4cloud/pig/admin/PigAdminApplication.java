@@ -25,6 +25,7 @@ import com.pig4cloud.pig.common.swagger.annotation.EnablePigDoc;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * @author lengleng
@@ -34,6 +35,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  */
 @EnablePigDoc(value = "admin")
 @EnablePigFeignClients
+@EnableScheduling
 @EnablePigResourceServer
 @EnableDiscoveryClient
 @SpringBootApplication(scanBasePackages = {"com.pig4cloud.pig.common.core","com.pig4cloud.pig.*"})

@@ -32,7 +32,7 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	* 合同编号
 	*/
     @Schema(description="合同编号")
-    private String contractId;
+    private Long contractId;
 
 	/**
 	* 借款人ID
@@ -115,7 +115,7 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	/**
 	* 利率（%）
 	*/
-    @Schema(description="利率（%）")
+    @Schema(description="利率（%） 数据库存小数")
     private BigDecimal interestRate;
 
 	/**
