@@ -20,7 +20,9 @@ import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
+import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.util.R;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,8 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * 用户详细信息
@@ -55,10 +59,23 @@ public class PigUserDetailsServiceImpl implements PigUserDetailsService {
 		if (cache != null && cache.get(username) != null) {
 			return (PigUser) cache.get(username).get();
 		}
-
+		// 获取当前 HTTP 请求
+		ServletRequestAttributes attributes =
+				(ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+		HttpServletRequest request;
+		String client = CommonConstants.BMS;
+		if (attributes != null) {
+			request = attributes.getRequest();
+			client = request.getHeader(CommonConstants.CLIENT);
+		}
 		UserDTO userDTO = new UserDTO();
 		userDTO.setUsername(username);
-		R<UserInfo> result = remoteUserService.info(userDTO);
+		R<UserInfo> result;
+		if (client.equalsIgnoreCase(CommonConstants.BMS)) {
+			result = remoteUserService.info(userDTO);
+		} else {
+			result = remoteUserService.infoApp(userDTO);
+		}
 		UserDetails userDetails = getUserDetails(result);
 		if (cache != null) {
 			cache.put(username, userDetails);

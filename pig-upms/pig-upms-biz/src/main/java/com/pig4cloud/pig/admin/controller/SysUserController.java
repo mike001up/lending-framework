@@ -24,10 +24,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
+import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.vo.UserExcelVO;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.admin.service.SysUserService;
+import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
@@ -74,11 +76,28 @@ public class SysUserController {
 		SysUser user = userService.getOne(Wrappers.<SysUser>query()
 			.lambda()
 			.eq(StrUtil.isNotBlank(username), SysUser::getUsername, username)
+						.ne(SysUser::getUserType, CommonConstants.FRONTEND)
 			.eq(StrUtil.isNotBlank(phone), SysUser::getPhone, phone));
 		if (user == null) {
 			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
 		}
-		return R.ok(userService.findUserInfo(user));
+		UserInfo userInfo = userService.findUserInfo(user);
+		return R.ok(userInfo);
+	}
+
+	@Inner
+	@GetMapping(value = { "/info/queryApp" })
+	public R infoApp(@RequestParam(required = false) String username, @RequestParam(required = false) String phone) {
+		SysUser user = userService.getOne(Wrappers.<SysUser>query()
+			.lambda()
+			.eq(StrUtil.isNotBlank(username), SysUser::getUsername, username)
+						.eq(SysUser::getUserType, CommonConstants.FRONTEND)
+			.eq(StrUtil.isNotBlank(phone), SysUser::getPhone, phone));
+		if (user == null) {
+			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
+		}
+		UserInfo userInfo = userService.findUserInfo(user);
+		return R.ok(userInfo);
 	}
 
 	/**
@@ -231,5 +250,37 @@ public class SysUserController {
 	public R check(String password) {
 		return userService.checkPassword(password);
 	}
+
+
+	//下面是会员管理接口
+
+	/**
+	 * 会员分页查询
+	 */
+	@GetMapping("/memberList")
+	@HasPermission("sys_user_memberList")
+	public R members(@ParameterObject Page page, @ParameterObject UserDTO userDTO) {
+		IPage<UserVO> usersWithRolePage = userService.getMembers(page, userDTO);
+		return R.ok(usersWithRolePage);
+	}
+
+
+	/**
+	 * 会员模糊搜索
+	 */
+	@GetMapping("/membersByUsername")
+	public R membersByUsername(String username) {
+		return userService.membersByUsername(username);
+	}
+
+
+
+	@SysLog("新增会员")
+	@PostMapping("/addMember")
+	@HasPermission("sys_user_addMember")
+	public R membersAdd(@RequestBody UserDTO userDto) {
+		return R.ok(userService.saveMembers(userDto));
+	}
+
 
 }

@@ -164,4 +164,8 @@ public class UserVO implements Serializable {
 	@Schema(description = "邮箱")
 	private String email;
 
+
+	@Schema(description = "用户类型")
+	private String userType;
+
 }

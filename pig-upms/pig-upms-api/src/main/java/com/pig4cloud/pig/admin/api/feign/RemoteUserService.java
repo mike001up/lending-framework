@@ -44,4 +44,8 @@ public interface RemoteUserService {
 	@GetMapping("/user/info/query")
 	R<UserInfo> info(@SpringQueryMap UserDTO user);
 
+	@NoToken
+	@GetMapping("/user/info/queryApp")
+	R<UserInfo> infoApp(@SpringQueryMap UserDTO user);
+
 }

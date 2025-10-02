@@ -109,5 +109,17 @@ public interface CommonConstants {
 	 * APP用户
 	 */
 	String FRONTEND = "FRONTEND";
+	/**
+	 * 请求头传参对象
+	 */
+	String CLIENT = "client";
+	/**
+	 * 后台
+	 */
+	String BMS = "bms";
+	/**
+	 * 前台
+	 */
+	String APP = "app";
 
 }

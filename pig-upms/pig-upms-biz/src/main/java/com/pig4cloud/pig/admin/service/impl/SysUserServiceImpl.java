@@ -46,6 +46,7 @@ import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.vo.ErrorMessage;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -416,6 +417,37 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         } else {
             return R.ok();
         }
+    }
+
+    @Override
+    public IPage<UserVO> getMembers(Page page, UserDTO userDTO) {
+        return baseMapper.getMembers(page, userDTO);
+    }
+
+    @Override
+    public R membersByUsername(String username) {
+        if (StringUtils.isBlank(username)) {
+            return R.failed("sys.username.not.empty");
+        }
+        return R.ok(this.list(Wrappers.<SysUser>lambdaQuery().like(SysUser::getUsername, username)));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public R saveMembers(UserDTO userDto) {
+        SysUser user = this.getOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, userDto.getUsername())
+                .eq(SysUser::getUserType, CommonConstants.FRONTEND));
+        if (user != null) {
+            return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERNAME_EXISTING, userDto.getUsername()));
+        }
+        SysUser sysUser = new SysUser();
+        BeanUtils.copyProperties(userDto, sysUser);
+        sysUser.setDelFlag(CommonConstants.STATUS_NORMAL);
+        sysUser.setCreateBy(SecurityUtils.getUser().getUsername());
+        sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
+        sysUser.setUserType(CommonConstants.FRONTEND);
+        baseMapper.insert(sysUser);
+        return R.ok(Boolean.TRUE);
     }
 
 }

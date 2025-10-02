@@ -132,4 +132,9 @@ public interface SysUserService extends IService<SysUser> {
 	 */
 	R checkPassword(String password);
 
+	IPage<UserVO> getMembers(Page page, UserDTO userDTO);
+
+	R membersByUsername(String username);
+
+	R saveMembers(UserDTO userDto);
 }
