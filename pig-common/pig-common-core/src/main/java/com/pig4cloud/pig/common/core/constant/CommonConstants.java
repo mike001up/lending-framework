@@ -121,5 +121,9 @@ public interface CommonConstants {
 	 * 前台
 	 */
 	String APP = "app";
+	/**
+	 * 前台
+	 */
+	String USER_BLOCKED = "user_blocked";
 
 }

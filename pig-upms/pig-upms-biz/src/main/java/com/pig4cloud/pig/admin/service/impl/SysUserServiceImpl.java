@@ -21,6 +21,7 @@ package com.pig4cloud.pig.admin.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -448,6 +449,22 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         sysUser.setUserType(CommonConstants.FRONTEND);
         baseMapper.insert(sysUser);
         return R.ok(Boolean.TRUE);
+    }
+
+    @Override
+    @CacheEvict(value = CacheConstants.USER_DETAILS, key = "#username")
+    public R isMagLogoutByUserId(Boolean isMagLogout, Long userId, String username) {
+        return R.ok(this.update(Wrappers.<SysUser>lambdaUpdate()
+                .set(ObjectUtil.isNotNull(isMagLogout), SysUser::getIsMagLogout, isMagLogout)
+                .eq(SysUser::getUserId, userId)));
+    }
+
+    @Override
+    @CacheEvict(value = CacheConstants.USER_DETAILS, key = "#username")
+    public R isBlackByUserId(Boolean isBlack, Long userId, String username) {
+        return R.ok(this.update(Wrappers.<SysUser>lambdaUpdate()
+                .set(ObjectUtil.isNotNull(isBlack), SysUser::getIsBlack, isBlack)
+                .eq(SysUser::getUserId, userId)));
     }
 
 }

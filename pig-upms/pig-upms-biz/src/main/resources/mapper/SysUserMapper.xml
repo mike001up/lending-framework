@@ -42,6 +42,8 @@
         <result column="name" property="name"/>
         <result column="email" property="email"/>
         <result column="user_type" property="userType"/>
+        <result column="is_mag_logout" property="isMagLogout"/>
+        <result column="is_black" property="isBlack"/>
         <collection property="roleList" ofType="com.pig4cloud.pig.admin.api.entity.SysRole"
                     select="com.pig4cloud.pig.admin.mapper.SysRoleMapper.listRolesByUserId" column="user_id">
         </collection>
@@ -217,7 +219,9 @@
         u.nickname,
         u.name,
         u.email,
-        u.user_type
+        u.user_type,
+        u.is_mag_logout,
+        u.is_black
         FROM
         sys_user u
         <where>

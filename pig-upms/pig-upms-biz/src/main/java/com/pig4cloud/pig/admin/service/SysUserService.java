@@ -137,4 +137,8 @@ public interface SysUserService extends IService<SysUser> {
 	R membersByUsername(String username);
 
 	R saveMembers(UserDTO userDto);
+
+	R isMagLogoutByUserId(Boolean isMagLogout, Long userId, String username);
+
+	R isBlackByUserId(Boolean isBlack, Long userId, String username);
 }

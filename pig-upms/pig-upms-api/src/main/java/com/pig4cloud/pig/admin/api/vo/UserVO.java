@@ -168,4 +168,10 @@ public class UserVO implements Serializable {
 	@Schema(description = "用户类型")
 	private String userType;
 
+	@Schema(description = "是否注销1注销0未注销")
+	private Boolean isMagLogout;
+
+	@Schema(description = "是否拉黑1拉黑0未拉黑")
+	private Boolean isBlack;
+
 }

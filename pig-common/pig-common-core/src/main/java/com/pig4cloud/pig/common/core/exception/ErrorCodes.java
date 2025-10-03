@@ -103,4 +103,9 @@ public interface ErrorCodes {
 	 */
 	String IP_NOT_EXISTS_SYSTEM = "sys.ip.not.exists";
 
+	/**
+	 * 用户已被注销
+	 */
+	String USER_IS_BLACK = "sys.user.is.black";
+
 }

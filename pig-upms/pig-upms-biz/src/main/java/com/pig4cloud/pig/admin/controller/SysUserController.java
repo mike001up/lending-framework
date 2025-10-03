@@ -96,6 +96,9 @@ public class SysUserController {
 		if (user == null) {
 			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
 		}
+		if (user.getIsMagLogout()) {
+			return R.failed(MsgUtils.getMessage(ErrorCodes.USER_IS_BLACK, username));
+		}
 		UserInfo userInfo = userService.findUserInfo(user);
 		return R.ok(userInfo);
 	}
@@ -279,8 +282,27 @@ public class SysUserController {
 	@PostMapping("/addMember")
 	@HasPermission("sys_user_addMember")
 	public R membersAdd(@RequestBody UserDTO userDto) {
-		return R.ok(userService.saveMembers(userDto));
+		return userService.saveMembers(userDto);
 	}
+
+
+	@SysLog("注销/撤销注销")
+	@GetMapping("/magLogout")
+	@HasPermission("sys_user_magLogout")
+	public R magLogout(Boolean isMagLogout,Long userId) {
+		SysUser user = userService.getById(userId);
+		return userService.isMagLogoutByUserId(isMagLogout, userId, user.getUsername());
+	}
+
+
+	@SysLog("拉黑/撤销拉黑")
+	@GetMapping("/isBlack")
+	@HasPermission("sys_user_isBlack")
+	public R isBlack(Boolean isBlack,Long userId) {
+		SysUser user = userService.getById(userId);
+		return userService.isBlackByUserId(isBlack, userId, user.getUsername());
+	}
+
 
 
 }

@@ -22,6 +22,7 @@ import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.security.exception.UserBlockedException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -43,49 +44,53 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @RequiredArgsConstructor
 public class PigUserDetailsServiceImpl implements PigUserDetailsService {
 
-	private final RemoteUserService remoteUserService;
+    private final RemoteUserService remoteUserService;
 
-	private final CacheManager cacheManager;
+    private final CacheManager cacheManager;
 
-	/**
-	 * 用户名密码登录
-	 * @param username 用户名
-	 * @return
-	 */
-	@Override
-	@SneakyThrows
-	public UserDetails loadUserByUsername(String username) {
-		Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
-		if (cache != null && cache.get(username) != null) {
-			return (PigUser) cache.get(username).get();
-		}
-		// 获取当前 HTTP 请求
-		ServletRequestAttributes attributes =
-				(ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-		HttpServletRequest request;
-		String client = CommonConstants.BMS;
-		if (attributes != null) {
-			request = attributes.getRequest();
-			client = request.getHeader(CommonConstants.CLIENT);
-		}
-		UserDTO userDTO = new UserDTO();
-		userDTO.setUsername(username);
-		R<UserInfo> result;
-		if (client.equalsIgnoreCase(CommonConstants.BMS)) {
-			result = remoteUserService.info(userDTO);
-		} else {
-			result = remoteUserService.infoApp(userDTO);
-		}
-		UserDetails userDetails = getUserDetails(result);
-		if (cache != null) {
-			cache.put(username, userDetails);
-		}
-		return userDetails;
-	}
+    /**
+     * 用户名密码登录
+     *
+     * @param username 用户名
+     * @return
+     */
+    @Override
+    @SneakyThrows
+    public UserDetails loadUserByUsername(String username) {
+        Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
+        if (cache != null && cache.get(username) != null) {
+            return (PigUser) cache.get(username).get();
+        }
+        // 获取当前 HTTP 请求
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request;
+        String client = CommonConstants.BMS;
+        if (attributes != null) {
+            request = attributes.getRequest();
+            client = request.getHeader(CommonConstants.CLIENT);
+        }
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUsername(username);
+        R<UserInfo> result;
+        if (client.equalsIgnoreCase(CommonConstants.BMS)) {
+            result = remoteUserService.info(userDTO);
+        } else {
+            result = remoteUserService.infoApp(userDTO);
+        }
+		int code = result.getCode();
+        if (code == 1) {
+            throw new UserBlockedException(result.getMsg());
+        }
+        UserDetails userDetails = getUserDetails(result);
+        if (cache != null) {
+            cache.put(username, userDetails);
+        }
+        return userDetails;
+    }
 
-	@Override
-	public int getOrder() {
-		return Integer.MIN_VALUE;
-	}
+    @Override
+    public int getOrder() {
+        return Integer.MIN_VALUE;
+    }
 
 }
