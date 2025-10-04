@@ -2,12 +2,16 @@ package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.collection.CollUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.BizContractInfo;
+import com.pig4cloud.pig.common.core.util.DateTimeUtil;
+import com.pig4cloud.pig.common.core.util.IdGenerator;
+import com.pig4cloud.pig.common.core.util.QueryWrapperBuilder;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.pig.admin.service.BizContractInfoService;
@@ -21,7 +25,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 /**
@@ -33,7 +36,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/bizContractInfo" )
-@Tag(description = "bizContractInfo" , name = "合同表管理" )
+@Tag(description = "bizContractInfo" , name = "合同管理" )
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
 public class BizContractInfoController {
 
@@ -49,7 +52,10 @@ public class BizContractInfoController {
     @GetMapping("/page" )
     @HasPermission("admin_bizContractInfo_view")
     public R getBizContractInfoPage(@ParameterObject Page page, @ParameterObject BizContractInfo bizContractInfo) {
-        LambdaQueryWrapper<BizContractInfo> wrapper = Wrappers.lambdaQuery();
+        String[] likeFields = {"userName", "realName"};
+        QueryWrapper<BizContractInfo> wrapper = QueryWrapperBuilder.build(bizContractInfo, likeFields, null);
+        wrapper.orderByDesc("create_time");
+        //  TODO 关联用户信息,kyc信息,抵押物信息
         return R.ok(bizContractInfoService.page(page, wrapper));
     }
 
@@ -71,11 +77,14 @@ public class BizContractInfoController {
      * @param bizContractInfo 合同表
      * @return R
      */
-    @Operation(summary = "新增合同表" , description = "新增合同表" )
-    @SysLog("新增合同表" )
+    @Operation(summary = "新增合同" , description = "新增合同" )
+    @SysLog("新增合同" )
     @PostMapping
     @HasPermission("admin_bizContractInfo_add")
     public R save(@RequestBody BizContractInfo bizContractInfo) {
+        bizContractInfo.setContractId(Long.valueOf(IdGenerator.nextId()));
+        bizContractInfo.setCreateTime(DateTimeUtil.now());
+        bizContractInfo.setCreateBy(SecurityUtils.getUser().getUsername());
         return R.ok(bizContractInfoService.save(bizContractInfo));
     }
 
@@ -84,11 +93,13 @@ public class BizContractInfoController {
      * @param bizContractInfo 合同表
      * @return R
      */
-    @Operation(summary = "修改合同表" , description = "修改合同表" )
-    @SysLog("修改合同表" )
+    @Operation(summary = "修改合同" , description = "修改合同" )
+    @SysLog("修改合同" )
     @PutMapping
     @HasPermission("admin_bizContractInfo_edit")
     public R updateById(@RequestBody BizContractInfo bizContractInfo) {
+        bizContractInfo.setUpdateTime(DateTimeUtil.now());
+        bizContractInfo.setUpdateBy(SecurityUtils.getUser().getUsername());
         return R.ok(bizContractInfoService.updateById(bizContractInfo));
     }
 

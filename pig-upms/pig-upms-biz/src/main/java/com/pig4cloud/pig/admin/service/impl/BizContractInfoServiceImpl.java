@@ -3,9 +3,11 @@ package com.pig4cloud.pig.admin.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.entity.BizCollectionSchedule;
+import com.pig4cloud.pig.admin.api.entity.BizContractExecution;
 import com.pig4cloud.pig.admin.api.entity.BizContractInfo;
 import com.pig4cloud.pig.admin.mapper.BizContractInfoMapper;
 import com.pig4cloud.pig.admin.service.BizCollectionScheduleService;
+import com.pig4cloud.pig.admin.service.BizContractExecutionService;
 import com.pig4cloud.pig.admin.service.BizContractInfoService;
 import com.pig4cloud.pig.admin.service.SysPublicParamService;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
@@ -34,6 +36,8 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
     private BizCollectionScheduleService collectionScheduleService;
     @Autowired
     private SysPublicParamService sysPublicParamService;
+    @Autowired
+    private BizContractExecutionService bizContractExecutionService;
 
     @Override
     @Transactional
@@ -111,6 +115,16 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
             schedule.setCreateBy("admin");
             schedule.setCreateTime(DateTimeUtil.now());
             collectionScheduleService.save(schedule);
+            //查看是否合同执行情况记录
+            BizContractExecution execution = bizContractExecutionService.getOne(Wrappers.<BizContractExecution>query().lambda().eq(BizContractExecution::getContractId, contract.getContractId()));
+            if (execution == null) {
+                execution = new BizContractExecution();
+                execution.setContractId(contract.getContractId());
+                execution.setCreateTime(DateTimeUtil.now());
+                execution.setCreateBy("admin");
+                execution.setBalance(balance);
+                bizContractExecutionService.save(execution);
+            }
         }
     }
 

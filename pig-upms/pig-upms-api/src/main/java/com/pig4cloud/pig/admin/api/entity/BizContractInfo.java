@@ -2,11 +2,13 @@ package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
+
 
 /**
  * 合同表
@@ -62,13 +64,15 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	* 合同开始时间
 	*/
     @Schema(description="合同开始时间")
-    private LocalDateTime startDate;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Timestamp startDate;
 
 	/**
 	* 合同结束时间
 	*/
     @Schema(description="合同结束时间")
-    private LocalDateTime endDate;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Timestamp endDate;
 
 	/**
 	* 滞纳金开始计算日期（合同开始后延迟还款开始收滞纳金）
@@ -178,7 +182,8 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	*/
 	@TableField(fill = FieldFill.INSERT)
     @Schema(description="创建时间")
-    private LocalDateTime createTime;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Timestamp createTime;
 
 	/**
 	* 修改人
@@ -192,5 +197,6 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="修改时间")
-    private LocalDateTime updateTime;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Timestamp updateTime;
 }
