@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 /**
  * 抵押物库存信息
@@ -93,12 +93,12 @@ public class BizWareHouse extends Model<BizWareHouse> {
 	*/
 	@TableField(fill = FieldFill.INSERT)
     @Schema(description="创建时间")
-    private LocalDateTime createTime;
+    private Timestamp createTime;
 
 	/**
 	* 更新时间
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="更新时间")
-    private LocalDateTime updateTime;
+    private Timestamp updateTime;
 }

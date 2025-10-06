@@ -2,11 +2,16 @@ package com.pig4cloud.pig.guaranty.controller;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.collection.CollUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.dynamic.datasource.annotation.DS;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.common.core.util.DateTimeUtil;
+import com.pig4cloud.pig.common.core.util.QueryWrapperBuilder;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.pig.guaranty.api.entity.DicCollateralType;
 import com.pig4cloud.pig.guaranty.service.DicCollateralTypeService;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -32,8 +37,8 @@ import java.util.List;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/dicCollateralType" )
-@Tag(description = "dicCollateralType" , name = "抵押物类型字典表管理" )
+@RequestMapping("/dicCollateralType")
+@Tag(description = "dicCollateralType", name = "抵押物类型管理")
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
 public class DicCollateralTypeController {
 
@@ -41,26 +46,30 @@ public class DicCollateralTypeController {
 
     /**
      * 分页查询
-     * @param page 分页对象
+     *
+     * @param page              分页对象
      * @param dicCollateralType 抵押物类型字典表
      * @return
      */
-    @Operation(summary = "分页查询" , description = "分页查询" )
-    @GetMapping("/page" )
+    @Operation(summary = "分页查询", description = "分页查询")
+    @GetMapping("/page")
     @HasPermission("admin_dicCollateralType_view")
     public R getDicCollateralTypePage(@ParameterObject Page page, @ParameterObject DicCollateralType dicCollateralType) {
-        LambdaQueryWrapper<DicCollateralType> wrapper = Wrappers.lambdaQuery();
+        QueryWrapper<DicCollateralType> wrapper = QueryWrapperBuilder.build(dicCollateralType, null, null);
+        wrapper.orderByAsc("sn");
+        wrapper.orderByDesc("create_time");
         return R.ok(dicCollateralTypeService.page(page, wrapper));
     }
 
 
     /**
      * 通过条件查询抵押物类型字典表
+     *
      * @param dicCollateralType 查询条件
      * @return R  对象列表
      */
-    @Operation(summary = "通过条件查询" , description = "通过条件查询对象" )
-    @GetMapping("/details" )
+    @Operation(summary = "通过条件查询", description = "通过条件查询对象")
+    @GetMapping("/details")
     @HasPermission("admin_dicCollateralType_view")
     public R getDetails(@ParameterObject DicCollateralType dicCollateralType) {
         return R.ok(dicCollateralTypeService.list(Wrappers.query(dicCollateralType)));
@@ -68,39 +77,47 @@ public class DicCollateralTypeController {
 
     /**
      * 新增抵押物类型字典表
+     *
      * @param dicCollateralType 抵押物类型字典表
      * @return R
      */
-    @Operation(summary = "新增抵押物类型字典表" , description = "新增抵押物类型字典表" )
-    @SysLog("新增抵押物类型字典表" )
+    @Operation(summary = "新增抵押物类型", description = "新增抵押物类型")
+    @SysLog("新增抵押物类型")
     @PostMapping
     @HasPermission("admin_dicCollateralType_add")
     public R save(@RequestBody DicCollateralType dicCollateralType) {
+        dicCollateralType.setCreateBy(SecurityUtils.getUser().getUsername());
+        dicCollateralType.setCreateTime(DateTimeUtil.now());
         return R.ok(dicCollateralTypeService.save(dicCollateralType));
     }
 
     /**
      * 修改抵押物类型字典表
+     *
      * @param dicCollateralType 抵押物类型字典表
      * @return R
      */
-    @Operation(summary = "修改抵押物类型字典表" , description = "修改抵押物类型字典表" )
-    @SysLog("修改抵押物类型字典表" )
+    @Operation(summary = "修改抵押物类型", description = "修改抵押物类型")
+    @SysLog("修改抵押物类型")
     @PutMapping
     @HasPermission("admin_dicCollateralType_edit")
     public R updateById(@RequestBody DicCollateralType dicCollateralType) {
+        dicCollateralType.setUpdateBy(SecurityUtils.getUser().getUsername());
+        dicCollateralType.setUpdateTime(DateTimeUtil.now());
         return R.ok(dicCollateralTypeService.updateById(dicCollateralType));
     }
 
     /**
      * 通过id删除抵押物类型字典表
+     *
      * @param ids id列表
      * @return R
      */
-    @Operation(summary = "通过id删除抵押物类型字典表" , description = "通过id删除抵押物类型字典表" )
-    @SysLog("通过id删除抵押物类型字典表" )
+    @Operation(summary = "通过id删除抵押物类型", description = "通过id删除抵押物类型")
+    @SysLog("通过id删除抵押物类型")
     @DeleteMapping
     @HasPermission("admin_dicCollateralType_del")
+    @DS("slave2")
     public R removeById(@RequestBody Long[] ids) {
         return R.ok(dicCollateralTypeService.removeBatchByIds(CollUtil.toList(ids)));
     }
@@ -108,8 +125,9 @@ public class DicCollateralTypeController {
 
     /**
      * 导出excel 表格
+     *
      * @param dicCollateralType 查询条件
-   	 * @param ids 导出指定ID
+     * @param ids               导出指定ID
      * @return excel 文件流
      */
     @ResponseExcel
@@ -121,8 +139,9 @@ public class DicCollateralTypeController {
 
     /**
      * 导入excel 表
+     *
      * @param dicCollateralTypeList 对象实体列表
-     * @param bindingResult 错误信息列表
+     * @param bindingResult         错误信息列表
      * @return ok fail
      */
     @PostMapping("/import")
@@ -130,4 +149,14 @@ public class DicCollateralTypeController {
     public R importExcel(@RequestExcel List<DicCollateralType> dicCollateralTypeList, BindingResult bindingResult) {
         return R.ok(dicCollateralTypeService.saveBatch(dicCollateralTypeList));
     }
+
+    @Operation(summary = "获取所有抵押物类型", description = "获取所有抵押物类型")
+    @GetMapping("/getAllCollateralType")
+    @Inner
+    public List getAllCollateralType() {
+        List<DicCollateralType> list = dicCollateralTypeService.list(Wrappers.<DicCollateralType>lambdaQuery()
+                .orderByAsc(DicCollateralType::getSn).orderByDesc(DicCollateralType::getCreateTime));
+        return list;
+    }
+
 }

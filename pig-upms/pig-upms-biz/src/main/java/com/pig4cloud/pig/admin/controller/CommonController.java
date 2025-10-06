@@ -3,6 +3,7 @@ package com.pig4cloud.pig.admin.controller;
 import com.pig4cloud.pig.admin.service.SysPublicParamService;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.guaranty.api.feign.RemoteCollateralTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,8 @@ public class CommonController {
 
     @Autowired
     private SysPublicParamService sysPublicParamService;
+    @Autowired
+    private RemoteCollateralTypeService remoteCollateralTypeService;
 
 
     @Operation(summary = "币种", description = "币种")
@@ -41,5 +44,11 @@ public class CommonController {
                     .collect(Collectors.toList());
         }
         return R.ok(list);
+    }
+
+    @Operation(summary = "获取所有抵押物类型", description = "获取所有抵押物类型")
+    @GetMapping("/getCollateralType")
+    public R getCollateralType() {
+        return R.ok(remoteCollateralTypeService.getAllCollateralType());
     }
 }

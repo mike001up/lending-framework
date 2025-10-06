@@ -63,7 +63,8 @@ public class PigUserDetailsServiceImpl implements PigUserDetailsService {
         String cacheKey = client + ":" + username;
         Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
         if (cache != null && cache.get(cacheKey) != null) {
-            return (PigUser) cache.get(cacheKey).get();
+            PigUser pigUser = (PigUser) cache.get(cacheKey).get();
+            return pigUser;
         }
         UserDTO userDTO = new UserDTO();
         userDTO.setUsername(username);

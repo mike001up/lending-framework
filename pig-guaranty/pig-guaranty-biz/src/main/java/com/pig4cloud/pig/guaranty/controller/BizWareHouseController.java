@@ -2,11 +2,14 @@ package com.pig4cloud.pig.guaranty.controller;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.common.core.util.DateTimeUtil;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.pig.guaranty.api.entity.BizWareHouse;
 import com.pig4cloud.pig.guaranty.service.BizWareHouseService;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -76,6 +79,9 @@ public class BizWareHouseController {
     @PostMapping
     @HasPermission("admin_bizWareHouse_add")
     public R save(@RequestBody BizWareHouse bizWareHouse) {
+        bizWareHouse.setOperatorId(SecurityUtils.getUser().getId());
+        bizWareHouse.setUserName(SecurityUtils.getUser().getUsername());
+        bizWareHouse.setCreateTime(DateTimeUtil.now());
         return R.ok(bizWareHouseService.save(bizWareHouse));
     }
 
@@ -89,6 +95,9 @@ public class BizWareHouseController {
     @PutMapping
     @HasPermission("admin_bizWareHouse_edit")
     public R updateById(@RequestBody BizWareHouse bizWareHouse) {
+        bizWareHouse.setUpdateTime(DateTimeUtil.now());
+        bizWareHouse.setUpdateUserId(SecurityUtils.getUser().getId());
+        bizWareHouse.setUpdateUserName(SecurityUtils.getUser().getUsername());
         return R.ok(bizWareHouseService.updateById(bizWareHouse));
     }
 
@@ -101,6 +110,7 @@ public class BizWareHouseController {
     @SysLog("通过id删除抵押物库存信息" )
     @DeleteMapping
     @HasPermission("admin_bizWareHouse_del")
+    @DS("slave2")
     public R removeById(@RequestBody Long[] ids) {
         return R.ok(bizWareHouseService.removeBatchByIds(CollUtil.toList(ids)));
     }

@@ -5,7 +5,8 @@ import com.baomidou.mybatisplus.extension.activerecord.Model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
+
 
 /**
  * 抵押物类型字典表
@@ -49,6 +50,7 @@ public class DicCollateralType extends Model<DicCollateralType> {
 	* 是否删除 0未删除 1已删除
 	*/
     @Schema(description="是否删除 0未删除 1已删除")
+	@TableLogic
     private Integer isDel;
 
 	/**
@@ -69,7 +71,7 @@ public class DicCollateralType extends Model<DicCollateralType> {
 	*/
 	@TableField(fill = FieldFill.INSERT)
     @Schema(description="创建时间")
-    private LocalDateTime createTime;
+    private Timestamp createTime;
 
 	/**
 	* 修改人
@@ -83,5 +85,5 @@ public class DicCollateralType extends Model<DicCollateralType> {
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="修改时间")
-    private LocalDateTime updateTime;
+    private Timestamp updateTime;
 }
