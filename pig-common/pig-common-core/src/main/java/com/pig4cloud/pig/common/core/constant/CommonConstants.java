@@ -122,8 +122,12 @@ public interface CommonConstants {
 	 */
 	String APP = "app";
 	/**
-	 * 前台
+	 * 用户被注销或禁止登录
 	 */
 	String USER_BLOCKED = "user_blocked";
+	/**
+	 * 用户不存在
+	 */
+	String USER_NOT_EXIST = "user_not_exist";
 
 }

@@ -21,8 +21,10 @@ import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.core.util.GetClient;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.security.exception.UserBlockedException;
+import com.pig4cloud.pig.common.security.exception.UserNotExistException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -57,17 +59,11 @@ public class PigUserDetailsServiceImpl implements PigUserDetailsService {
     @Override
     @SneakyThrows
     public UserDetails loadUserByUsername(String username) {
+        String client = GetClient.get();
+        String cacheKey = client + ":" + username;
         Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
-        if (cache != null && cache.get(username) != null) {
-            return (PigUser) cache.get(username).get();
-        }
-        // 获取当前 HTTP 请求
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request;
-        String client = CommonConstants.BMS;
-        if (attributes != null) {
-            request = attributes.getRequest();
-            client = request.getHeader(CommonConstants.CLIENT);
+        if (cache != null && cache.get(cacheKey) != null) {
+            return (PigUser) cache.get(cacheKey).get();
         }
         UserDTO userDTO = new UserDTO();
         userDTO.setUsername(username);
@@ -81,9 +77,12 @@ public class PigUserDetailsServiceImpl implements PigUserDetailsService {
         if (code == 1) {
             throw new UserBlockedException(result.getMsg());
         }
+        if (code == 101) {
+            throw new UserNotExistException(result.getMsg());
+        }
         UserDetails userDetails = getUserDetails(result);
         if (cache != null) {
-            cache.put(username, userDetails);
+            cache.put(cacheKey, userDetails);
         }
         return userDetails;
     }

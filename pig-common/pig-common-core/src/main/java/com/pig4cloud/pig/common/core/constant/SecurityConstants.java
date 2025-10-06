@@ -143,5 +143,9 @@ public interface SecurityConstants {
 	 * 豁免天数
 	 */
 	String EXEMPTION_DAYS = "EXEMPTION_DAYS";
+	/**
+	 * 币种
+	 */
+	String CURRENCY = "CURRENCY";
 
 }

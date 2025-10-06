@@ -11,9 +11,11 @@ import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.service.SysRoleService;
 import com.pig4cloud.pig.admin.service.SysUserService;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.core.util.DateTimeUtil;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.pig.admin.service.SysMerchantService;
@@ -93,14 +95,14 @@ public class SysMerchantController {
      * @param sysMerchant 商户表
      * @return R
      */
-    @Operation(summary = "新增商户表", description = "新增商户表")
-    @SysLog("新增商户表")
+    @Operation(summary = "新增商户", description = "新增商户")
+    @SysLog("新增商户")
     @PostMapping
     @HasPermission("admin_sysMerchant_add")
     @Transactional
     public R save(@RequestBody SysMerchant sysMerchant) {
         SysRole sysRole = sysRoleService.getOne(Wrappers.<SysRole>query().lambda().eq(SysRole::getRoleCode, CommonConstants.MERCHANT));
-        if (sysRole != null) {
+        if (sysRole == null) {
             return R.failed(MsgUtils.getMessage("sys.merchant.not.exists"));
         }
         //维护sys_user表
@@ -110,9 +112,9 @@ public class SysMerchantController {
         }
         SysUser sysUser = new SysUser();
         sysUser.setDelFlag(CommonConstants.STATUS_NORMAL);
-        sysUser.setCreateBy(sysMerchant.getPlatName());
+        sysUser.setCreateBy(SecurityUtils.getUser().getUsername());
         sysUser.setPassword(ENCODER.encode(sysMerchant.getPassword()));
-        sysUser.setUsername(sysMerchant.getMerName());
+        sysUser.setUsername(sysMerchant.getPlatName());
         sysUser.setUserType(CommonConstants.MERCHANT);
         userService.save(sysUser);
         //维护角色表
@@ -121,6 +123,7 @@ public class SysMerchantController {
         roles.add(sysRole.getRoleId());
         // 插入用户角色关系表
         sysRoleService.saveByRoleList(roles, sysUser);
+        sysMerchant.setCreateTime(DateTimeUtil.now());
         return R.ok(sysMerchantService.save(sysMerchant));
     }
 

@@ -94,7 +94,7 @@ public class SysUserController {
 						.eq(SysUser::getUserType, CommonConstants.FRONTEND)
 			.eq(StrUtil.isNotBlank(phone), SysUser::getPhone, phone));
 		if (user == null) {
-			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
+			return R.failedByCode(101, MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
 		}
 		if (user.getIsMagLogout()) {
 			return R.failed(MsgUtils.getMessage(ErrorCodes.USER_IS_BLACK, username));

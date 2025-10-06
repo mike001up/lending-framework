@@ -6,6 +6,7 @@ import java.util.Locale;
 
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.security.exception.UserBlockedException;
+import com.pig4cloud.pig.common.security.exception.UserNotExistException;
 import org.springframework.context.i18n.LocaleContextHolder;
 import com.pig4cloud.pig.common.security.util.OAuth2ErrorCodesExpand;
 import com.pig4cloud.pig.common.security.util.ScopeException;
@@ -243,6 +244,9 @@ public abstract class OAuth2ResourceOwnerBaseAuthenticationProvider<T extends OA
         Throwable realCause = authenticationException.getCause();
         if (realCause instanceof UserBlockedException) {
             return new OAuth2AuthenticationException(new OAuth2Error(CommonConstants.USER_BLOCKED, this.messages.getMessage("AbstractUserDetailsAuthenticationProvider.blocked", "User has been blocked.", clientLocale), ""));
+        }
+        if (realCause instanceof UserNotExistException) {
+            return new OAuth2AuthenticationException(new OAuth2Error(CommonConstants.USER_NOT_EXIST, this.messages.getMessage("AbstractUserDetailsAuthenticationProvider.not.exist", "User does not exist", clientLocale), ""));
         }
 
         return new OAuth2AuthenticationException(OAuth2ErrorCodesExpand.UN_KNOW_LOGIN_ERROR);

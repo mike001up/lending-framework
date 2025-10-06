@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.activerecord.Model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 /**
  * 商户表
@@ -93,6 +93,7 @@ public class SysMerchant extends Model<SysMerchant> {
 	* 是否删除: 0=未删除, 1=已删除
 	*/
     @Schema(description="是否删除: 0=未删除, 1=已删除")
+	@TableLogic
     private Integer isDel;
 
 	/**
@@ -107,7 +108,7 @@ public class SysMerchant extends Model<SysMerchant> {
 	*/
 	@TableField(fill = FieldFill.INSERT)
     @Schema(description="创建时间")
-    private LocalDateTime createTime;
+    private Timestamp createTime;
 
 	/**
 	* 修改人
@@ -121,5 +122,5 @@ public class SysMerchant extends Model<SysMerchant> {
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="修改时间")
-    private LocalDateTime updateTime;
+    private Timestamp updateTime;
 }

@@ -3,6 +3,8 @@ package com.pig4cloud.pig.admin.api.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.pig4cloud.pig.common.core.jackson.SqlTimestampDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -65,6 +67,7 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	*/
     @Schema(description="合同开始时间")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
     private Timestamp startDate;
 
 	/**
@@ -72,6 +75,7 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	*/
     @Schema(description="合同结束时间")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
     private Timestamp endDate;
 
 	/**
