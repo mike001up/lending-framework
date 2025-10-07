@@ -1,7 +1,10 @@
 package com.pig4cloud.pig.guaranty.api.entity;
 
+
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -56,6 +59,7 @@ public class BizWareHouse extends Model<BizWareHouse> {
 	* 是否删除 0未删除，1已删除
 	*/
     @Schema(description="是否删除 0未删除，1已删除")
+	@TableLogic
     private Integer isDel;
 
 	/**
@@ -74,7 +78,8 @@ public class BizWareHouse extends Model<BizWareHouse> {
 	* JSON保存不同抵押物的具体属性参数
 	*/
     @Schema(description="JSON保存不同抵押物的具体属性参数")
-    private String parameters;
+	@TableField(typeHandler = JacksonTypeHandler.class)
+	private JsonNode parameters;
 
 	/**
 	* 修改人ID
@@ -101,4 +106,18 @@ public class BizWareHouse extends Model<BizWareHouse> {
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="更新时间")
     private Timestamp updateTime;
+
+	/**
+	 * 抵押物类型名称
+	 */
+	@Schema(description="抵押物类型名称")
+	@TableField(exist = false)
+	private String collateralType;
+
+	/**
+	 * 抵押物类型值
+	 */
+	@Schema(description="抵押物类型值")
+	@TableField(exist = false)
+	private String collateralTypeValue;
 }

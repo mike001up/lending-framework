@@ -1,10 +1,13 @@
 package com.pig4cloud.pig.admin.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.entity.BizCollectionSchedule;
 import com.pig4cloud.pig.admin.api.entity.BizContractExecution;
 import com.pig4cloud.pig.admin.api.entity.BizContractInfo;
+import com.pig4cloud.pig.admin.api.vo.BizContractInfoVo;
 import com.pig4cloud.pig.admin.mapper.BizContractInfoMapper;
 import com.pig4cloud.pig.admin.service.BizCollectionScheduleService;
 import com.pig4cloud.pig.admin.service.BizContractExecutionService;
@@ -155,5 +158,10 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
             }
         }
         return lateFee;
+    }
+
+    @Override
+    public IPage<BizContractInfoVo> getPage(Page page, BizContractInfo bizContractInfo) {
+        return this.baseMapper.getPage(page, bizContractInfo);
     }
 }

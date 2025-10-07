@@ -1,28 +1,23 @@
-package com.pig4cloud.pig.admin.api.entity;
+package com.pig4cloud.pig.admin.api.vo;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.pig4cloud.pig.admin.api.entity.SysUserKyc;
 import com.pig4cloud.pig.common.core.jackson.SqlTimestampDeserializer;
+import com.pig4cloud.pig.guaranty.api.entity.BizWareHouse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.List;
 
 
-/**
- * 合同表
- *
- * @author pig
- * @date 2025-09-29 12:58:48
- */
 @Data
-@TableName("biz_contract_info")
-@EqualsAndHashCode(callSuper = true)
-@Schema(description = "合同表")
-public class BizContractInfo extends Model<BizContractInfo> {
+@Schema(description = "合同信息VO")
+public class BizContractInfoVo  {
 
 
 	/**
@@ -204,4 +199,10 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp updateTime;
 
+
+	@Schema(description="kyc信息")
+	private SysUserKyc sysUserKyc;
+
+	@Schema(description="抵押物列表")
+	private List<BizWareHouse> houseList;
 }

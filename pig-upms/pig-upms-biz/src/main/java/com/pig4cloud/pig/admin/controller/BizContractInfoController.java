@@ -2,16 +2,22 @@ package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.collection.CollUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.admin.api.entity.BizContractCollateral;
 import com.pig4cloud.pig.admin.api.entity.BizContractInfo;
+import com.pig4cloud.pig.admin.api.entity.SysUserKyc;
+import com.pig4cloud.pig.admin.api.vo.BizContractInfoVo;
+import com.pig4cloud.pig.admin.service.BizContractCollateralService;
+import com.pig4cloud.pig.admin.service.SysUserKycService;
 import com.pig4cloud.pig.common.core.util.DateTimeUtil;
 import com.pig4cloud.pig.common.core.util.IdGenerator;
-import com.pig4cloud.pig.common.core.util.QueryWrapperBuilder;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
+import com.pig4cloud.pig.guaranty.api.entity.BizWareHouse;
+import com.pig4cloud.pig.guaranty.api.feign.RemoteWareHouseService;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.pig.admin.service.BizContractInfoService;
@@ -25,7 +31,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 合同表
@@ -41,6 +50,9 @@ import java.util.List;
 public class BizContractInfoController {
 
     private final  BizContractInfoService bizContractInfoService;
+    private final SysUserKycService sysUserKycService;
+    private final BizContractCollateralService bizContractCollateralService;
+    private final RemoteWareHouseService remoteWareHouseService;
 
     /**
      * 分页查询
@@ -52,11 +64,63 @@ public class BizContractInfoController {
     @GetMapping("/page" )
     @HasPermission("admin_bizContractInfo_view")
     public R getBizContractInfoPage(@ParameterObject Page page, @ParameterObject BizContractInfo bizContractInfo) {
-        String[] likeFields = {"userName", "realName"};
-        QueryWrapper<BizContractInfo> wrapper = QueryWrapperBuilder.build(bizContractInfo, likeFields, null);
-        wrapper.orderByDesc("create_time");
-        //  TODO 关联用户信息,kyc信息,抵押物信息
-        return R.ok(bizContractInfoService.page(page, wrapper));
+        IPage<BizContractInfoVo> bizContractInfoPage = bizContractInfoService.getPage(page, bizContractInfo);
+        List<Long> userIdList = bizContractInfoPage.getRecords().stream()
+                .map(BizContractInfoVo::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+        //根据userId 查询 kyc信息
+        List<SysUserKyc> kycList = sysUserKycService.list(
+                Wrappers.<SysUserKyc>lambdaQuery()
+                        .in(SysUserKyc::getUserId, userIdList)
+        );
+        Map<Long, SysUserKyc> kycMap = kycList.stream()
+                .collect(Collectors.toMap(SysUserKyc::getUserId, Function.identity(), (a, b) -> a));
+        bizContractInfoPage.getRecords().forEach(contract -> {
+            SysUserKyc kyc = kycMap.get(contract.getUserId());
+            if (kyc != null) {
+                contract.setSysUserKyc(kyc); // 你的 VO 可以新增字段接收
+            }
+        });
+        //组装抵押物
+        List<Long> contractIdList = bizContractInfoPage.getRecords().stream()
+                .map(BizContractInfoVo::getContractId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 批量查抵押物
+        List<BizContractCollateral> collaterals = bizContractCollateralService.list(
+                Wrappers.<BizContractCollateral>lambdaQuery().in(BizContractCollateral::getContractId, contractIdList)
+        );
+
+        // 收集仓库ID
+        List<Long> wareHouseIds = collaterals.stream()
+                .map(BizContractCollateral::getCollateralId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 远程批量查仓库
+        List<BizWareHouse> wareHouses = Optional.ofNullable(remoteWareHouseService.listByIds(wareHouseIds))
+                .orElse(Collections.emptyList());
+
+        // 建立 ID -> 仓库 map
+        Map<Long, BizWareHouse> wareHouseMap = wareHouses.stream()
+                .collect(Collectors.toMap(BizWareHouse::getId, Function.identity(), (a, b) -> a));
+
+        // 回填仓库信息
+        bizContractInfoPage.getRecords().forEach(contract -> {
+            List<BizContractCollateral> contractCollaterals = collaterals.stream()
+                    .filter(c -> c.getContractId().equals(contract.getContractId()))
+                    .toList();
+
+            List<BizWareHouse> contractWareHouses = contractCollaterals.stream()
+                    .map(c -> wareHouseMap.get(c.getCollateralId()))
+                    .filter(Objects::nonNull)
+                    .toList();
+
+            contract.setHouseList(contractWareHouses);
+        });
+        return R.ok(bizContractInfoPage);
     }
 
 

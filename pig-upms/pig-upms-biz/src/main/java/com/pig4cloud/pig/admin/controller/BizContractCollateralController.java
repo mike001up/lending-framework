@@ -71,8 +71,8 @@ public class BizContractCollateralController {
      * @param bizContractCollateral 合同抵押物关联表
      * @return R
      */
-    @Operation(summary = "新增合同抵押物关联表" , description = "新增合同抵押物关联表" )
-    @SysLog("新增合同抵押物关联表" )
+    @Operation(summary = "新增合同抵押物关联" , description = "新增合同抵押物关联" )
+    @SysLog("新增合同抵押物关联" )
     @PostMapping
     @HasPermission("admin_bizContractCollateral_add")
     public R save(@RequestBody BizContractCollateral bizContractCollateral) {
@@ -84,8 +84,8 @@ public class BizContractCollateralController {
      * @param bizContractCollateral 合同抵押物关联表
      * @return R
      */
-    @Operation(summary = "修改合同抵押物关联表" , description = "修改合同抵押物关联表" )
-    @SysLog("修改合同抵押物关联表" )
+    @Operation(summary = "修改合同抵押物关联" , description = "修改合同抵押物关联" )
+    @SysLog("修改合同抵押物关联" )
     @PutMapping
     @HasPermission("admin_bizContractCollateral_edit")
     public R updateById(@RequestBody BizContractCollateral bizContractCollateral) {
@@ -97,8 +97,8 @@ public class BizContractCollateralController {
      * @param ids id列表
      * @return R
      */
-    @Operation(summary = "通过id删除合同抵押物关联表" , description = "通过id删除合同抵押物关联表" )
-    @SysLog("通过id删除合同抵押物关联表" )
+    @Operation(summary = "通过id删除合同抵押物关联" , description = "通过id删除合同抵押物关联" )
+    @SysLog("通过id删除合同抵押物关联" )
     @DeleteMapping
     @HasPermission("admin_bizContractCollateral_del")
     public R removeById(@RequestBody Long[] ids) {

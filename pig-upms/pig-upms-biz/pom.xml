@@ -36,12 +36,6 @@
             <artifactId>pig-upms-api</artifactId>
             <version>3.8.3</version>
         </dependency>
-        <!--guaranty api、model 模块-->
-        <dependency>
-            <groupId>com.pig4cloud</groupId>
-            <artifactId>pig-guaranty-api</artifactId>
-            <version>3.8.3</version>
-        </dependency>
         <!--文件管理-->
         <dependency>
             <groupId>com.pig4cloud</groupId>
