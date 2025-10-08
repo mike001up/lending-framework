@@ -22,6 +22,7 @@ package com.pig4cloud.pig.admin.api.vo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pig4cloud.pig.admin.api.entity.SysPost;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
+import com.pig4cloud.pig.admin.api.entity.SysUserKyc;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -173,5 +174,8 @@ public class UserVO implements Serializable {
 
 	@Schema(description = "是否拉黑1拉黑0未拉黑")
 	private Boolean isBlack;
+
+	@Schema(description="kyc信息")
+	private SysUserKyc sysUserKyc;
 
 }

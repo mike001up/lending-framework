@@ -6,8 +6,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.SysUserKyc;
+import com.pig4cloud.pig.common.core.util.DateTimeUtil;
+import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.pig.admin.service.SysUserKycService;
@@ -71,11 +74,17 @@ public class SysUserKycController {
      * @param sysUserKyc 用户KYC信息表
      * @return R
      */
-    @Operation(summary = "新增用户KYC信息表" , description = "新增用户KYC信息表" )
-    @SysLog("新增用户KYC信息表" )
+    @Operation(summary = "新增用户KYC信息" , description = "新增用户KYC信息" )
+    @SysLog("新增用户KYC信息" )
     @PostMapping
     @HasPermission("admin_sysUserKyc_add")
     public R save(@RequestBody SysUserKyc sysUserKyc) {
+        sysUserKyc.setCreateTime(DateTimeUtil.now());
+        sysUserKyc.setCreateBy(SecurityUtils.getUser().getUsername());
+        SysUserKyc kyc = sysUserKycService.getOne(Wrappers.<SysUserKyc>lambdaQuery().eq(SysUserKyc::getUserId, sysUserKyc.getUserId()));
+        if (kyc != null) {
+            return R.failed(MsgUtils.getMessage("sys.kyc.exists"));
+        }
         return R.ok(sysUserKycService.save(sysUserKyc));
     }
 
@@ -84,11 +93,17 @@ public class SysUserKycController {
      * @param sysUserKyc 用户KYC信息表
      * @return R
      */
-    @Operation(summary = "修改用户KYC信息表" , description = "修改用户KYC信息表" )
-    @SysLog("修改用户KYC信息表" )
+    @Operation(summary = "修改用户KYC信息" , description = "修改用户KYC信息" )
+    @SysLog("修改用户KYC信息" )
     @PutMapping
     @HasPermission("admin_sysUserKyc_edit")
     public R updateById(@RequestBody SysUserKyc sysUserKyc) {
+        sysUserKyc.setUpdateBy(SecurityUtils.getUser().getUsername());
+        sysUserKyc.setUpdateTime(DateTimeUtil.now());
+        SysUserKyc kyc = sysUserKycService.getById(sysUserKyc.getId());
+        if (kyc != null && !sysUserKyc.getUserId().equals(kyc.getUserId())) {
+            return R.failed(MsgUtils.getMessage("sys.kyc.id.no.update"));
+        }
         return R.ok(sysUserKycService.updateById(sysUserKyc));
     }
 
@@ -97,8 +112,8 @@ public class SysUserKycController {
      * @param ids id列表
      * @return R
      */
-    @Operation(summary = "通过id删除用户KYC信息表" , description = "通过id删除用户KYC信息表" )
-    @SysLog("通过id删除用户KYC信息表" )
+    @Operation(summary = "通过id删除用户KYC信息" , description = "通过id删除用户KYC信息" )
+    @SysLog("通过id删除用户KYC信息" )
     @DeleteMapping
     @HasPermission("admin_sysUserKyc_del")
     public R removeById(@RequestBody Long[] ids) {

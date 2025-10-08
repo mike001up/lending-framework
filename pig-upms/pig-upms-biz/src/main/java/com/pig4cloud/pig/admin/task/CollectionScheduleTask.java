@@ -21,8 +21,7 @@ public class CollectionScheduleTask {
     /**
      * 每天凌晨 2 点检查并生成收款计划
      */
-    //@Scheduled(cron = "0 0 2 * * ?")
-    @Scheduled(cron = "0 * * * * ?")
+    @Scheduled(cron = "0 0 2 * * ?")
     public void generateMonthlySchedules() {
         contractInfoService.generateCollectionSchedules();
     }
@@ -31,8 +30,7 @@ public class CollectionScheduleTask {
     /**
      * 每天凌晨 1 点扫描未收款计划，将过期的标记为延迟收款
      */
-    //@Scheduled(cron = "0 0 1 * * ?")
-    @Scheduled(cron = "0 * * * * ?")
+    @Scheduled(cron = "0 0 1 * * ?")
     public void scanAndUpdateOverdue() {
         bizCollectionScheduleService.updateOverdueStatus();
     }
