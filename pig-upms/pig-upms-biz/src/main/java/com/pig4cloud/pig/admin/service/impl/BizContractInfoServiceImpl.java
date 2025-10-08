@@ -126,6 +126,7 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
                 execution.setCreateTime(DateTimeUtil.now());
                 execution.setCreateBy("admin");
                 execution.setBalance(balance);
+                execution.setTotalMoney(balance);
                 bizContractExecutionService.save(execution);
             }
         }

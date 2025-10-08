@@ -2,11 +2,14 @@ package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.pig4cloud.pig.common.core.jackson.SqlTimestampDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 /**
  * 收款详情表
@@ -38,7 +41,9 @@ public class BizCollectionDetails extends Model<BizCollectionDetails> {
 	* 收款日期
 	*/
     @Schema(description="收款日期")
-    private LocalDateTime repaymentPeriod;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
+    private Timestamp repaymentPeriod;
 
 	/**
 	* 收款前余额
@@ -100,7 +105,9 @@ public class BizCollectionDetails extends Model<BizCollectionDetails> {
 	*/
 	@TableField(fill = FieldFill.INSERT)
     @Schema(description="创建时间")
-    private LocalDateTime createTime;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
+    private Timestamp createTime;
 
 	/**
 	* 修改人
@@ -114,5 +121,7 @@ public class BizCollectionDetails extends Model<BizCollectionDetails> {
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="修改时间")
-    private LocalDateTime updateTime;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
+    private Timestamp updateTime;
 }

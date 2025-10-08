@@ -1,6 +1,12 @@
 package com.pig4cloud.pig.admin.controller;
 
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.pig4cloud.pig.admin.api.entity.BizContractExecution;
+import com.pig4cloud.pig.admin.api.entity.SysMerchant;
+import com.pig4cloud.pig.admin.service.SysMerchantService;
 import com.pig4cloud.pig.admin.service.SysPublicParamService;
+import com.pig4cloud.pig.common.core.constant.BusinessConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.guaranty.api.feign.RemoteCollateralTypeService;
@@ -30,6 +36,8 @@ public class CommonController {
     @Autowired
     private SysPublicParamService sysPublicParamService;
     @Autowired
+    private  SysMerchantService sysMerchantService;
+    @Autowired
     private RemoteCollateralTypeService remoteCollateralTypeService;
 
 
@@ -51,4 +59,14 @@ public class CommonController {
     public R getCollateralType() {
         return R.ok(remoteCollateralTypeService.getAllCollateralType());
     }
+
+
+    @Operation(summary = "获取所有商户", description = "获取所有商户")
+    @GetMapping("/getAllMerchant")
+    public R getAllMerchant(String merName, String platName) {
+        return R.ok(sysMerchantService.list(Wrappers.<SysMerchant>lambdaQuery().eq(SysMerchant::getStatus, BusinessConstants.NORMAL)
+                .like(StrUtil.isNotBlank(merName), SysMerchant::getMerName, merName)
+                .like(StrUtil.isNotBlank(platName), SysMerchant::getPlatName, platName)));
+    }
+
 }

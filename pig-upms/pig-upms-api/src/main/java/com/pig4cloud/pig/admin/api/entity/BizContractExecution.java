@@ -41,11 +41,18 @@ public class BizContractExecution extends Model<BizContractExecution> {
     @Schema(description="还款余额")
     private BigDecimal balance;
 
+
+	/**
+	* 合同总金额(本金加利息)
+	*/
+    @Schema(description="合同总金额(本金加利息)")
+    private BigDecimal totalMoney;
+
 	/**
 	* 汇款进度, 如: 50%
 	*/
     @Schema(description="汇款进度, 如: 50%,这里存储小数")
-    private Double repaymentProgress;
+    private BigDecimal repaymentProgress;
 
 	/**
 	* 备注

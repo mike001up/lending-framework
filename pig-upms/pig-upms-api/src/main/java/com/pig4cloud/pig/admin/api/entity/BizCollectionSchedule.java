@@ -2,6 +2,9 @@ package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.pig4cloud.pig.common.core.jackson.SqlTimestampDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -77,6 +80,8 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	* 收款日期
 	*/
     @Schema(description="收款日期")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
     private Timestamp collectionDate;
 
 	/**
@@ -95,12 +100,16 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	* 收款开始时间
 	*/
     @Schema(description="收款开始时间")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
     private Timestamp colStartDate;
 
 	/**
 	* 收款结束时间
 	*/
     @Schema(description="收款结束时间")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
     private Timestamp colEndDate;
 
 	/**
@@ -119,6 +128,8 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	* 入款时间
 	*/
     @Schema(description="入款时间")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
     private Timestamp incomeTime;
 
 	/**
@@ -133,10 +144,15 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
     @Schema(description="审核人ID")
     private Long approveUserId;
 
+    @Schema(description="审核人")
+    private String approveUserName;
+
 	/**
 	* 审核时间
 	*/
     @Schema(description="审核时间")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
     private Timestamp approveTime;
 
 	/**
@@ -169,6 +185,8 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	*/
 	@TableField(fill = FieldFill.INSERT)
     @Schema(description="创建时间")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
     private Timestamp createTime;
 
 	/**
@@ -183,6 +201,8 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="修改时间")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
     private Timestamp updateTime;
 
 }

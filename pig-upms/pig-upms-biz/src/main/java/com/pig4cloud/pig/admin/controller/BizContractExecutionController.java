@@ -32,7 +32,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/bizContractExecution" )
-@Tag(description = "bizContractExecution" , name = "合同执行情况表管理" )
+@Tag(description = "bizContractExecution" , name = "合同执行情况管理" )
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
 public class BizContractExecutionController {
 

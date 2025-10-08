@@ -6,16 +6,22 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.BizCollectionSchedule;
+import com.pig4cloud.pig.admin.api.entity.BizContractInfo;
 import com.pig4cloud.pig.admin.api.vo.BizCollectionScheduleVo;
+import com.pig4cloud.pig.admin.service.BizContractInfoService;
+import com.pig4cloud.pig.common.core.util.DateTimeUtil;
+import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.QueryWrapperBuilder;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.pig.admin.service.BizCollectionScheduleService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
+import org.apache.commons.beanutils.BeanUtils;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 /**
@@ -40,6 +47,8 @@ import java.util.List;
 public class BizCollectionScheduleController {
 
     private final  BizCollectionScheduleService bizCollectionScheduleService;
+    private final  BizContractInfoService bizContractInfoService;
+
 
     /**
      * 分页查询
@@ -94,6 +103,13 @@ public class BizCollectionScheduleController {
     @PutMapping
     @HasPermission("admin_bizCollectionSchedule_edit")
     public R updateById(@RequestBody BizCollectionSchedule bizCollectionSchedule) {
+        bizCollectionSchedule.setUpdateTime(DateTimeUtil.now());
+        bizCollectionSchedule.setUpdateBy(SecurityUtils.getUser().getUsername());
+        BizCollectionSchedule collectionScheduleServiceById = bizCollectionScheduleService.getById(bizCollectionSchedule.getId());
+        //这个接口不允许修改审核状态
+        if (collectionScheduleServiceById != null  && !bizCollectionSchedule.getApproveStatus().equals(collectionScheduleServiceById.getApproveStatus())) {
+            return R.failed(MsgUtils.getMessage("sys.not.allowedchanged.status"));
+        }
         return R.ok(bizCollectionScheduleService.updateById(bizCollectionSchedule));
     }
 
@@ -134,5 +150,19 @@ public class BizCollectionScheduleController {
     @HasPermission("admin_bizCollectionSchedule_export")
     public R importExcel(@RequestExcel List<BizCollectionSchedule> bizCollectionScheduleList, BindingResult bindingResult) {
         return R.ok(bizCollectionScheduleService.saveBatch(bizCollectionScheduleList));
+    }
+
+    @Operation(summary = "审核" , description = "审核" )
+    @SysLog("审核" )
+    @PutMapping("/audit")
+    @HasPermission("admin_bizCollectionSchedule_audit")
+    public R audit(@RequestBody BizCollectionSchedule bizCollectionSchedule) {
+        bizCollectionSchedule.setUpdateTime(DateTimeUtil.now());
+        bizCollectionSchedule.setUpdateBy(SecurityUtils.getUser().getUsername());
+        bizCollectionSchedule.setApproveUserId(SecurityUtils.getUser().getId());
+        bizCollectionSchedule.setApproveTime(DateTimeUtil.now());
+        bizCollectionSchedule.setApproveUserName(SecurityUtils.getUser().getUsername());
+        BizContractInfo info = bizContractInfoService.getOne(Wrappers.<BizContractInfo>lambdaQuery().eq(BizContractInfo::getContractId, bizCollectionSchedule.getContractId()));
+        return bizCollectionScheduleService.audit(bizCollectionSchedule, info);
     }
 }
