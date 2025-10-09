@@ -3,6 +3,7 @@ package com.pig4cloud.pig.admin.api.vo;
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.pig4cloud.pig.admin.api.entity.BizContractExecution;
 import com.pig4cloud.pig.admin.api.entity.SysUserKyc;
 import com.pig4cloud.pig.common.core.jackson.SqlTimestampDeserializer;
 import com.pig4cloud.pig.guaranty.api.entity.BizWareHouse;
@@ -205,4 +206,7 @@ public class BizContractInfoVo  {
 
 	@Schema(description="抵押物列表")
 	private List<BizWareHouse> houseList;
+
+	@Schema(description="合同执行情况")
+	private BizContractExecution bizContractExecution;
 }
