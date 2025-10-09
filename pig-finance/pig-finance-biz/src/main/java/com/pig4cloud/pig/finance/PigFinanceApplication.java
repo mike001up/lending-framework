@@ -30,7 +30,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * @author lengleng
  * @date 2018年06月21日
  * <p>
- * 抵押物服务
+ * 财物服务
  */
 @EnablePigDoc(value = "finance")
 @EnablePigFeignClients
