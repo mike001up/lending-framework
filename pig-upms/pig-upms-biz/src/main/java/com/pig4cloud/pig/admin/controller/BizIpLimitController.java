@@ -164,6 +164,6 @@ public class BizIpLimitController {
         if (CollUtil.isEmpty(list)) {
             return true;
         }
-        return bizIpLimitService.isMatch(remoteIP);
+        return bizIpLimitService.isMatch(remoteIP, list);
     }
 }
