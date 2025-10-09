@@ -64,48 +64,44 @@ public class BizContractInfoController {
     @HasPermission("admin_bizContractInfo_view")
     public R getBizContractInfoPage(@ParameterObject Page page, @ParameterObject BizContractInfo bizContractInfo) {
         IPage<BizContractInfoVo> bizContractInfoPage = bizContractInfoService.getPage(page, bizContractInfo);
-        List<Long> userIdList = bizContractInfoPage.getRecords().stream().map(BizContractInfoVo::getUserId).distinct().collect(Collectors.toList());
-        //根据userId 查询 kyc信息
-        List<SysUserKyc> kycList = sysUserKycService.list(Wrappers.<SysUserKyc>lambdaQuery().in(SysUserKyc::getUserId, userIdList));
-        Map<Long, SysUserKyc> kycMap = kycList.stream().collect(Collectors.toMap(SysUserKyc::getUserId, Function.identity(), (a, b) -> a));
-        bizContractInfoPage.getRecords().forEach(contract -> {
-            SysUserKyc kyc = kycMap.get(contract.getUserId());
-            if (kyc != null) {
-                contract.setSysUserKyc(kyc); // 你的 VO 可以新增字段接收
-            }
-        });
-        //组装抵押物
-        List<Long> contractIdList = bizContractInfoPage.getRecords().stream().map(BizContractInfoVo::getContractId).distinct().collect(Collectors.toList());
-
-        // 批量查抵押物
-        List<BizContractCollateral> collaterals = bizContractCollateralService.list(Wrappers.<BizContractCollateral>lambdaQuery().in(BizContractCollateral::getContractId, contractIdList));
-
-        // 收集仓库ID
-        List<Long> wareHouseIds = collaterals.stream().map(BizContractCollateral::getCollateralId).distinct().collect(Collectors.toList());
-
-        // 远程批量查仓库
-        List<BizWareHouse> wareHouses = Optional.ofNullable(remoteWareHouseService.listByIds(wareHouseIds)).orElse(Collections.emptyList());
-
-        // 建立 ID -> 仓库 map
-        Map<Long, BizWareHouse> wareHouseMap = wareHouses.stream().collect(Collectors.toMap(BizWareHouse::getId, Function.identity(), (a, b) -> a));
-
-        // 回填仓库信息
-        bizContractInfoPage.getRecords().forEach(contract -> {
-            List<BizContractCollateral> contractCollaterals = collaterals.stream().filter(c -> c.getContractId().equals(contract.getContractId())).toList();
-
-            List<BizWareHouse> contractWareHouses = contractCollaterals.stream().map(c -> wareHouseMap.get(c.getCollateralId())).filter(Objects::nonNull).toList();
-
-            contract.setHouseList(contractWareHouses);
-        });
-        // 合同执行情况
-        List<BizContractExecution> executionList = bizContractExecutionService.list(Wrappers.<BizContractExecution>lambdaQuery().in(BizContractExecution::getContractId, contractIdList));
-        Map<Long, BizContractExecution> executionMap = executionList.stream().collect(Collectors.toMap(BizContractExecution::getContractId, Function.identity(), (a, b) -> a));
-        bizContractInfoPage.getRecords().forEach(execution -> {
-            BizContractExecution bizContractExecution = executionMap.get(execution.getContractId());
-            if (bizContractExecution != null) {
-                execution.setBizContractExecution(bizContractExecution);
-            }
-        });
+        //只要有数据才能进行下面的取值
+        if (bizContractInfoPage != null && bizContractInfoPage.getRecords() != null && !bizContractInfoPage.getRecords().isEmpty()) {
+            List<Long> userIdList = bizContractInfoPage.getRecords().stream().map(BizContractInfoVo::getUserId).distinct().collect(Collectors.toList());
+            //根据userId 查询 kyc信息
+            List<SysUserKyc> kycList = sysUserKycService.list(Wrappers.<SysUserKyc>lambdaQuery().in(SysUserKyc::getUserId, userIdList));
+            Map<Long, SysUserKyc> kycMap = kycList.stream().collect(Collectors.toMap(SysUserKyc::getUserId, Function.identity(), (a, b) -> a));
+            bizContractInfoPage.getRecords().forEach(contract -> {
+                SysUserKyc kyc = kycMap.get(contract.getUserId());
+                if (kyc != null) {
+                    contract.setSysUserKyc(kyc);
+                }
+            });
+            //组装抵押物
+            List<Long> contractIdList = bizContractInfoPage.getRecords().stream().map(BizContractInfoVo::getContractId).distinct().collect(Collectors.toList());
+            // 批量查抵押物
+            List<BizContractCollateral> collaterals = bizContractCollateralService.list(Wrappers.<BizContractCollateral>lambdaQuery().in(BizContractCollateral::getContractId, contractIdList));
+            // 收集仓库ID
+            List<Long> wareHouseIds = collaterals.stream().map(BizContractCollateral::getCollateralId).distinct().collect(Collectors.toList());
+            //远程批量查仓库
+            List<BizWareHouse> wareHouses = Optional.ofNullable(remoteWareHouseService.listByIds(wareHouseIds)).orElse(Collections.emptyList());
+            //建立 ID -> 仓库 map
+            Map<Long, BizWareHouse> wareHouseMap = wareHouses.stream().collect(Collectors.toMap(BizWareHouse::getId, Function.identity(), (a, b) -> a));
+            //回填仓库信息
+            bizContractInfoPage.getRecords().forEach(contract -> {
+                List<BizContractCollateral> contractCollaterals = collaterals.stream().filter(c -> c.getContractId().equals(contract.getContractId())).toList();
+                List<BizWareHouse> contractWareHouses = contractCollaterals.stream().map(c -> wareHouseMap.get(c.getCollateralId())).filter(Objects::nonNull).toList();
+                contract.setHouseList(contractWareHouses);
+            });
+            // 合同执行情况
+            List<BizContractExecution> executionList = bizContractExecutionService.list(Wrappers.<BizContractExecution>lambdaQuery().in(BizContractExecution::getContractId, contractIdList));
+            Map<Long, BizContractExecution> executionMap = executionList.stream().collect(Collectors.toMap(BizContractExecution::getContractId, Function.identity(), (a, b) -> a));
+            bizContractInfoPage.getRecords().forEach(execution -> {
+                BizContractExecution bizContractExecution = executionMap.get(execution.getContractId());
+                if (bizContractExecution != null) {
+                    execution.setBizContractExecution(bizContractExecution);
+                }
+            });
+        }
         return R.ok(bizContractInfoPage);
     }
 
