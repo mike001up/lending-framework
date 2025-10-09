@@ -115,6 +115,7 @@
         <module>pig-workflow</module>
         <module>pig-guaranty</module>
         <module>pig-risk</module>
+        <module>pig-finance</module>
     </modules>
 
     <dependencyManagement>
