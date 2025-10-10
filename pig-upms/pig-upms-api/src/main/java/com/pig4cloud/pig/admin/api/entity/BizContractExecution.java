@@ -25,7 +25,7 @@ public class BizContractExecution extends Model<BizContractExecution> {
 	/**
 	* 主键ID
 	*/
-    @TableId(type = IdType.AUTO)
+	@TableId(type = IdType.ASSIGN_ID)
     @Schema(description="主键ID")
     private Long id;
 
@@ -36,17 +36,10 @@ public class BizContractExecution extends Model<BizContractExecution> {
     private Long contractId;
 
 	/**
-	* 还款余额
+	* 还款余额 只算本金
 	*/
     @Schema(description="还款余额")
     private BigDecimal balance;
-
-
-	/**
-	* 合同总金额(本金加利息)
-	*/
-    @Schema(description="合同总金额(本金加利息)")
-    private BigDecimal totalMoney;
 
 	/**
 	* 汇款进度, 如: 50%

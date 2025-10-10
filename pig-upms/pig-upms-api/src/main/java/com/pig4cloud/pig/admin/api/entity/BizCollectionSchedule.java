@@ -27,7 +27,7 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	/**
 	* 主键ID
 	*/
-    @TableId(type = IdType.AUTO)
+	@TableId(type = IdType.ASSIGN_ID)
     @Schema(description="主键ID")
     private Long id;
 
@@ -73,7 +73,7 @@ public class BizCollectionSchedule extends Model<BizCollectionSchedule> {
 	/**
 	* 本期还款前余额
 	*/
-    @Schema(description="本期还款前余额")
+    @Schema(description="本期还款前余额(剩余本金)")
     private BigDecimal balance;
 
 	/**

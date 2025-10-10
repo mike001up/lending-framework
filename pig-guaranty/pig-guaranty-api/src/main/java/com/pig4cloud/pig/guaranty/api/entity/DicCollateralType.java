@@ -24,7 +24,7 @@ public class DicCollateralType extends Model<DicCollateralType> {
 	/**
 	* 主键ID
 	*/
-    @TableId(type = IdType.AUTO)
+	@TableId(type = IdType.ASSIGN_ID)
     @Schema(description="主键ID")
     private Long id;
 

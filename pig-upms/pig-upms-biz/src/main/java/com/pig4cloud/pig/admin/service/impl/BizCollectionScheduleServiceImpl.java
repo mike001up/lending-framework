@@ -6,12 +6,13 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.entity.*;
+import com.pig4cloud.pig.admin.api.feign.RemoteCollectInfoService;
+import com.pig4cloud.pig.admin.api.vo.RepaymentDetailVo;
 import com.pig4cloud.pig.admin.mapper.BizCollectionScheduleMapper;
 import com.pig4cloud.pig.admin.service.*;
 import com.pig4cloud.pig.common.core.constant.BusinessConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.DateTimeUtil;
-import com.pig4cloud.pig.common.core.util.FinanceCalcUtil;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
@@ -42,6 +43,8 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
     private BizCollectionDetailsService bizCollectionDetailsService;
     @Autowired
     private BizContractExecutionService bizContractExecutionService;
+    @Autowired
+    private RemoteCollectInfoService remoteCollectInfoService;
 
     @Override
     public BigDecimal getTotalIncomeAmount(Long contractId) {
@@ -110,20 +113,19 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
             if (collectionScheduleServiceById.getCollectedAmount() == null || collectionScheduleServiceById.getCollectedAmount().compareTo(BigDecimal.ZERO) == 0) {
                 return R.ok(MsgUtils.getMessage("sys.not.actual.amount"));
             }
+            RepaymentDetailVo detail = remoteCollectInfoService.detail(info);
             BizCollectionDetails bizCollectionDetails = new BizCollectionDetails();
             bizCollectionDetails.setContractId(collectionScheduleServiceById.getContractId());
             bizCollectionDetails.setRepaymentPeriod(DateTimeUtil.now());
-            bizCollectionDetails.setPreBalance(collectionScheduleServiceById.getBalance());
-            //收款后余额 = 收款前余额 - 本期实际收款金额
-            BigDecimal postBalance = bizCollectionDetails.getPreBalance().subtract(collectionScheduleServiceById.getCollectedAmount());
+            bizCollectionDetails.setPreBalance(detail.getRemainingPrincipalBefore());
+            BigDecimal postBalance = detail.getRemainingPrincipal();
             bizCollectionDetails.setPostBalance(postBalance);
-            bizCollectionDetails.setRemainsPrincipal(collectionScheduleServiceById.getMinAmount());
-            bizCollectionDetails.setLateFee(collectionScheduleServiceById.getLateFee());
-            BigDecimal periodInterest = FinanceCalcUtil.calculateInterest(bizCollectionDetails.getRemainsPrincipal(), info.getInterestRate());
-            bizCollectionDetails.setPeriodInterest(periodInterest);
-            bizCollectionDetails.setRemainsInterest(periodInterest);
-            bizCollectionDetails.setCollectedPrincipal(bizCollectionDetails.getRemainsPrincipal());
-            bizCollectionDetails.setCollectedInterest(bizCollectionDetails.getRemainsInterest());
+            bizCollectionDetails.setRemainsPrincipal(detail.getPrincipal());
+            bizCollectionDetails.setLateFee(detail.getLateFee());
+            bizCollectionDetails.setPeriodInterest(detail.getInterest());
+            bizCollectionDetails.setRemainsInterest(detail.getInterest());
+            bizCollectionDetails.setCollectedPrincipal(detail.getPrincipal());
+            bizCollectionDetails.setCollectedInterest(detail.getInterest());
             bizCollectionDetails.setCreateTime(DateTimeUtil.now());
             bizCollectionDetails.setCreateBy(SecurityUtils.getUser().getUsername());
             bizCollectionDetailsService.save(bizCollectionDetails);
@@ -131,12 +133,12 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
             if (contractExecution != null) {
                 //还款余额
                 BigDecimal balance = contractExecution.getBalance();
-                balance = balance.subtract(collectionScheduleServiceById.getCollectedAmount());
+                BigDecimal principal = detail.getPrincipal();
+                balance = balance.subtract(principal);
                 contractExecution.setBalance(balance);
-                BigDecimal totalMoney = contractExecution.getTotalMoney();
                 //已还
-                BigDecimal repaidMoney = totalMoney.subtract(balance);
-                BigDecimal repaymentProgress = repaidMoney.divide(totalMoney, 3, RoundingMode.HALF_UP);
+                BigDecimal repaidMoney = info.getFundAmount().subtract(balance);
+                BigDecimal repaymentProgress = repaidMoney.divide(info.getFundAmount(), 3, RoundingMode.HALF_UP);
                 contractExecution.setRepaymentProgress(repaymentProgress);
                 bizContractExecutionService.updateById(contractExecution);
             }

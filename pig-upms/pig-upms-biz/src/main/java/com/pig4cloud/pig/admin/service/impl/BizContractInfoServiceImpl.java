@@ -4,16 +4,15 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.pig4cloud.pig.admin.api.entity.BizCollectionSchedule;
-import com.pig4cloud.pig.admin.api.entity.BizContractExecution;
-import com.pig4cloud.pig.admin.api.entity.BizContractInfo;
+import com.pig4cloud.pig.admin.api.entity.*;
 import com.pig4cloud.pig.admin.api.vo.BizContractInfoVo;
+import com.pig4cloud.pig.admin.api.vo.RepaymentDetailVo;
+import com.pig4cloud.pig.admin.cypher.AbstractRepaymentCalculator;
+import com.pig4cloud.pig.admin.cypher.RepaymentCalculatorFactory;
 import com.pig4cloud.pig.admin.mapper.BizContractInfoMapper;
-import com.pig4cloud.pig.admin.service.BizCollectionScheduleService;
-import com.pig4cloud.pig.admin.service.BizContractExecutionService;
-import com.pig4cloud.pig.admin.service.BizContractInfoService;
-import com.pig4cloud.pig.admin.service.SysPublicParamService;
+import com.pig4cloud.pig.admin.service.*;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
+import com.pig4cloud.pig.common.core.constant.enums.RepaymentType;
 import com.pig4cloud.pig.common.core.util.DateTimeUtil;
 import com.pig4cloud.pig.common.core.util.FinanceCalcUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +40,8 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
     private SysPublicParamService sysPublicParamService;
     @Autowired
     private BizContractExecutionService bizContractExecutionService;
+    @Autowired
+    private BizCollectionDetailsService bizCollectionDetailsService;
 
     @Override
     @Transactional
@@ -61,25 +62,6 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
                 continue; // 已生成，跳过
             }
 
-            // 计算总利息
-            BigDecimal totalInterest = this.totalInterest(contract);
-
-            // 计算总入款金额(总还款金额)
-            BigDecimal totalIncomeAmount = collectionScheduleService.getTotalIncomeAmount(contract.getContractId());
-
-            // 计算本期还款前余额 = 总利息 + 实付金额(实际借款金额) + 手续费 - 已经还款的金额
-            BigDecimal fundAmount = contract.getFundAmount() == null ? BigDecimal.ZERO : contract.getFundAmount();
-            BigDecimal feeAmount = contract.getFeeAmount() == null ? BigDecimal.ZERO : contract.getFeeAmount();
-            BigDecimal balance = totalInterest.add(fundAmount).add(feeAmount).subtract(totalIncomeAmount).setScale(2, RoundingMode.HALF_UP);
-
-            BigDecimal lateFee = this.lateFee(contract);
-            // 计算每期最小金额
-            BigDecimal minAmount = BigDecimal.ZERO;
-            if (contract.getLoanTerm() != null && contract.getLoanTerm() > 0) {
-                //最小还款金额 = 实际借款金额/期数
-                minAmount = fundAmount.divide(BigDecimal.valueOf(contract.getLoanTerm()), 2, RoundingMode.HALF_UP);
-            }
-
             // 收款开始日
             int periodStartDay = contract.getPeriodStartDate() == null || contract.getPeriodStartDate() <= 0 ? 1 : contract.getPeriodStartDate();
             periodStartDay = Math.min(periodStartDay, today.lengthOfMonth()); // 防止超过当月天数
@@ -89,32 +71,25 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
             if (!DateTimeUtil.greaterOrEqual(today, startDate)) {
                 continue;
             }
+            RepaymentDetailVo detail = getRepaymentDetailVo(contract);
             // 收款结束日 = 开始日 + period_days
             // 获取合同天数，处理 null 或 <=0 的情况
             int periodDays = contract.getPeriodDays() == null || contract.getPeriodDays() <= 0 ? 1 : contract.getPeriodDays();
-
             // 结束日期，开始日算作第 1 天，所以减 1
             LocalDate endDate = startDate.plusDays(periodDays - 1);
-
-
-            // 计算本月利息 = 本期本金 * 月利率
-            BigDecimal monthlyInterest = FinanceCalcUtil.calculateInterest(minAmount, contract.getInterestRate());
-            //最大还款金额 = 本金 + 利息 + 滞纳金
-            BigDecimal maxAmount = minAmount.add(monthlyInterest).add(lateFee).setScale(2, RoundingMode.HALF_UP);
-
             // 构建催款计划
             BizCollectionSchedule schedule = new BizCollectionSchedule();
             schedule.setContractId(contract.getContractId());
             schedule.setUserId(contract.getUserId());
             schedule.setUserName(contract.getUserName());
             schedule.setRealName(contract.getRealName());
-            schedule.setBalance(balance);
-            schedule.setMinAmount(minAmount);
-            schedule.setMaxAmount(maxAmount);
+            schedule.setBalance(detail.getRemainingPrincipalBefore());
+            schedule.setMinAmount(detail.getMinRepaymentAmount());
+            schedule.setMaxAmount(detail.getMaxRepaymentAmount());
             schedule.setColStartDate(DateTimeUtil.startOfDay(startDate));
             schedule.setColEndDate(DateTimeUtil.endOfDay(endDate));
             schedule.setStatus(0); // 待收款
-            schedule.setLateFee(lateFee);
+            schedule.setLateFee(detail.getLateFee());
             schedule.setCreateBy("admin");
             schedule.setCreateTime(DateTimeUtil.now());
             collectionScheduleService.save(schedule);
@@ -125,11 +100,29 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
                 execution.setContractId(contract.getContractId());
                 execution.setCreateTime(DateTimeUtil.now());
                 execution.setCreateBy("admin");
-                execution.setBalance(balance);
-                execution.setTotalMoney(balance);
+                execution.setBalance(detail.getRemainingPrincipalBefore());
                 bizContractExecutionService.save(execution);
             }
         }
+    }
+
+
+    @Override
+    public RepaymentDetailVo getRepaymentDetailVo(BizContractInfo contract) {
+        //查询上次有没有延迟还款
+        Boolean hasPreviousLate = collectionScheduleService.hasLastMonthDelayedOrders(contract);
+        //滞纳金利率
+        String sysPublicParamKeyToValue = sysPublicParamService.getSysPublicParamKeyToValue(SecurityConstants.LATE_PAYMENT_PENALTY_RATE);
+        BigDecimal lateFeeRate = BigDecimal.ZERO;
+        if (StringUtils.isNotBlank(sysPublicParamKeyToValue)) {
+            lateFeeRate = new BigDecimal(sysPublicParamKeyToValue);
+        }
+        // 从工厂类获取对应计算器
+        Long successCount = bizCollectionDetailsService.count(Wrappers.<BizCollectionDetails>lambdaQuery().eq(BizCollectionDetails::getContractId, contract.getContractId()));
+        AbstractRepaymentCalculator calculator = RepaymentCalculatorFactory.getCalculator(RepaymentType.FIXED_PRINCIPAL_INTEREST);
+        Integer currentPeriod = Math.toIntExact(successCount + 1);
+        RepaymentDetailVo detail = calculator.calculate(contract.getFundAmount(), contract.getInterestRate(), contract.getLoanTerm(), currentPeriod, hasPreviousLate, lateFeeRate);
+        return detail;
     }
 
 

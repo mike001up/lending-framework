@@ -7,11 +7,13 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.*;
 import com.pig4cloud.pig.admin.api.vo.BizContractInfoVo;
+import com.pig4cloud.pig.admin.api.vo.RepaymentDetailVo;
 import com.pig4cloud.pig.admin.service.*;
 import com.pig4cloud.pig.common.core.util.DateTimeUtil;
 import com.pig4cloud.pig.common.core.util.IdGenerator;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.annotation.Inner;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.pig.guaranty.api.entity.BizWareHouse;
 import com.pig4cloud.pig.guaranty.api.feign.RemoteWareHouseService;
@@ -201,4 +203,14 @@ public class BizContractInfoController {
     public R details(Long contractId) {
         return R.ok(bizCollectionDetailsService.list(Wrappers.<BizCollectionDetails>lambdaQuery().eq(BizCollectionDetails::getContractId, contractId)));
     }
+
+
+
+    @Operation(summary = "计算某合同的本期还款详情", description = "计算某合同的本期还款详情")
+    @PostMapping("/detail")
+    @Inner
+    public RepaymentDetailVo getRepaymentDetail(@RequestBody BizContractInfo contract) {
+        return bizContractInfoService.getRepaymentDetailVo(contract);
+    }
+
 }

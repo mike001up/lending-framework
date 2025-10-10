@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.pig4cloud.pig.admin.api.entity.BizContractInfo;
 import com.pig4cloud.pig.admin.api.vo.BizContractInfoVo;
+import com.pig4cloud.pig.admin.api.vo.RepaymentDetailVo;
 
 import java.math.BigDecimal;
 
@@ -17,4 +18,6 @@ public interface BizContractInfoService extends IService<BizContractInfo> {
     BigDecimal lateFee(BizContractInfo contract);
 
     IPage<BizContractInfoVo> getPage(Page page, BizContractInfo bizContractInfo);
+
+    RepaymentDetailVo getRepaymentDetailVo(BizContractInfo contract);
 }

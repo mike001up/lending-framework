@@ -22,7 +22,7 @@ public class BizContractCollateral extends Model<BizContractCollateral> {
 	/**
 	* 主键ID
 	*/
-    @TableId(type = IdType.AUTO)
+	@TableId(type = IdType.ASSIGN_ID)
     @Schema(description="主键ID")
     private Long id;
 

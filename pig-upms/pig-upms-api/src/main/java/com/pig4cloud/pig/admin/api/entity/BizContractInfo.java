@@ -28,7 +28,7 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	/**
 	* ID
 	*/
-    @TableId(type = IdType.AUTO)
+	@TableId(type = IdType.ASSIGN_ID)
     @Schema(description="ID")
     private Long id;
 

@@ -44,7 +44,7 @@ public class SysUser implements Serializable {
 	/**
 	 * 主键ID
 	 */
-	@TableId(value = "user_id", type = IdType.AUTO)
+	@TableId(type = IdType.ASSIGN_ID)
 	@Schema(description = "主键id")
 	private Long userId;
 
