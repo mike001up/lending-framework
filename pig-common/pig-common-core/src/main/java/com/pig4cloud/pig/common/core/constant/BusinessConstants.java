@@ -26,6 +26,7 @@ public interface BusinessConstants {
 	 * 收款状态 0 待收款;1 延迟收款;2 已收款
 	 */
 	Integer PAYMENT_STATUS = 2;
+	Integer PAYMENT_STATUS_DELAY = 1;
 	/**
 	 * 审核状态 0 待审核;1 审核不通过;2 审核通过
 	 */

@@ -2,7 +2,6 @@ package com.pig4cloud.pig.admin.service.impl;
 
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.entity.*;
@@ -25,7 +24,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
-import java.util.List;
 
 /**
  * 催款计划信息表
@@ -53,9 +51,17 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
 
     @Override
     public Boolean hasLastMonthDelayedOrders(BizContractInfo contract) {
-        //查看是不是第一次
-        List<BizCollectionSchedule> list = this.list(Wrappers.<BizCollectionSchedule>query().lambda().eq(BizCollectionSchedule::getContractId, contract.getContractId()));
-        if (CollectionUtils.isNotEmpty(list) && list.size() == 1 && list.get(0).getStatus() == 1) {
+        // 查询该合同的所有还款计划，按期数或还款日期倒序，只取最新一条
+        BizCollectionSchedule lastSchedule = this.lambdaQuery().eq(BizCollectionSchedule::getContractId, contract.getContractId()).orderByDesc(BizCollectionSchedule::getColEndDate) // 按还款结束日倒序
+                .last("LIMIT 1").one();
+
+        // 没有找到还款记录，说明还没开始还款
+        if (lastSchedule == null) {
+            return false;
+        }
+        Long count = this.count(Wrappers.<BizCollectionSchedule>lambdaQuery().eq(BizCollectionSchedule::getContractId, contract.getContractId()));
+        //判断第一个月满不满足滞纳金免息
+        if (count == 1 && lastSchedule.getStatus().equals(BusinessConstants.PAYMENT_STATUS_DELAY)) {
             String exemptionDays = sysPublicParamService.getSysPublicParamKeyToValue(SecurityConstants.EXEMPTION_DAYS);
             //判断上月最后一天离滞纳金开始计算日期有几天
             Integer startLateFeeDate = contract.getStartLateFeeDate();
@@ -68,11 +74,10 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
                 return true;
             }
         }
-        LocalDate now = LocalDate.now();
-        LocalDateTime start = now.minusMonths(1).withDayOfMonth(1).atStartOfDay();
-        LocalDateTime end = now.withDayOfMonth(1).atStartOfDay().minusSeconds(1);
-        boolean exists = this.lambdaQuery().eq(BizCollectionSchedule::getStatus, 1).eq(BizCollectionSchedule::getContractId, contract.getContractId()).between(BizCollectionSchedule::getColStartDate, start, end).exists();
-        return exists;
+        if (lastSchedule.getStatus().equals(BusinessConstants.PAYMENT_STATUS_DELAY)) {
+            return true;
+        }
+        return false;
     }
 
     @Override
