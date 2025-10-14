@@ -2,12 +2,12 @@ package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.pig4cloud.pig.admin.api.entity.BizContractExecution;
 import com.pig4cloud.pig.admin.api.entity.SysMerchant;
 import com.pig4cloud.pig.admin.service.SysMerchantService;
 import com.pig4cloud.pig.admin.service.SysPublicParamService;
 import com.pig4cloud.pig.common.core.constant.BusinessConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
+import com.pig4cloud.pig.common.core.constant.enums.RepaymentType;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.guaranty.api.feign.RemoteCollateralTypeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,7 +37,7 @@ public class CommonController {
     @Autowired
     private SysPublicParamService sysPublicParamService;
     @Autowired
-    private  SysMerchantService sysMerchantService;
+    private SysMerchantService sysMerchantService;
     @Autowired
     private RemoteCollateralTypeService remoteCollateralTypeService;
 
@@ -64,9 +65,23 @@ public class CommonController {
     @Operation(summary = "获取所有商户", description = "获取所有商户")
     @GetMapping("/getAllMerchant")
     public R getAllMerchant(String merName, String platName) {
-        return R.ok(sysMerchantService.list(Wrappers.<SysMerchant>lambdaQuery().eq(SysMerchant::getStatus, BusinessConstants.NORMAL)
+        return R.ok(sysMerchantService.list(Wrappers.<SysMerchant>lambdaQuery()
+                .eq(SysMerchant::getStatus, BusinessConstants.NORMAL)
                 .like(StrUtil.isNotBlank(merName), SysMerchant::getMerName, merName)
                 .like(StrUtil.isNotBlank(platName), SysMerchant::getPlatName, platName)));
     }
 
+
+    /**
+     * 获取所有还款方式
+     */
+    @GetMapping("/repaymentTypes")
+    @Operation(summary = "获取还款方式", description = "获取还款方式")
+    public R getAllRepaymentTypes() {
+        List<Map<String, String>> list =
+                Arrays.stream(RepaymentType.values())
+                                .map(type -> Map.of("type", type.getType(), "description", type.getDescription(),
+                                "englishDescription", type.getEnglishDescription())).collect(Collectors.toList());
+        return R.ok(list);
+    }
 }

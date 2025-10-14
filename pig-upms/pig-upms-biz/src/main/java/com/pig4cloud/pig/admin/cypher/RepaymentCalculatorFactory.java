@@ -17,8 +17,9 @@ public class RepaymentCalculatorFactory {
      */
     public static AbstractRepaymentCalculator getCalculator(RepaymentType type) {
         switch (type) {
-            case EQUAL_PRINCIPAL_INTEREST:
-                // 等额本息计算器（可后续实现）
+            //等额本金
+            case EQUAL_PRINCIPAL:
+                // 等额本金
                 return new EqualPrincipalCalculator();
             default:
                 return new EqualPrincipalCalculator();

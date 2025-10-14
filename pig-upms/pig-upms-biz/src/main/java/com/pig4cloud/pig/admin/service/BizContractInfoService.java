@@ -7,17 +7,17 @@ import com.pig4cloud.pig.admin.api.entity.BizContractInfo;
 import com.pig4cloud.pig.admin.api.vo.BizContractInfoVo;
 import com.pig4cloud.pig.admin.api.vo.RepaymentDetailVo;
 
-import java.math.BigDecimal;
-
 public interface BizContractInfoService extends IService<BizContractInfo> {
 
     void generateCollectionSchedules();
 
-    BigDecimal totalInterest(BizContractInfo contract);
-
-    BigDecimal lateFee(BizContractInfo contract);
-
     IPage<BizContractInfoVo> getPage(Page page, BizContractInfo bizContractInfo);
 
+    RepaymentDetailVo getDetailVo(BizContractInfo contract);
+
     RepaymentDetailVo getRepaymentDetailVo(BizContractInfo contract);
+
+    void saveRepaymentDetailToRedis(RepaymentDetailVo detail, Long contractNo, int period);
+
+    RepaymentDetailVo getRepaymentDetailFromRedis(Long contractNo, int period);
 }

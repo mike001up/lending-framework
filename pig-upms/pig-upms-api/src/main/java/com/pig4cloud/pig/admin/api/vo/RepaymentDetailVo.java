@@ -3,6 +3,7 @@ package com.pig4cloud.pig.admin.api.vo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
@@ -11,7 +12,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RepaymentDetailVo {
+public class RepaymentDetailVo implements Serializable {
     /** 当前期数 */
     private int period;
     /** 当前本金 */

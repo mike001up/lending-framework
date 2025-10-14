@@ -205,12 +205,19 @@ public class BizContractInfoController {
     }
 
 
-
     @Operation(summary = "计算某合同的本期还款详情", description = "计算某合同的本期还款详情")
     @PostMapping("/detail")
     @Inner
     public RepaymentDetailVo getRepaymentDetail(@RequestBody BizContractInfo contract) {
         return bizContractInfoService.getRepaymentDetailVo(contract);
+    }
+
+
+    @Operation(summary = "获取还款计划缓存", description = "获取还款计划缓存")
+    @GetMapping("/detailByIssue")
+    @Inner
+    public RepaymentDetailVo detailByIssue(@RequestParam("contractNo") Long contractNo, @RequestParam("period") int period) {
+        return bizContractInfoService.getRepaymentDetailFromRedis(contractNo, period);
     }
 
 }

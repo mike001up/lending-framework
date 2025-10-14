@@ -1,6 +1,7 @@
 package com.pig4cloud.pig.admin.service.impl;
 
 
+import cn.hutool.core.util.NumberUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -44,41 +45,52 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
     @Autowired
     private RemoteCollectInfoService remoteCollectInfoService;
 
-    @Override
-    public BigDecimal getTotalIncomeAmount(Long contractId) {
-        return this.baseMapper.getTotalIncomeAmount(contractId);
-    }
-
+    /**
+     * 判断合同上个月是否存在逾期还款（含首月免滞纳规则）
+     *
+     * @param contract 合同信息
+     * @return true 表示上个月存在逾期
+     */
     @Override
     public Boolean hasLastMonthDelayedOrders(BizContractInfo contract) {
-        // 查询该合同的所有还款计划，按期数或还款日期倒序，只取最新一条
-        BizCollectionSchedule lastSchedule = this.lambdaQuery().eq(BizCollectionSchedule::getContractId, contract.getContractId()).orderByDesc(BizCollectionSchedule::getColEndDate) // 按还款结束日倒序
-                .last("LIMIT 1").one();
-
-        // 没有找到还款记录，说明还没开始还款
+        if (contract == null || contract.getContractId() == null) {
+            return false;
+        }
+        // 获取最新一期还款计划
+        BizCollectionSchedule lastSchedule = this.lambdaQuery().eq(BizCollectionSchedule::getContractId, contract.getContractId()).orderByDesc(BizCollectionSchedule::getColEndDate).last("LIMIT 1").one();
+        // 如果没有还款计划，直接返回 false
         if (lastSchedule == null) {
             return false;
         }
-        Long count = this.count(Wrappers.<BizCollectionSchedule>lambdaQuery().eq(BizCollectionSchedule::getContractId, contract.getContractId()));
-        //判断第一个月满不满足滞纳金免息
-        if (count == 1 && lastSchedule.getStatus().equals(BusinessConstants.PAYMENT_STATUS_DELAY)) {
-            String exemptionDays = sysPublicParamService.getSysPublicParamKeyToValue(SecurityConstants.EXEMPTION_DAYS);
-            //判断上月最后一天离滞纳金开始计算日期有几天
+        // 计算该合同一共生成几期还款计划
+        Long totalCount = this.count(Wrappers.<BizCollectionSchedule>lambdaQuery().eq(BizCollectionSchedule::getContractId, contract.getContractId()));
+        // 如果最新一期状态是逾期
+        boolean isDelayed = BusinessConstants.PAYMENT_STATUS_DELAY.equals(lastSchedule.getStatus());
+        // === 1️⃣ 首月免滞纳逻辑 ===
+        if (totalCount == 1 && isDelayed) {
+            // 获取系统配置的免滞纳天数（默认 0）
+            String exemptionDaysStr = sysPublicParamService.getSysPublicParamKeyToValue(SecurityConstants.EXEMPTION_DAYS);
+            int exemptionDays = NumberUtil.parseInt(exemptionDaysStr, 0);
+            // 滞纳金起算日
             Integer startLateFeeDate = contract.getStartLateFeeDate();
-            Integer endLateFeeDate = startLateFeeDate + Integer.valueOf(exemptionDays);
-            // 上个月最后一天
-            LocalDate lastDayOfPrevMonth = LocalDate.now().minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
-            // 取出“天”部分
-            int lastDay = lastDayOfPrevMonth.getDayOfMonth();
-            if (lastDay > endLateFeeDate) {
-                return true;
+            if (startLateFeeDate == null) {
+                startLateFeeDate = 0;
             }
+            // 滞纳金免息截止日期
+            int endLateFeeDate = startLateFeeDate + exemptionDays;
+            // 上个月最后一天的“日”数
+            int lastDayOfPrevMonth = LocalDate.now().minusMonths(1).with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth();
+            // 若上月最后一天超过免息截止日 → 逾期生效
+            return lastDayOfPrevMonth > endLateFeeDate;
         }
-        if (lastSchedule.getStatus().equals(BusinessConstants.PAYMENT_STATUS_DELAY)) {
+        //=== 2️⃣ 非首月逻辑 ===
+        //若状态为逾期
+        if (isDelayed) {
             return true;
         }
         return false;
     }
+
 
     @Override
     @Transactional
@@ -91,16 +103,6 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
                 .set(BizCollectionSchedule::getStatus, 1);    // 设置为延迟收款
         int updatedCount = this.baseMapper.update(null, updateWrapper);
         log.info("延迟收款更新条数：" + updatedCount);
-    }
-
-    @Override
-    public R verificationStatus(BizCollectionSchedule bizCollectionSchedule) {
-        BizCollectionSchedule collectionScheduleServiceById = this.getById(bizCollectionSchedule.getId());
-        //已收款 不能更改成其他状态
-        if (collectionScheduleServiceById != null && collectionScheduleServiceById.getStatus().equals(BusinessConstants.PAYMENT_STATUS) && bizCollectionSchedule.getStatus().equals(collectionScheduleServiceById.getStatus())) {
-            return R.failed(MsgUtils.getMessage("sys.changed.status"));
-        }
-        return R.ok(this.updateById(bizCollectionSchedule));
     }
 
     @Override
@@ -118,7 +120,13 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
             if (collectionScheduleServiceById.getCollectedAmount() == null || collectionScheduleServiceById.getCollectedAmount().compareTo(BigDecimal.ZERO) == 0) {
                 return R.ok(MsgUtils.getMessage("sys.not.actual.amount"));
             }
-            RepaymentDetailVo detail = remoteCollectInfoService.detail(info);
+            //获取缓存
+            Long successCount = bizCollectionDetailsService.count(Wrappers.<BizCollectionDetails>lambdaQuery().eq(BizCollectionDetails::getContractId, info.getContractId()));
+            Integer currentPeriod = Math.toIntExact(successCount + 1);
+            RepaymentDetailVo detail = remoteCollectInfoService.detailByIssue(info.getContractId(), currentPeriod);
+            if (detail == null) {
+                detail = remoteCollectInfoService.detail(info);
+            }
             BizCollectionDetails bizCollectionDetails = new BizCollectionDetails();
             bizCollectionDetails.setContractId(collectionScheduleServiceById.getContractId());
             bizCollectionDetails.setRepaymentPeriod(DateTimeUtil.now());
@@ -147,7 +155,6 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
                 contractExecution.setRepaymentProgress(repaymentProgress);
                 bizContractExecutionService.updateById(contractExecution);
             }
-
         }
         return R.ok(this.updateById(bizCollectionSchedule));
     }
