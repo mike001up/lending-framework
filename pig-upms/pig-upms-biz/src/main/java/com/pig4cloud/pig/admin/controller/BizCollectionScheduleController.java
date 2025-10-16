@@ -21,17 +21,16 @@ import com.pig4cloud.pig.admin.service.BizCollectionScheduleService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
-import org.apache.commons.beanutils.BeanUtils;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpHeaders;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 催款计划信息表
@@ -134,11 +133,35 @@ public class BizCollectionScheduleController {
      * @return excel 文件流
      */
     @ResponseExcel
-    @GetMapping("/export")
+    @GetMapping("/exports")
     @HasPermission("admin_bizCollectionSchedule_export")
     public List<BizCollectionSchedule> exportExcel(BizCollectionSchedule bizCollectionSchedule, Long[] ids) {
         return bizCollectionScheduleService.list(Wrappers.lambdaQuery(bizCollectionSchedule).in(ArrayUtil.isNotEmpty(ids), BizCollectionSchedule::getId, ids));
     }
+
+    @Operation(summary = "导出催收进度表", description = "导出催收进度表，与分页字段一致")
+    @GetMapping("/export")
+    @ResponseExcel(name = "催收进度表.xlsx", i18nHeader = false)
+    @HasPermission("admin_bizCollectionSchedule_export")
+    public List<BizCollectionScheduleVo> export(BizCollectionScheduleVo bizCollectionSchedule) {
+        // 模糊匹配字段
+        String[] likeFields = {"userName"};
+        // 时间范围字段
+        String[] rangeFields = {"createTimeStart", "createTimeEnd"};
+        QueryWrapper<BizCollectionSchedule> wrapper =
+                QueryWrapperBuilder.build(bizCollectionSchedule, likeFields, rangeFields);
+        wrapper.orderByDesc("create_time");
+        // 查询列表（不分页）
+        List<BizCollectionSchedule> list = bizCollectionScheduleService.list(wrapper);
+        // 转换为 VO（如果你的分页用的是 VO）
+        List<BizCollectionScheduleVo> voList = list.stream().map(item -> {
+            BizCollectionScheduleVo vo = new BizCollectionScheduleVo();
+            BeanUtils.copyProperties(item, vo);
+            return vo;
+        }).collect(Collectors.toList());
+        return voList;
+    }
+
 
     /**
      * 导入excel 表
