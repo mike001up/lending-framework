@@ -9,6 +9,7 @@ import com.pig4cloud.pig.admin.api.entity.*;
 import com.pig4cloud.pig.admin.api.vo.BizContractInfoVo;
 import com.pig4cloud.pig.admin.api.vo.RepaymentDetailVo;
 import com.pig4cloud.pig.admin.service.*;
+import com.pig4cloud.pig.common.core.constant.BusinessConstants;
 import com.pig4cloud.pig.common.core.util.DateTimeUtil;
 import com.pig4cloud.pig.common.core.util.IdGenerator;
 import com.pig4cloud.pig.common.core.util.R;
@@ -210,6 +211,17 @@ public class BizContractInfoController {
     @Inner
     public RepaymentDetailVo getRepaymentDetail(@RequestBody BizContractInfo contract) {
         return bizContractInfoService.getRepaymentDetailVo(contract);
+    }
+
+
+    @Operation(summary = "合同状态设置完成", description = "合同状态设置完成")
+    @PostMapping("/finish")
+    @Inner
+    public R finish(@RequestBody BizContractInfo contract) {
+        contract.setIsRunning(BusinessConstants.CONTRACT_STATUS_FINISH);
+        contract.setUpdateTime(DateTimeUtil.now());
+        bizContractInfoService.updateById(contract);
+        return R.ok();
     }
 
 

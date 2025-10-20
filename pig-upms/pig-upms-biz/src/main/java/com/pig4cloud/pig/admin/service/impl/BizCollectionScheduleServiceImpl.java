@@ -17,6 +17,7 @@ import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.seata.spring.annotation.GlobalTransactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -106,7 +107,7 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
     }
 
     @Override
-    @Transactional
+    @GlobalTransactional(rollbackFor = Exception.class)
     public R audit(BizCollectionSchedule bizCollectionSchedule, BizContractInfo info) {
         //如果审核通过,更新到收款详情以及合同执行情况
         if (bizCollectionSchedule.getApproveStatus().equals(BusinessConstants.REVIEW_STATUS)) {
@@ -154,6 +155,10 @@ public class BizCollectionScheduleServiceImpl extends ServiceImpl<BizCollectionS
                 BigDecimal repaymentProgress = repaidMoney.divide(info.getFundAmount(), 3, RoundingMode.HALF_UP);
                 contractExecution.setRepaymentProgress(repaymentProgress);
                 bizContractExecutionService.updateById(contractExecution);
+                //如果还款进度达到1,那么合同状态改为完成
+                if (repaymentProgress.compareTo(BigDecimal.ONE) >= 0) {
+                    remoteCollectInfoService.finish(info);
+                }
             }
         }
         return R.ok(this.updateById(bizCollectionSchedule));

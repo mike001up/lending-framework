@@ -35,5 +35,11 @@ public interface BusinessConstants {
 	 * 状态: 1=正常, 2=停用
 	 */
 	Integer NORMAL = 1;
+	/**
+	 * 合同状态: 0结束，1进行中
+	 */
+	Integer CONTRACT_STATUS_RUNNING = 1;
+	Integer CONTRACT_STATUS_FINISH = 0;
+
 
 }

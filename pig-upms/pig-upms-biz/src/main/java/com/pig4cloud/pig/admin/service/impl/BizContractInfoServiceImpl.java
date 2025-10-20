@@ -11,6 +11,7 @@ import com.pig4cloud.pig.admin.cypher.AbstractRepaymentCalculator;
 import com.pig4cloud.pig.admin.cypher.RepaymentCalculatorFactory;
 import com.pig4cloud.pig.admin.mapper.BizContractInfoMapper;
 import com.pig4cloud.pig.admin.service.*;
+import com.pig4cloud.pig.common.core.constant.BusinessConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.constant.enums.RepaymentType;
 import com.pig4cloud.pig.common.core.util.DateTimeUtil;
@@ -46,7 +47,7 @@ public class BizContractInfoServiceImpl extends ServiceImpl<BizContractInfoMappe
     @Transactional
     public void generateCollectionSchedules() {
         // 查询未结束的合同
-        List<BizContractInfo> contractList = this.lambdaQuery().eq(BizContractInfo::getIsRunning, 1).list();
+        List<BizContractInfo> contractList = this.lambdaQuery().eq(BizContractInfo::getIsRunning, BusinessConstants.CONTRACT_STATUS_RUNNING).list();
 
         LocalDate today = LocalDate.now();
 

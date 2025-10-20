@@ -24,6 +24,7 @@ import com.pig4cloud.pig.admin.api.entity.BizContractInfo;
 import com.pig4cloud.pig.admin.api.vo.RepaymentDetailVo;
 import com.pig4cloud.pig.common.core.config.FeignConfig;
 import com.pig4cloud.pig.common.core.constant.ServiceNameConstants;
+import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.feign.annotation.NoToken;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,5 +48,8 @@ public interface RemoteCollectInfoService {
     @GetMapping("/bizContractInfo/detailByIssue")
     RepaymentDetailVo detailByIssue(@RequestParam("contractNo") Long contractNo, @RequestParam("period") int period);
 
+    @NoToken
+    @PostMapping("/bizContractInfo/finish")
+    R finish(@RequestBody BizContractInfo contract);
 
 }
