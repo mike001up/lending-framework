@@ -24,33 +24,33 @@ public class EqualPrincipalCalculator extends AbstractRepaymentCalculator {
 
         // 每期本金
         BigDecimal principalPerPeriod = principal
-                .divide(BigDecimal.valueOf(totalPeriods), 2, RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(totalPeriods), 2, RoundingMode.CEILING);
 
         // 还款前剩余本金
         BigDecimal remainingPrincipalBefore = principal
                 .subtract(principalPerPeriod.multiply(BigDecimal.valueOf(currentPeriod - 1)))
-                .setScale(2, RoundingMode.HALF_UP);
+                .setScale(2, RoundingMode.CEILING);
 
         // 当前期利息
-        BigDecimal interest = remainingPrincipalBefore.multiply(periodRate).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal interest = remainingPrincipalBefore.multiply(periodRate).setScale(2, RoundingMode.CEILING);
 
         // 本期应还总额（本金 + 利息）
-        BigDecimal totalAmount = principalPerPeriod.add(interest).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = principalPerPeriod.add(interest).setScale(2, RoundingMode.CEILING);
 
         // 滞纳金计算
         BigDecimal lateFee = BigDecimal.ZERO;
         if (hasPreviousLate && lateFeeRate != null && lateFeeRate.compareTo(BigDecimal.ZERO) > 0) {
-            lateFee = totalAmount.multiply(lateFeeRate).setScale(2, RoundingMode.HALF_UP);
+            lateFee = totalAmount.multiply(lateFeeRate).setScale(2, RoundingMode.CEILING);
         }
 
         // 还款后剩余本金
         BigDecimal remainingPrincipalAfter = principal
                 .subtract(principalPerPeriod.multiply(BigDecimal.valueOf(currentPeriod)))
-                .setScale(2, RoundingMode.HALF_UP);
+                .setScale(2, RoundingMode.CEILING);
 
         // ✅ 计算最小与最大还款金额
-        BigDecimal minRepaymentAmount = principalPerPeriod.setScale(2, RoundingMode.HALF_UP);
-        BigDecimal maxRepaymentAmount = totalAmount.add(lateFee).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal minRepaymentAmount = principalPerPeriod.setScale(2, RoundingMode.CEILING);
+        BigDecimal maxRepaymentAmount = totalAmount.add(lateFee).setScale(2, RoundingMode.CEILING);
 
         // 封装结果
         RepaymentDetailVo detail = new RepaymentDetailVo();
