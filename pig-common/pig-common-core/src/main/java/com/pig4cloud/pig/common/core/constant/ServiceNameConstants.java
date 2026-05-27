@@ -32,4 +32,24 @@ public interface ServiceNameConstants {
 	 */
 	String UPMS_SERVICE = "pig-upms-biz";
 
+	/**
+	 * 抵押物模块
+	 */
+	String GUARANTY_SERVICE = "pig-guaranty-biz";
+
+	/**
+	 * 财务模块
+	 */
+	String FINANCE_SERVICE = "pig-finance-biz";
+
+	/**
+	 * 工作流模块
+	 */
+	String WORKFLOW_SERVICE = "pig-workflow-biz";
+
+	/**
+	 * 风控模块
+	 */
+	String RISK_SERVICE = "pig-risk-biz";
+
 }

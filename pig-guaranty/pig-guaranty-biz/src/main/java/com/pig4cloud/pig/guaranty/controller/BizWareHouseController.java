@@ -2,11 +2,15 @@ package com.pig4cloud.pig.guaranty.controller;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.collection.CollUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.dynamic.datasource.annotation.DS;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.common.core.util.DateTimeUtil;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.pig.guaranty.api.entity.BizWareHouse;
 import com.pig4cloud.pig.guaranty.service.BizWareHouseService;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -49,8 +53,8 @@ public class BizWareHouseController {
     @GetMapping("/page" )
     @HasPermission("admin_bizWareHouse_view")
     public R getBizWareHousePage(@ParameterObject Page page, @ParameterObject BizWareHouse bizWareHouse) {
-        LambdaQueryWrapper<BizWareHouse> wrapper = Wrappers.lambdaQuery();
-        return R.ok(bizWareHouseService.page(page, wrapper));
+        IPage<BizWareHouse> bizWareHousePage = bizWareHouseService.getPage(page, bizWareHouse);
+        return R.ok(bizWareHousePage);
     }
 
 
@@ -76,6 +80,9 @@ public class BizWareHouseController {
     @PostMapping
     @HasPermission("admin_bizWareHouse_add")
     public R save(@RequestBody BizWareHouse bizWareHouse) {
+        bizWareHouse.setOperatorId(SecurityUtils.getUser().getId());
+        bizWareHouse.setUserName(SecurityUtils.getUser().getUsername());
+        bizWareHouse.setCreateTime(DateTimeUtil.now());
         return R.ok(bizWareHouseService.save(bizWareHouse));
     }
 
@@ -89,6 +96,9 @@ public class BizWareHouseController {
     @PutMapping
     @HasPermission("admin_bizWareHouse_edit")
     public R updateById(@RequestBody BizWareHouse bizWareHouse) {
+        bizWareHouse.setUpdateTime(DateTimeUtil.now());
+        bizWareHouse.setUpdateUserId(SecurityUtils.getUser().getId());
+        bizWareHouse.setUpdateUserName(SecurityUtils.getUser().getUsername());
         return R.ok(bizWareHouseService.updateById(bizWareHouse));
     }
 
@@ -101,6 +111,7 @@ public class BizWareHouseController {
     @SysLog("通过id删除抵押物库存信息" )
     @DeleteMapping
     @HasPermission("admin_bizWareHouse_del")
+    @DS("slave2")
     public R removeById(@RequestBody Long[] ids) {
         return R.ok(bizWareHouseService.removeBatchByIds(CollUtil.toList(ids)));
     }
@@ -129,5 +140,21 @@ public class BizWareHouseController {
     @HasPermission("admin_bizWareHouse_export")
     public R importExcel(@RequestExcel List<BizWareHouse> bizWareHouseList, BindingResult bindingResult) {
         return R.ok(bizWareHouseService.saveBatch(bizWareHouseList));
+    }
+
+    @Operation(summary = "根据ID获取抵押物信息", description = "根据ID获取抵押物信息")
+    @GetMapping("/getWareHouseById")
+    @Inner
+    public BizWareHouse getWareHouseById(Long id) {
+        BizWareHouse bizWareHouse = bizWareHouseService.getOneById(id);
+        return bizWareHouse;
+    }
+
+    @Operation(summary = "批量查询仓库信息", description = "批量查询仓库信息")
+    @PostMapping("/listByIds")
+    @Inner
+    public List<BizWareHouse> listByIds(@RequestBody List<Long> ids) {
+        List<BizWareHouse> bizWareHouses = bizWareHouseService.getListByIds(ids);
+        return bizWareHouses;
     }
 }

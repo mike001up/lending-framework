@@ -2,12 +2,19 @@ package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.collection.CollUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.BizCollectionSchedule;
+import com.pig4cloud.pig.admin.api.entity.BizContractInfo;
+import com.pig4cloud.pig.admin.api.vo.BizCollectionScheduleVo;
+import com.pig4cloud.pig.admin.service.BizContractInfoService;
+import com.pig4cloud.pig.common.core.util.DateTimeUtil;
+import com.pig4cloud.pig.common.core.util.MsgUtils;
+import com.pig4cloud.pig.common.core.util.QueryWrapperBuilder;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.pig.admin.service.BizCollectionScheduleService;
@@ -15,14 +22,15 @@ import com.pig4cloud.pig.admin.service.BizCollectionScheduleService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpHeaders;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 催款计划信息表
@@ -38,6 +46,8 @@ import java.util.List;
 public class BizCollectionScheduleController {
 
     private final  BizCollectionScheduleService bizCollectionScheduleService;
+    private final  BizContractInfoService bizContractInfoService;
+
 
     /**
      * 分页查询
@@ -48,8 +58,11 @@ public class BizCollectionScheduleController {
     @Operation(summary = "分页查询" , description = "分页查询" )
     @GetMapping("/page" )
     @HasPermission("admin_bizCollectionSchedule_view")
-    public R getBizCollectionSchedulePage(@ParameterObject Page page, @ParameterObject BizCollectionSchedule bizCollectionSchedule) {
-        LambdaQueryWrapper<BizCollectionSchedule> wrapper = Wrappers.lambdaQuery();
+    public R getBizCollectionSchedulePage(@ParameterObject Page page, @ParameterObject BizCollectionScheduleVo bizCollectionSchedule) {
+        String[] likeFields = {"userName"};
+        String[] rangeFields = {"createTimeStart", "createTimeEnd"};
+        QueryWrapper<BizCollectionSchedule> wrapper = QueryWrapperBuilder.build(bizCollectionSchedule, likeFields, rangeFields);
+        wrapper.orderByDesc("create_time");
         return R.ok(bizCollectionScheduleService.page(page, wrapper));
     }
 
@@ -89,6 +102,13 @@ public class BizCollectionScheduleController {
     @PutMapping
     @HasPermission("admin_bizCollectionSchedule_edit")
     public R updateById(@RequestBody BizCollectionSchedule bizCollectionSchedule) {
+        bizCollectionSchedule.setUpdateTime(DateTimeUtil.now());
+        bizCollectionSchedule.setUpdateBy(SecurityUtils.getUser().getUsername());
+        BizCollectionSchedule collectionScheduleServiceById = bizCollectionScheduleService.getById(bizCollectionSchedule.getId());
+        //这个接口不允许修改审核状态
+        if (collectionScheduleServiceById != null  && !bizCollectionSchedule.getApproveStatus().equals(collectionScheduleServiceById.getApproveStatus())) {
+            return R.failed(MsgUtils.getMessage("sys.not.allowedchanged.status"));
+        }
         return R.ok(bizCollectionScheduleService.updateById(bizCollectionSchedule));
     }
 
@@ -113,11 +133,35 @@ public class BizCollectionScheduleController {
      * @return excel 文件流
      */
     @ResponseExcel
-    @GetMapping("/export")
+    @GetMapping("/exports")
     @HasPermission("admin_bizCollectionSchedule_export")
     public List<BizCollectionSchedule> exportExcel(BizCollectionSchedule bizCollectionSchedule, Long[] ids) {
         return bizCollectionScheduleService.list(Wrappers.lambdaQuery(bizCollectionSchedule).in(ArrayUtil.isNotEmpty(ids), BizCollectionSchedule::getId, ids));
     }
+
+    @Operation(summary = "导出催收进度表", description = "导出催收进度表，与分页字段一致")
+    @GetMapping("/export")
+    @ResponseExcel(name = "催收进度表.xlsx", i18nHeader = false)
+    @HasPermission("admin_bizCollectionSchedule_export")
+    public List<BizCollectionScheduleVo> export(BizCollectionScheduleVo bizCollectionSchedule) {
+        // 模糊匹配字段
+        String[] likeFields = {"userName"};
+        // 时间范围字段
+        String[] rangeFields = {"createTimeStart", "createTimeEnd"};
+        QueryWrapper<BizCollectionSchedule> wrapper =
+                QueryWrapperBuilder.build(bizCollectionSchedule, likeFields, rangeFields);
+        wrapper.orderByDesc("create_time");
+        // 查询列表（不分页）
+        List<BizCollectionSchedule> list = bizCollectionScheduleService.list(wrapper);
+        // 转换为 VO（如果你的分页用的是 VO）
+        List<BizCollectionScheduleVo> voList = list.stream().map(item -> {
+            BizCollectionScheduleVo vo = new BizCollectionScheduleVo();
+            BeanUtils.copyProperties(item, vo);
+            return vo;
+        }).collect(Collectors.toList());
+        return voList;
+    }
+
 
     /**
      * 导入excel 表
@@ -129,5 +173,19 @@ public class BizCollectionScheduleController {
     @HasPermission("admin_bizCollectionSchedule_export")
     public R importExcel(@RequestExcel List<BizCollectionSchedule> bizCollectionScheduleList, BindingResult bindingResult) {
         return R.ok(bizCollectionScheduleService.saveBatch(bizCollectionScheduleList));
+    }
+
+    @Operation(summary = "审核" , description = "审核" )
+    @SysLog("审核" )
+    @PutMapping("/audit")
+    @HasPermission("admin_bizCollectionSchedule_audit")
+    public R audit(@RequestBody BizCollectionSchedule bizCollectionSchedule) {
+        bizCollectionSchedule.setUpdateTime(DateTimeUtil.now());
+        bizCollectionSchedule.setUpdateBy(SecurityUtils.getUser().getUsername());
+        bizCollectionSchedule.setApproveUserId(SecurityUtils.getUser().getId());
+        bizCollectionSchedule.setApproveTime(DateTimeUtil.now());
+        bizCollectionSchedule.setApproveUserName(SecurityUtils.getUser().getUsername());
+        BizContractInfo info = bizContractInfoService.getOne(Wrappers.<BizContractInfo>lambdaQuery().eq(BizContractInfo::getContractId, bizCollectionSchedule.getContractId()));
+        return bizCollectionScheduleService.audit(bizCollectionSchedule, info);
     }
 }

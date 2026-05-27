@@ -2,11 +2,15 @@ package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.pig4cloud.pig.common.core.jackson.SqlTimestampDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
+
 
 /**
  * 合同表
@@ -24,7 +28,7 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	/**
 	* ID
 	*/
-    @TableId(type = IdType.AUTO)
+	@TableId(type = IdType.ASSIGN_ID)
     @Schema(description="ID")
     private Long id;
 
@@ -32,7 +36,7 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	* 合同编号
 	*/
     @Schema(description="合同编号")
-    private String contractId;
+    private Long contractId;
 
 	/**
 	* 借款人ID
@@ -62,13 +66,17 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	* 合同开始时间
 	*/
     @Schema(description="合同开始时间")
-    private LocalDateTime startDate;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
+    private Timestamp startDate;
 
 	/**
 	* 合同结束时间
 	*/
     @Schema(description="合同结束时间")
-    private LocalDateTime endDate;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = SqlTimestampDeserializer.class)
+    private Timestamp endDate;
 
 	/**
 	* 滞纳金开始计算日期（合同开始后延迟还款开始收滞纳金）
@@ -115,7 +123,7 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	/**
 	* 利率（%）
 	*/
-    @Schema(description="利率（%）")
+    @Schema(description="利率（%） 数据库存小数")
     private BigDecimal interestRate;
 
 	/**
@@ -178,7 +186,8 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	*/
 	@TableField(fill = FieldFill.INSERT)
     @Schema(description="创建时间")
-    private LocalDateTime createTime;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Timestamp createTime;
 
 	/**
 	* 修改人
@@ -192,5 +201,7 @@ public class BizContractInfo extends Model<BizContractInfo> {
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="修改时间")
-    private LocalDateTime updateTime;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Timestamp updateTime;
+
 }

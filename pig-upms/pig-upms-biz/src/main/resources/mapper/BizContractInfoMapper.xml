@@ -33,4 +33,26 @@
         <result property="updateBy" column="update_by"/>
         <result property="updateTime" column="update_time"/>
   </resultMap>
+
+      <select id="getPage" resultType="com.pig4cloud.pig.admin.api.vo.BizContractInfoVo">
+            SELECT
+            ci.*
+            FROM
+            biz_contract_info ci
+            <where>
+                  <if test="query.userName != null and query.userName != ''">
+                        AND ci.user_name like concat('%', #{query.userName}, '%')
+                  </if>
+                  <if test="query.isRunning != null">
+                        AND ci.is_running = #{query.isRunning}
+                  </if>
+                  <if test="query.contractId != null">
+                        AND ci.contract_id = #{query.contractId}
+                  </if>
+            </where>
+
+            <if test="_databaseId != 'mssql'">
+                  ORDER BY ci.create_time DESC
+            </if>
+      </select>
 </mapper>

@@ -72,4 +72,6 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 	 */
 	List<UserVO> selectVoList(@Param("query") UserDTO userDTO);
 
+
+	IPage<UserVO> getMembers(Page page, @Param("query") UserDTO userDTO);
 }

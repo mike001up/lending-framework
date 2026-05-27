@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <process id="leaveProcess" name="请假审批流程" isExecutable="true">
+        <startEvent id="startEvent" name="提交请假申请"/>
+        <userTask id="applyTask" name="员工提交申请" flowable:assignee="${applyUser}" />
+        <sequenceFlow sourceRef="startEvent" targetRef="applyTask"/>
+
+        <userTask id="managerApprove" name="主管审批" flowable:assignee="${manager}" />
+        <sequenceFlow sourceRef="applyTask" targetRef="managerApprove"/>
+
+        <exclusiveGateway id="decisionGateway" name="是否通过" />
+        <sequenceFlow sourceRef="managerApprove" targetRef="decisionGateway"/>
+
+        <userTask id="hrApprove" name="人事审批" flowable:assignee="${hr}" />
+        <sequenceFlow id="approvedFlow" sourceRef="decisionGateway" targetRef="hrApprove">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == true}]]></conditionExpression>
+        </sequenceFlow>
+
+        <endEvent id="endApproved" name="结束(通过)" />
+        <sequenceFlow sourceRef="hrApprove" targetRef="endApproved"/>
+
+        <endEvent id="endRejected" name="结束(驳回)" />
+        <sequenceFlow id="rejectedFlow" sourceRef="decisionGateway" targetRef="endRejected">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == false}]]></conditionExpression>
+        </sequenceFlow>
+    </process>
+</definitions>

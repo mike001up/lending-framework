@@ -109,5 +109,25 @@ public interface CommonConstants {
 	 * APP用户
 	 */
 	String FRONTEND = "FRONTEND";
+	/**
+	 * 请求头传参对象
+	 */
+	String CLIENT = "client";
+	/**
+	 * 后台
+	 */
+	String BMS = "bms";
+	/**
+	 * 前台
+	 */
+	String APP = "app";
+	/**
+	 * 用户被注销或禁止登录
+	 */
+	String USER_BLOCKED = "user_blocked";
+	/**
+	 * 用户不存在
+	 */
+	String USER_NOT_EXIST = "user_not_exist";
 
 }

@@ -70,6 +70,10 @@ public class R<T> implements Serializable {
 		return restResult(null, CommonConstants.FAIL, msg);
 	}
 
+	public static <T> R<T> failedByCode(Integer code, String msg) {
+		return restResult(null, code, msg);
+	}
+
 	public static <T> R<T> failed(T data) {
 		return restResult(data, CommonConstants.FAIL, null);
 	}

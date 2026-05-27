@@ -24,7 +24,7 @@ public class BizIpLimit extends Model<BizIpLimit> {
 	/**
 	* ID
 	*/
-    @TableId(type = IdType.AUTO)
+	@TableId(type = IdType.ASSIGN_ID)
     @Schema(description="ID")
     private Long id;
 

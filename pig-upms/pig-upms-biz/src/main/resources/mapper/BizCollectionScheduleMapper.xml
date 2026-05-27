@@ -3,7 +3,7 @@
 
 <mapper namespace="com.pig4cloud.pig.admin.mapper.BizCollectionScheduleMapper">
 
-  <resultMap id="bizCollectionScheduleMap" type="com.pig4cloud.pig.admin.api.entity.BizCollectionSchedule">
+    <resultMap id="bizCollectionScheduleMap" type="com.pig4cloud.pig.admin.api.entity.BizCollectionSchedule">
         <id property="id" column="id"/>
         <result property="contractId" column="contract_id"/>
         <result property="userId" column="user_id"/>
@@ -30,5 +30,21 @@
         <result property="createTime" column="create_time"/>
         <result property="updateBy" column="update_by"/>
         <result property="updateTime" column="update_time"/>
-  </resultMap>
+    </resultMap>
+
+
+    <select id="getTotalIncomeAmount" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(income_amount), 0) AS totalIncome
+        FROM biz_collection_schedule
+        <where>
+            <!-- 审核通过且已收款 -->
+            approve_status = 2
+            AND status = 2
+            <!-- 可选过滤：合同ID -->
+            <if test="contractId != null">
+                AND contract_id = #{contractId}
+            </if>
+        </where>
+    </select>
+
 </mapper>

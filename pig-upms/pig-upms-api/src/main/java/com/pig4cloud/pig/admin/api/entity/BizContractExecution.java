@@ -6,7 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
+
 
 /**
  * 合同执行情况表
@@ -24,7 +25,7 @@ public class BizContractExecution extends Model<BizContractExecution> {
 	/**
 	* 主键ID
 	*/
-    @TableId(type = IdType.AUTO)
+	@TableId(type = IdType.ASSIGN_ID)
     @Schema(description="主键ID")
     private Long id;
 
@@ -35,7 +36,7 @@ public class BizContractExecution extends Model<BizContractExecution> {
     private Long contractId;
 
 	/**
-	* 还款余额
+	* 还款余额 只算本金
 	*/
     @Schema(description="还款余额")
     private BigDecimal balance;
@@ -43,8 +44,8 @@ public class BizContractExecution extends Model<BizContractExecution> {
 	/**
 	* 汇款进度, 如: 50%
 	*/
-    @Schema(description="汇款进度, 如: 50%")
-    private String repaymentProgress;
+    @Schema(description="汇款进度, 如: 50%,这里存储小数")
+    private BigDecimal repaymentProgress;
 
 	/**
 	* 备注
@@ -64,7 +65,7 @@ public class BizContractExecution extends Model<BizContractExecution> {
 	*/
 	@TableField(fill = FieldFill.INSERT)
     @Schema(description="创建时间")
-    private LocalDateTime createTime;
+    private Timestamp createTime;
 
 	/**
 	* 修改人
@@ -78,5 +79,5 @@ public class BizContractExecution extends Model<BizContractExecution> {
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="修改时间")
-    private LocalDateTime updateTime;
+    private Timestamp updateTime;
 }

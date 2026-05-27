@@ -135,5 +135,17 @@ public interface SecurityConstants {
 	 * admin账号
 	 */
 	String ADMIN = "admin";
+	/**
+	 * 滞纳金参数(滞纳金收取比率)
+	 */
+	String LATE_PAYMENT_PENALTY_RATE = "LATE_PAYMENT_PENALTY_RATE";
+	/**
+	 * 豁免天数
+	 */
+	String EXEMPTION_DAYS = "EXEMPTION_DAYS";
+	/**
+	 * 币种
+	 */
+	String CURRENCY = "CURRENCY";
 
 }

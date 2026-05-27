@@ -44,7 +44,7 @@ public class SysUser implements Serializable {
 	/**
 	 * 主键ID
 	 */
-	@TableId(value = "user_id", type = IdType.AUTO)
+	@TableId(type = IdType.ASSIGN_ID)
 	@Schema(description = "主键id")
 	private Long userId;
 
@@ -177,5 +177,11 @@ public class SysUser implements Serializable {
 
 	@Schema(description = "用户类型(SYSTEM 后台用户，FRONTEND APP用户，MERCHANT 商户)")
 	private String userType;
+
+	@Schema(description = "是否注销1注销0未注销")
+	private Boolean isMagLogout;
+
+	@Schema(description = "是否拉黑1拉黑0未拉黑")
+	private Boolean isBlack;
 
 }

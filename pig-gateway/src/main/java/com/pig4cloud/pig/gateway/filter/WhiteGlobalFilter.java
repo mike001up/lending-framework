@@ -111,7 +111,7 @@ public class WhiteGlobalFilter implements GlobalFilter, Ordered {
             return Mono.just(username);
         }
         // 其他情况需要远程调用
-        if (!StringUtils.isEmpty(token)) {
+        if (!StringUtils.isEmpty(token) && token.length() > 18) {
             RemoteUserService userService = userServiceProvider.getIfAvailable();
             if (userService != null) {
                 return Mono.fromCallable(() -> {
