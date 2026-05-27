@@ -1,10 +1,15 @@
 package com.pig4cloud.pig.common.core.service.mqtt;
 
+import com.pig4cloud.pig.common.core.config.MqttConfiguration;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnBean({MqttConfiguration.class})
 public class MqttPublisher {
 
     private final MqttPahoMessageHandler mqttHandler;

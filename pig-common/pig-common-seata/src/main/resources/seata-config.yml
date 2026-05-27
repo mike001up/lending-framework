@@ -29,7 +29,7 @@ seata:
     disable-global-transaction: false # 禁用全局事务（默认false）
     grouplist:
 #      default: pig-seata:8091
-      default: 192.168.0.201:8091
+      default: 127.0.0.1:8091
   transport:
     shutdown:
       wait: 3

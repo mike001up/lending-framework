@@ -2,6 +2,7 @@ package com.pig4cloud.pig.common.core.config;
 
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
@@ -14,6 +15,7 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 
 @Configuration
+@ConditionalOnProperty(prefix = "spring.mqtt",name = "url")
 public class MqttConfiguration {
 
     @Value("${spring.mqtt.url}")
