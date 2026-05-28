@@ -138,6 +138,24 @@ public class SysUserController {
 	 * @param query 查询条件
 	 * @return 不为空返回用户名
 	 */
+	@Inner
+	@GetMapping("/permissions")
+	public R<Map<String, Object>> getUserPermissions(@RequestParam String username) {
+		SysUser user = userService.getOne(Wrappers.<SysUser>query().lambda()
+				.eq(SysUser::getUsername, username)
+				.ne(SysUser::getUserType, CommonConstants.FRONTEND));
+		if (user == null) {
+			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
+		}
+		UserInfo userInfo = userService.findUserInfo(user);
+		Map<String, Object> result = new java.util.HashMap<>();
+		result.put("username", user.getUsername());
+		result.put("userId", user.getUserId());
+		result.put("permissions", userInfo.getPermissions());
+		result.put("roles", userInfo.getRoles());
+		return R.ok(result);
+	}
+
 	@Inner(value = false)
 	@GetMapping("/details")
 	public R getDetails(@ParameterObject SysUser query) {

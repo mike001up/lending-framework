@@ -148,4 +148,10 @@ public interface SecurityConstants {
 	 */
 	String CURRENCY = "CURRENCY";
 
+	String SERVICE_AUTHORIZATION = "Service-Authorization";
+
+	String CALLER_SERVICE_ID = "X-Caller-Service-Id";
+
+	String CALLER_SERVICE_ID_VALIDATED = "X-Caller-Service-Id-Validated";
+
 }

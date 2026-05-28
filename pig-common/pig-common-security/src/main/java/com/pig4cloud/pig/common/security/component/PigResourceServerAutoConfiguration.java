@@ -17,8 +17,10 @@
 package com.pig4cloud.pig.common.security.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pig4cloud.pig.common.security.service.RemoteServiceAuthClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authorization.method.PrePostTemplateDefaults;
@@ -81,6 +83,11 @@ public class PigResourceServerAutoConfiguration {
 	@Bean
 	PrePostTemplateDefaults prePostTemplateDefaults() {
 		return new PrePostTemplateDefaults();
+	}
+
+	@Bean
+	public LocalServiceAuthCache localServiceAuthCache(ObjectProvider<RemoteServiceAuthClient> remoteAuthClientProvider) {
+		return new LocalServiceAuthCache(remoteAuthClientProvider);
 	}
 
 }
