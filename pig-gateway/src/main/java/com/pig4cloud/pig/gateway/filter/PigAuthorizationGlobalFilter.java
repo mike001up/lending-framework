@@ -61,17 +61,9 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 			return chain.filter(exchange);
 		}
 
-		String client = exchange.getAttribute(GatewayAttrConstants.GATEWAY_CLIENT_ATTR);
-		if (StrUtil.isBlank(client) || !client.equalsIgnoreCase(CommonConstants.BMS)) {
-			return chain.filter(exchange);
-		}
 
 		String username = exchange.getAttribute(GatewayAttrConstants.GATEWAY_USERNAME_ATTR);
-		if (StrUtil.isBlank(username)) {
-			log.warn("鉴权失败: 无用户身份信息, 拒绝访问路径[{}]", exchange.getRequest().getURI().getPath());
-			return writeErrorResponse(exchange, HttpStatus.UNAUTHORIZED.value(), "Unauthorized",
-					HttpStatus.UNAUTHORIZED);
-		}
+
 
 		if (username.equalsIgnoreCase(SecurityConstants.ADMIN)) {
 			return chain.filter(exchange);

@@ -8,6 +8,5 @@ public interface GatewayAttrConstants {
 
 	String GATEWAY_WHITELIST_ATTR = "gateway_whitelist";
 
-	String X_CLIENT_FROM = "x-client-from";
 
 }
