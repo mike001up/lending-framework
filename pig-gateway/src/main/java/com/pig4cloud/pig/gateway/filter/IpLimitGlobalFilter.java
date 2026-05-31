@@ -1,14 +1,16 @@
 package com.pig4cloud.pig.gateway.filter;
 
 import cn.hutool.core.util.StrUtil;
+import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
 import com.pig4cloud.pig.common.core.util.IpUtil;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
+import com.pig4cloud.pig.gateway.config.GatewaySecurityProperties;
 import com.pig4cloud.pig.gateway.fegin.RemoteIPLimitService;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -22,65 +24,86 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class IpLimitGlobalFilter implements GlobalFilter, Ordered {
 
 	private final ObjectProvider<RemoteIPLimitService> remoteIPLimitServiceProvider;
 
-	private static final String CLIENT = "client";
-	private static final String BMS = "bms";
+	private final Cache<String, Boolean> ipCache;
 
-	private static final Logger log = LoggerFactory.getLogger(IpLimitGlobalFilter.class);
-
-	public IpLimitGlobalFilter(ObjectProvider<RemoteIPLimitService> remoteIPLimitServiceProvider) {
+	public IpLimitGlobalFilter(ObjectProvider<RemoteIPLimitService> remoteIPLimitServiceProvider,
+			GatewaySecurityProperties securityProperties) {
 		this.remoteIPLimitServiceProvider = remoteIPLimitServiceProvider;
+		this.ipCache = Caffeine.newBuilder()
+			.expireAfterWrite(securityProperties.getIpCacheTtlSeconds(), TimeUnit.SECONDS)
+			.maximumSize(securityProperties.getIpCacheMaxSize())
+			.build();
 	}
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-		ServerHttpRequest request = exchange.getRequest();
-		String client = request.getHeaders().getFirst(CLIENT);
-		if (StringUtils.isEmpty(client) || !client.equalsIgnoreCase(BMS)) {
-			return chain.filter(exchange);
-		}
+
 		String username = exchange.getAttribute(GatewayAttrConstants.GATEWAY_USERNAME_ATTR);
 		if (StrUtil.isNotBlank(username) && username.equalsIgnoreCase(SecurityConstants.ADMIN)) {
 			return chain.filter(exchange);
 		}
+
+		ServerHttpRequest request = exchange.getRequest();
 		String remoteIP = IpUtil.getIpAddress(request);
-		return validIp(request, remoteIP, exchange).then(chain.filter(exchange));
+
+		Boolean cached = ipCache.getIfPresent(remoteIP);
+		if (cached != null) {
+			if (cached) {
+				return chain.filter(exchange);
+			}
+			log.warn("IP 校验失败(缓存), 拒绝访问: {}", remoteIP);
+			return writeForbiddenResponse(request, exchange, remoteIP);
+		}
+
+		return validateIpRemotely(request, remoteIP, exchange, chain);
 	}
 
 	@Override
 	public int getOrder() {
-		return -1;
+		return 0;
 	}
 
-	private Mono<Void> validIp(ServerHttpRequest request, String remoteIP, ServerWebExchange exchange) {
+	private Mono<Void> validateIpRemotely(ServerHttpRequest request, String remoteIP, ServerWebExchange exchange,
+			GatewayFilterChain chain) {
 		RemoteIPLimitService ipLimitService = remoteIPLimitServiceProvider.getIfAvailable();
-		if (ipLimitService != null) {
-			return Mono.fromCallable(() -> ipLimitService.isValidIP(SecurityConstants.FROM_IN, remoteIP))
-					.subscribeOn(Schedulers.boundedElastic())
-					.flatMap(isValidIP -> {
-						if (!isValidIP) {
-							log.warn("IP 校验失败，拒绝访问: {}", remoteIP);
-							String acceptLang = request.getHeaders().getFirst("Accept-Language");
-							if (acceptLang == null || acceptLang.isEmpty() || acceptLang.equals("zh-cn")) {
-								acceptLang = "zh_CN";
-							}
-							return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(),
-									MsgUtils.getMessageByLang(ErrorCodes.IP_NOT_EXISTS_SYSTEM, acceptLang, remoteIP),
-									HttpStatus.FORBIDDEN);
-						}
-						return Mono.empty();
-					}).onErrorResume(ex -> {
-						log.error("调用 ipLimitService.isValidIP 出错", ex);
-						return writeErrorResponse(exchange, 1,
-								"调用 ipLimitService.isValidIP 出错: " + ex.getMessage(),
-								HttpStatus.INTERNAL_SERVER_ERROR);
-					});
+		if (ipLimitService == null) {
+			log.warn("RemoteIPLimitService 不可用, 放行请求");
+			return chain.filter(exchange);
 		}
-		return Mono.empty();
+
+		return Mono.fromCallable(() -> ipLimitService.isValidIP(SecurityConstants.FROM_IN, remoteIP))
+			.subscribeOn(Schedulers.boundedElastic())
+			.flatMap(isValidIP -> {
+				ipCache.put(remoteIP, isValidIP);
+				if (!isValidIP) {
+					log.warn("IP 校验失败, 拒绝访问: {}", remoteIP);
+					return writeForbiddenResponse(request, exchange, remoteIP);
+				}
+				return chain.filter(exchange);
+			})
+			.onErrorResume(ex -> {
+				log.error("调用 ipLimitService.isValidIP 出错", ex);
+				return writeErrorResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+						"IP validation service error", HttpStatus.INTERNAL_SERVER_ERROR);
+			});
+	}
+
+	private Mono<Void> writeForbiddenResponse(ServerHttpRequest request, ServerWebExchange exchange,
+			String remoteIP) {
+		String acceptLang = request.getHeaders().getFirst("Accept-Language");
+		if (acceptLang == null || acceptLang.isEmpty() || acceptLang.equals("zh-cn")) {
+			acceptLang = "zh_CN";
+		}
+		return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(),
+				MsgUtils.getMessageByLang(ErrorCodes.IP_NOT_EXISTS_SYSTEM, acceptLang, remoteIP),
+				HttpStatus.FORBIDDEN);
 	}
 
 	private Mono<Void> writeErrorResponse(ServerWebExchange exchange, int code, String msg, HttpStatus status) {

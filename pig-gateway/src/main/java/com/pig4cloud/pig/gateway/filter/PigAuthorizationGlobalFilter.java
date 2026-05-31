@@ -1,10 +1,13 @@
 package com.pig4cloud.pig.gateway.filter;
 
 import cn.hutool.core.util.StrUtil;
+import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.gateway.config.GatewaySecurityProperties;
 import com.pig4cloud.pig.gateway.config.GatewaySecurityProperties.AuthorizeRule;
 import com.pig4cloud.pig.gateway.fegin.RemotePermService;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -25,13 +28,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
-
-	private static final String CLIENT = "client";
-	private static final String BMS = "bms";
 
 	private final GatewaySecurityProperties securityProperties;
 
@@ -39,12 +39,16 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 
 	private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-	private final ConcurrentHashMap<String, PermissionCacheEntry> userPermissionCache = new ConcurrentHashMap<>();
+	private final Cache<String, Set<String>> permissionCache;
 
 	public PigAuthorizationGlobalFilter(GatewaySecurityProperties securityProperties,
 			RemotePermService remotePermService) {
 		this.securityProperties = securityProperties;
 		this.remotePermService = remotePermService;
+		this.permissionCache = Caffeine.newBuilder()
+			.expireAfterWrite(securityProperties.getPermissionCacheTtlMs(), TimeUnit.MILLISECONDS)
+			.maximumSize(securityProperties.getPermissionCacheMaxSize())
+			.build();
 	}
 
 	@Override
@@ -53,21 +57,27 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 			return chain.filter(exchange);
 		}
 
-		ServerHttpRequest request = exchange.getRequest();
-		String client = request.getHeaders().getFirst(CLIENT);
-		if (StrUtil.isBlank(client) || !client.equalsIgnoreCase(BMS)) {
+		if (Boolean.TRUE.equals(exchange.getAttribute(GatewayAttrConstants.GATEWAY_WHITELIST_ATTR))) {
+			return chain.filter(exchange);
+		}
+
+		String client = exchange.getAttribute(GatewayAttrConstants.GATEWAY_CLIENT_ATTR);
+		if (StrUtil.isBlank(client) || !client.equalsIgnoreCase(CommonConstants.BMS)) {
 			return chain.filter(exchange);
 		}
 
 		String username = exchange.getAttribute(GatewayAttrConstants.GATEWAY_USERNAME_ATTR);
 		if (StrUtil.isBlank(username)) {
-			return chain.filter(exchange);
+			log.warn("鉴权失败: 无用户身份信息, 拒绝访问路径[{}]", exchange.getRequest().getURI().getPath());
+			return writeErrorResponse(exchange, HttpStatus.UNAUTHORIZED.value(), "Unauthorized",
+					HttpStatus.UNAUTHORIZED);
 		}
 
 		if (username.equalsIgnoreCase(SecurityConstants.ADMIN)) {
 			return chain.filter(exchange);
 		}
 
+		ServerHttpRequest request = exchange.getRequest();
 		String requestPath = request.getURI().getPath();
 		HttpMethod httpMethod = request.getMethod();
 
@@ -83,7 +93,9 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 
 		return getUserPermissions(username).flatMap(userPermissions -> {
 			if (userPermissions == null) {
-				return chain.filter(exchange);
+				log.warn("鉴权失败: 无法获取用户[{}]权限信息, 拒绝访问路径[{}]", username, requestPath);
+				return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(),
+						"Access Denied: unable to verify permissions", HttpStatus.FORBIDDEN);
 			}
 			boolean authorized = requiredPermissions.stream().anyMatch(userPermissions::contains);
 			if (authorized) {
@@ -110,9 +122,9 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 	}
 
 	private Mono<Set<String>> getUserPermissions(String username) {
-		PermissionCacheEntry cached = userPermissionCache.get(username);
-		if (cached != null && !cached.isExpired()) {
-			return Mono.just(cached.getPermissions());
+		Set<String> cached = permissionCache.getIfPresent(username);
+		if (cached != null) {
+			return Mono.just(cached);
 		}
 
 		return Mono.fromCallable(() -> {
@@ -127,21 +139,22 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 					permsList.forEach(p -> permissions.add(String.valueOf(p)));
 				}
 			}
-			long ttl = securityProperties.getPermissionCacheTtlMs();
-			userPermissionCache.put(username, new PermissionCacheEntry(permissions, System.currentTimeMillis() + ttl));
-			return permissions;
+			if (!permissions.isEmpty()) {
+				permissionCache.put(username, permissions);
+			}
+			return permissions.isEmpty() ? null : permissions;
 		}).subscribeOn(Schedulers.boundedElastic()).onErrorResume(ex -> {
-			log.error("获取用户[{}]权限信息失败, 放行请求由下游服务鉴权", username, ex);
+			log.error("获取用户[{}]权限信息失败, 拒绝请求", username, ex);
 			return Mono.just(null);
 		});
 	}
 
 	public void evictCache(String username) {
-		userPermissionCache.remove(username);
+		permissionCache.invalidate(username);
 	}
 
 	public void evictAllCache() {
-		userPermissionCache.clear();
+		permissionCache.invalidateAll();
 	}
 
 	private Mono<Void> writeErrorResponse(ServerWebExchange exchange, int code, String msg, HttpStatus status) {
@@ -154,28 +167,7 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 
 	@Override
 	public int getOrder() {
-		return 0;
-	}
-
-	private static class PermissionCacheEntry {
-
-		private final Set<String> permissions;
-
-		private final long expiresAt;
-
-		PermissionCacheEntry(Set<String> permissions, long expiresAt) {
-			this.permissions = permissions;
-			this.expiresAt = expiresAt;
-		}
-
-		Set<String> getPermissions() {
-			return permissions;
-		}
-
-		boolean isExpired() {
-			return System.currentTimeMillis() > expiresAt;
-		}
-
+		return 1;
 	}
 
 }

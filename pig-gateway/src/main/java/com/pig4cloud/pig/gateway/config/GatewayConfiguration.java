@@ -5,6 +5,8 @@ import com.pig4cloud.pig.gateway.filter.IpLimitGlobalFilter;
 import com.pig4cloud.pig.gateway.filter.PigAuthenticationFilter;
 import com.pig4cloud.pig.gateway.filter.PigAuthorizationGlobalFilter;
 import com.pig4cloud.pig.gateway.filter.PigRequestGlobalFilter;
+import com.pig4cloud.pig.gateway.filter.RequestCleanGlobalFilter;
+import com.pig4cloud.pig.gateway.filter.WhitelistGlobalFilter;
 import com.pig4cloud.pig.gateway.fegin.RemoteIPLimitService;
 import com.pig4cloud.pig.gateway.fegin.RemotePermService;
 import com.pig4cloud.pig.gateway.fegin.RemoteUserService;
@@ -19,14 +21,24 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 public class GatewayConfiguration {
 
 	@Bean
-	public PigAuthenticationFilter pigAuthenticationFilter(ObjectProvider<RemoteUserService> userServiceProvider,
-			GatewaySecurityProperties securityProperties) {
-		return new PigAuthenticationFilter(userServiceProvider, securityProperties);
+	public RequestCleanGlobalFilter requestCleanGlobalFilter() {
+		return new RequestCleanGlobalFilter();
 	}
 
 	@Bean
-	public IpLimitGlobalFilter ipLimitGlobalFilter(ObjectProvider<RemoteIPLimitService> remoteIPLimitServiceProvider) {
-		return new IpLimitGlobalFilter(remoteIPLimitServiceProvider);
+	public WhitelistGlobalFilter whitelistGlobalFilter(GatewaySecurityProperties securityProperties) {
+		return new WhitelistGlobalFilter(securityProperties);
+	}
+
+	@Bean
+	public PigAuthenticationFilter pigAuthenticationFilter(ObjectProvider<RemoteUserService> userServiceProvider) {
+		return new PigAuthenticationFilter(userServiceProvider);
+	}
+
+	@Bean
+	public IpLimitGlobalFilter ipLimitGlobalFilter(ObjectProvider<RemoteIPLimitService> remoteIPLimitServiceProvider,
+			GatewaySecurityProperties securityProperties) {
+		return new IpLimitGlobalFilter(remoteIPLimitServiceProvider, securityProperties);
 	}
 
 	@Bean

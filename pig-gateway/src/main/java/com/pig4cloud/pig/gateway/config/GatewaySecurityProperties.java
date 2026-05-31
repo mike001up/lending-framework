@@ -15,19 +15,19 @@ import java.util.List;
 @ConfigurationProperties(prefix = "gateway.security")
 public class GatewaySecurityProperties {
 
-	private List<String> ignoreUrls = new ArrayList<>(Arrays.asList(
-			"/auth/token/logout",
-			"/admin/user/details",
-			"/auth/code/image",
-			"/admin/sys-file",
-			"/admin/user/info",
-			"/admin/user/check",
+	private List<String> ignoreUrls = new ArrayList<>(Arrays.asList(			
 			"/auth/token/check_token"
 	));
 
 	private boolean authorizeEnabled = true;
 
 	private long permissionCacheTtlMs = 300000;
+
+	private long ipCacheTtlSeconds = 300;
+
+	private long ipCacheMaxSize = 10000;
+
+	private long permissionCacheMaxSize = 1000;
 
 	private List<AuthorizeRule> authorizeRules = new ArrayList<>();
 

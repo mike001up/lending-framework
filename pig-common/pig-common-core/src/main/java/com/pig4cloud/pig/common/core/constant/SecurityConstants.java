@@ -43,6 +43,11 @@ public interface SecurityConstants {
 	String FROM_IN = "Y";
 
 	/**
+	 * 外部（网关进入）
+	 */
+	String FROM_OUT = "N";
+
+	/**
 	 * 标志
 	 */
 	String FROM = "from";
