@@ -1,6 +1,8 @@
 package com.pig4cloud.pig.gateway.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pig4cloud.pig.admin.api.feign.RemoteLogService;
+import com.pig4cloud.pig.gateway.filter.GatewayAuditLogFilter;
 import com.pig4cloud.pig.gateway.filter.IpLimitGlobalFilter;
 import com.pig4cloud.pig.gateway.filter.PigAuthenticationFilter;
 import com.pig4cloud.pig.gateway.filter.PigAuthorizationGlobalFilter;
@@ -50,6 +52,11 @@ public class GatewayConfiguration {
 	@Bean
 	public PigRequestGlobalFilter pigRequestGlobalFilter() {
 		return new PigRequestGlobalFilter();
+	}
+
+	@Bean
+	public GatewayAuditLogFilter gatewayAuditLogFilter(ObjectProvider<RemoteLogService> remoteLogServiceProvider) {
+		return new GatewayAuditLogFilter(remoteLogServiceProvider);
 	}
 
 	@Bean

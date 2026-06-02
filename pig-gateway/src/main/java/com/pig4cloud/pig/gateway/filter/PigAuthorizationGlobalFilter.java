@@ -1,10 +1,12 @@
 package com.pig4cloud.pig.gateway.filter;
 
 import cn.hutool.core.util.StrUtil;
+import com.pig4cloud.pig.admin.api.dto.UserInfo;
+import com.pig4cloud.pig.admin.api.entity.SysPermission;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
+import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.gateway.config.GatewaySecurityProperties;
-import com.pig4cloud.pig.gateway.config.GatewaySecurityProperties.AuthorizeRule;
 import com.pig4cloud.pig.gateway.fegin.RemotePermService;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -24,9 +26,9 @@ import reactor.core.scheduler.Schedulers;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +42,10 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 	private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
 	private final Cache<String, Set<String>> permissionCache;
+
+	private volatile List<SysPermission> authorizeRules = Collections.emptyList();
+
+	private volatile long authorizeRulesLastLoadTime = 0;
 
 	public PigAuthorizationGlobalFilter(GatewaySecurityProperties securityProperties,
 			RemotePermService remotePermService) {
@@ -61,9 +67,13 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 			return chain.filter(exchange);
 		}
 
-
 		String username = exchange.getAttribute(GatewayAttrConstants.GATEWAY_USERNAME_ATTR);
 
+		if (StrUtil.isBlank(username)) {
+			log.warn("鉴权失败: 请求缺少用户标识, path: {}", exchange.getRequest().getURI().getPath());
+			return writeErrorResponse(exchange, HttpStatus.UNAUTHORIZED.value(), "Unauthorized",
+					HttpStatus.UNAUTHORIZED);
+		}
 
 		if (username.equalsIgnoreCase(SecurityConstants.ADMIN)) {
 			return chain.filter(exchange);
@@ -73,36 +83,36 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 		String requestPath = request.getURI().getPath();
 		HttpMethod httpMethod = request.getMethod();
 
-		AuthorizeRule matchedRule = findMatchedRule(requestPath, httpMethod);
-		if (matchedRule == null) {
-			return chain.filter(exchange);
-		}
-
-		List<String> requiredPermissions = matchedRule.getPermissions();
-		if (requiredPermissions == null || requiredPermissions.isEmpty()) {
-			return chain.filter(exchange);
-		}
-
-		return getUserPermissions(username).flatMap(userPermissions -> {
-			if (userPermissions == null) {
-				log.warn("鉴权失败: 无法获取用户[{}]权限信息, 拒绝访问路径[{}]", username, requestPath);
-				return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(),
-						"Access Denied: unable to verify permissions", HttpStatus.FORBIDDEN);
-			}
-			boolean authorized = requiredPermissions.stream().anyMatch(userPermissions::contains);
-			if (authorized) {
+		return getOrRefreshAuthorizeRules().flatMap(rules -> {
+			SysPermission matchedRule = findMatchedRule(rules, requestPath, httpMethod);
+			if (matchedRule == null) {
 				return chain.filter(exchange);
 			}
-			log.warn("鉴权失败: 用户[{}]无权访问路径[{}], 需要权限[{}], 拥有权限[{}]",
-					username, requestPath, requiredPermissions, userPermissions);
-			return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(),
-					"Access Denied: insufficient permissions", HttpStatus.FORBIDDEN);
+
+			String requiredPermission = matchedRule.getPermission();
+			if (StrUtil.isBlank(requiredPermission)) {
+				return chain.filter(exchange);
+			}
+
+			return getUserPermissions(username).flatMap(userPermissions -> {
+				if (userPermissions == null) {
+					log.warn("鉴权失败: 获取用户[{}]权限信息异常, 拒绝访问路径[{}]", username, requestPath);
+					return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(),
+							"Access Denied: unable to verify permissions", HttpStatus.FORBIDDEN);
+				}
+				if (userPermissions.contains(requiredPermission)) {
+					return chain.filter(exchange);
+				}
+				log.warn("鉴权失败: 用户[{}]无权访问路径[{}], 需要权限[{}], 拥有权限[{}]",
+						username, requestPath, requiredPermission, userPermissions);
+				return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(),
+						"Access Denied: insufficient permissions", HttpStatus.FORBIDDEN);
+			});
 		});
 	}
 
-	private AuthorizeRule findMatchedRule(String requestPath, HttpMethod httpMethod) {
-		List<AuthorizeRule> rules = securityProperties.getAuthorizeRules();
-		for (AuthorizeRule rule : rules) {
+	private SysPermission findMatchedRule(List<SysPermission> rules, String requestPath, HttpMethod httpMethod) {
+		for (SysPermission rule : rules) {
 			if (pathMatcher.match(rule.getPath(), requestPath)) {
 				if (StrUtil.isBlank(rule.getMethod())
 						|| rule.getMethod().equalsIgnoreCase(httpMethod.name())) {
@@ -113,6 +123,27 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 		return null;
 	}
 
+	private Mono<List<SysPermission>> getOrRefreshAuthorizeRules() {
+		long now = System.currentTimeMillis();
+		if (now - authorizeRulesLastLoadTime < securityProperties.getPermissionCacheTtlMs()
+				&& !authorizeRules.isEmpty()) {
+			return Mono.just(authorizeRules);
+		}
+
+		return Mono.fromCallable(() -> {
+			R<List<SysPermission>> result = remotePermService.getAuthorizeRules();
+			if (result != null && result.getData() != null) {
+				authorizeRules = result.getData();
+				authorizeRulesLastLoadTime = System.currentTimeMillis();
+				permissionCache.invalidateAll();
+			}
+			return authorizeRules;
+		}).subscribeOn(Schedulers.boundedElastic()).onErrorResume(ex -> {
+			log.error("获取授权规则失败, 使用缓存规则", ex);
+			return Mono.just(authorizeRules);
+		});
+	}
+
 	private Mono<Set<String>> getUserPermissions(String username) {
 		Set<String> cached = permissionCache.getIfPresent(username);
 		if (cached != null) {
@@ -120,23 +151,20 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 		}
 
 		return Mono.fromCallable(() -> {
-			Map<String, Object> result = remotePermService.getUserPermissions(SecurityConstants.FROM_IN, username);
+			R<UserInfo> result = remotePermService.getUserInfo(username);
 			Set<String> permissions = new HashSet<>();
-			if (result != null) {
-				Object permsObj = result.get("permissions");
-				if (permsObj instanceof String[] perms) {
+			if (result != null && result.getData() != null) {
+				String[] perms = result.getData().getPermissions();
+				if (perms != null) {
 					Arrays.stream(perms).forEach(permissions::add);
-				}
-				else if (permsObj instanceof List<?> permsList) {
-					permsList.forEach(p -> permissions.add(String.valueOf(p)));
 				}
 			}
 			if (!permissions.isEmpty()) {
 				permissionCache.put(username, permissions);
 			}
-			return permissions.isEmpty() ? null : permissions;
+			return permissions;
 		}).subscribeOn(Schedulers.boundedElastic()).onErrorResume(ex -> {
-			log.error("获取用户[{}]权限信息失败, 拒绝请求", username, ex);
+			log.error("获取用户[{}]权限信息失败", username, ex);
 			return Mono.just(null);
 		});
 	}
@@ -147,6 +175,7 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 
 	public void evictAllCache() {
 		permissionCache.invalidateAll();
+		authorizeRulesLastLoadTime = 0;
 	}
 
 	private Mono<Void> writeErrorResponse(ServerWebExchange exchange, int code, String msg, HttpStatus status) {

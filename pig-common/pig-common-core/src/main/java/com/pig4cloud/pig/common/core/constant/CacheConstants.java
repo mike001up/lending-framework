@@ -35,9 +35,9 @@ public interface CacheConstants {
 	String DEFAULT_CODE_KEY = "DEFAULT_CODE_KEY:";
 
 	/**
-	 * 菜单信息缓存
+	 * 权限资源信息缓存
 	 */
-	String MENU_DETAILS = "menu_details";
+	String PERMISSION_DETAILS = "permission_details";
 
 	/**
 	 * 用户信息缓存

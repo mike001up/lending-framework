@@ -20,26 +20,20 @@
 package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
-import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
-import com.pig4cloud.pig.admin.api.entity.SysUserKyc;
 import com.pig4cloud.pig.admin.api.vo.UserExcelVO;
-import com.pig4cloud.pig.admin.api.vo.UserVO;
-import com.pig4cloud.pig.admin.service.SysUserKycService;
 import com.pig4cloud.pig.admin.service.SysUserService;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
-import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
 import com.pig4cloud.pig.common.security.annotation.Inner;
-import com.pig4cloud.pig.common.security.service.PigUser;
+import com.pig4cloud.pig.common.security.annotation.RequireServiceAuth;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -52,10 +46,8 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * @author lengleng
@@ -70,43 +62,22 @@ public class SysUserController {
 
 	private final SysUserService userService;
 
-	private final SysUserKycService sysUserKycService;
-
 	/**
 	 * 获取指定用户全部信息
 	 * @return 用户信息
 	 */
 	@Inner
+	@RequireServiceAuth
 	@GetMapping(value = { "/info/query" })
 	public R info(@RequestParam(required = false) String username, @RequestParam(required = false) String phone) {
 		SysUser user = userService.getOne(Wrappers.<SysUser>query()
 			.lambda()
 			.eq(StrUtil.isNotBlank(username), SysUser::getUsername, username)
-						.ne(SysUser::getUserType, CommonConstants.FRONTEND)
 			.eq(StrUtil.isNotBlank(phone), SysUser::getPhone, phone));
 		if (user == null) {
 			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
 		}
-		UserInfo userInfo = userService.findUserInfo(user);
-		return R.ok(userInfo);
-	}
-
-	@Inner
-	@GetMapping(value = { "/info/queryApp" })
-	public R infoApp(@RequestParam(required = false) String username, @RequestParam(required = false) String phone) {
-		SysUser user = userService.getOne(Wrappers.<SysUser>query()
-			.lambda()
-			.eq(StrUtil.isNotBlank(username), SysUser::getUsername, username)
-						.eq(SysUser::getUserType, CommonConstants.FRONTEND)
-			.eq(StrUtil.isNotBlank(phone), SysUser::getPhone, phone));
-		if (user == null) {
-			return R.failedByCode(101, MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
-		}
-		if (user.getIsMagLogout()) {
-			return R.failed(MsgUtils.getMessage(ErrorCodes.USER_IS_BLACK, username));
-		}
-		UserInfo userInfo = userService.findUserInfo(user);
-		return R.ok(userInfo);
+		return R.ok(userService.findUserInfo(user));
 	}
 
 	/**
@@ -138,29 +109,11 @@ public class SysUserController {
 	 * @param query 查询条件
 	 * @return 不为空返回用户名
 	 */
-	@Inner
-	@GetMapping("/permissions")
-	public R<Map<String, Object>> getUserPermissions(@RequestParam String username) {
-		SysUser user = userService.getOne(Wrappers.<SysUser>query().lambda()
-				.eq(SysUser::getUsername, username)
-				.ne(SysUser::getUserType, CommonConstants.FRONTEND));
-		if (user == null) {
-			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
-		}
-		UserInfo userInfo = userService.findUserInfo(user);
-		Map<String, Object> result = new java.util.HashMap<>();
-		result.put("username", user.getUsername());
-		result.put("userId", user.getUserId());
-		result.put("permissions", userInfo.getPermissions());
-		result.put("roles", userInfo.getRoles());
-		return R.ok(result);
-	}
-
 	@Inner(value = false)
 	@GetMapping("/details")
 	public R getDetails(@ParameterObject SysUser query) {
 		SysUser sysUser = userService.getOne(Wrappers.query(query), false);
-		return R.ok(sysUser == null ? null : sysUser);
+		return R.ok(sysUser == null ? null : CommonConstants.SUCCESS);
 	}
 
 	/**
@@ -208,17 +161,7 @@ public class SysUserController {
 	 */
 	@GetMapping("/page")
 	public R getUserPage(@ParameterObject Page page, @ParameterObject UserDTO userDTO) {
-		IPage<UserVO> usersWithRolePage = userService.getUsersWithRolePage(page, userDTO);
-		// 只有admin账号才能看到admin账号，才能修改admin
-		PigUser user = SecurityUtils.getUser();
-		if (!user.getUsername().equalsIgnoreCase(SecurityConstants.ADMIN)) {
-			// 过滤掉admin账号，普通用户不可见
-			List<UserVO> filteredRecords = usersWithRolePage.getRecords().stream()
-					.filter(u -> !u.getUsername().equalsIgnoreCase(SecurityConstants.ADMIN))
-					.collect(Collectors.toList());
-			usersWithRolePage.setRecords(filteredRecords);
-		}
-		return R.ok(usersWithRolePage);
+		return R.ok(userService.getUsersWithRolePage(page, userDTO));
 	}
 
 	/**
@@ -277,74 +220,5 @@ public class SysUserController {
 	public R check(String password) {
 		return userService.checkPassword(password);
 	}
-
-
-	//下面是会员管理接口
-
-	/**
-	 * 会员分页查询
-	 */
-	@GetMapping("/memberList")
-	@HasPermission("sys_user_memberList")
-	public R members(@ParameterObject Page page, @ParameterObject UserDTO userDTO) {
-		IPage<UserVO> usersWithRolePage = userService.getMembers(page, userDTO);
-		//查询每页所有的用户kyc信息
-		List<Long> userIdList = usersWithRolePage.getRecords().stream()
-				.map(UserVO::getUserId)
-				.distinct()
-				.collect(Collectors.toList());
-		//根据userId 查询 kyc信息
-		List<SysUserKyc> kycList = sysUserKycService.list(
-				Wrappers.<SysUserKyc>lambdaQuery()
-						.in(SysUserKyc::getUserId, userIdList)
-		);
-		Map<Long, SysUserKyc> kycMap = kycList.stream()
-				.collect(Collectors.toMap(SysUserKyc::getUserId, Function.identity(), (a, b) -> a));
-		usersWithRolePage.getRecords().forEach(sysUser -> {
-			SysUserKyc kyc = kycMap.get(sysUser.getUserId());
-			if (kyc != null) {
-				sysUser.setSysUserKyc(kyc);
-			}
-		});
-		return R.ok(usersWithRolePage);
-	}
-
-
-	/**
-	 * 会员模糊搜索
-	 */
-	@GetMapping("/membersByUsername")
-	public R membersByUsername(String username) {
-		return userService.membersByUsername(username);
-	}
-
-
-
-	@SysLog("新增会员")
-	@PostMapping("/addMember")
-	@HasPermission("sys_user_addMember")
-	public R membersAdd(@RequestBody UserDTO userDto) {
-		return userService.saveMembers(userDto);
-	}
-
-
-	@SysLog("注销/撤销注销")
-	@GetMapping("/magLogout")
-	@HasPermission("sys_user_magLogout")
-	public R magLogout(Boolean isMagLogout,Long userId) {
-		SysUser user = userService.getById(userId);
-		return userService.isMagLogoutByUserId(isMagLogout, userId, user.getUsername());
-	}
-
-
-	@SysLog("拉黑/撤销拉黑")
-	@GetMapping("/isBlack")
-	@HasPermission("sys_user_isBlack")
-	public R isBlack(Boolean isBlack,Long userId) {
-		SysUser user = userService.getById(userId);
-		return userService.isBlackByUserId(isBlack, userId, user.getUsername());
-	}
-
-
 
 }

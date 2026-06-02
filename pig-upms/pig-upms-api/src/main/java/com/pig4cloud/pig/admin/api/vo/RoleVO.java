@@ -34,8 +34,8 @@ public class RoleVO {
 	private Long roleId;
 
 	/**
-	 * 菜单列表
+	 * 权限列表
 	 */
-	private String menuIds;
+	private String permissionIds;
 
 }

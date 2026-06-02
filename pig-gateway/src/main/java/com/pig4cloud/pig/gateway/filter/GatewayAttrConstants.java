@@ -8,5 +8,7 @@ public interface GatewayAttrConstants {
 
 	String GATEWAY_WHITELIST_ATTR = "gateway_whitelist";
 
+	String GATEWAY_TENANT_ATTR = "gateway_tenant";
+
 
 }

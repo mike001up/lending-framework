@@ -28,7 +28,6 @@ import com.pig4cloud.pig.admin.api.vo.RoleExcelVO;
 import com.pig4cloud.pig.admin.api.vo.RoleVO;
 import com.pig4cloud.pig.admin.service.SysRoleService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
-import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
@@ -124,7 +123,7 @@ public class SysRoleController {
 	 */
 	@GetMapping("/list")
 	public R listRoles() {
-		return R.ok(sysRoleService.list(Wrappers.<SysRole>lambdaQuery().ne(SysRole::getRoleCode, CommonConstants.MERCHANT)));
+		return R.ok(sysRoleService.list(Wrappers.emptyWrapper()));
 	}
 
 	/**
@@ -144,10 +143,10 @@ public class SysRoleController {
 	 * @param roleVo 角色对象
 	 * @return success、false
 	 */
-	@SysLog("更新角色菜单")
-	@PutMapping("/menu")
+	@SysLog("更新角色权限")
+	@PutMapping("/permission")
 	@HasPermission("sys_role_perm")
-	public R saveRoleMenus(@RequestBody RoleVO roleVo) {
+	public R saveRolePermissions(@RequestBody RoleVO roleVo) {
 		return R.ok(sysRoleService.updateRoleMenus(roleVo));
 	}
 

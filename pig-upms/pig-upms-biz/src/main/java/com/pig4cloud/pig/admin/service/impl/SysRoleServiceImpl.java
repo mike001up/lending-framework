@@ -24,14 +24,11 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
-import com.pig4cloud.pig.admin.api.entity.SysRoleMenu;
-import com.pig4cloud.pig.admin.api.entity.SysUser;
-import com.pig4cloud.pig.admin.api.entity.SysUserRole;
+import com.pig4cloud.pig.admin.api.entity.SysRolePermission;
 import com.pig4cloud.pig.admin.api.vo.RoleExcelVO;
 import com.pig4cloud.pig.admin.api.vo.RoleVO;
 import com.pig4cloud.pig.admin.mapper.SysRoleMapper;
-import com.pig4cloud.pig.admin.mapper.SysUserRoleMapper;
-import com.pig4cloud.pig.admin.service.SysRoleMenuService;
+import com.pig4cloud.pig.admin.service.SysRolePermissionService;
 import com.pig4cloud.pig.admin.service.SysRoleService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
@@ -61,9 +58,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
 
-	private SysRoleMenuService roleMenuService;
-
-	private final SysUserRoleMapper sysUserRoleMapper;
+	private SysRolePermissionService rolePermissionService;
 
 	/**
 	 * 通过用户ID，查询角色信息
@@ -95,8 +90,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public Boolean removeRoleByIds(Long[] ids) {
-		roleMenuService
-			.remove(Wrappers.<SysRoleMenu>update().lambda().in(SysRoleMenu::getRoleId, CollUtil.toList(ids)));
+		rolePermissionService
+			.remove(Wrappers.<SysRolePermission>update().lambda().in(SysRolePermission::getRoleId, CollUtil.toList(ids)));
 		return this.removeBatchByIds(CollUtil.toList(ids));
 	}
 
@@ -107,7 +102,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 	 */
 	@Override
 	public Boolean updateRoleMenus(RoleVO roleVo) {
-		return roleMenuService.saveRoleMenus(roleVo.getRoleId(), roleVo.getMenuIds());
+		return rolePermissionService.saveRolePermissions(roleVo.getRoleId(), roleVo.getPermissionIds());
 	}
 
 	/**
@@ -165,16 +160,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 			BeanUtil.copyProperties(role, roleExcelVO);
 			return roleExcelVO;
 		}).collect(Collectors.toList());
-	}
-
-	@Override
-	public void saveByRoleList(List<Long> roles, SysUser sysUser) {
-		roles.stream().map(roleId -> {
-			SysUserRole userRole = new SysUserRole();
-			userRole.setUserId(sysUser.getUserId());
-			userRole.setRoleId(roleId);
-			return userRole;
-		}).forEach(sysUserRoleMapper::insert);
 	}
 
 	/**

@@ -12,6 +12,7 @@ import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
 import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.security.annotation.RequireServiceAuth;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.Operation;
@@ -155,6 +156,7 @@ public class BizIpLimitController {
     }
 
     @Inner
+    @RequireServiceAuth
     @GetMapping("/isValidIP")
     public Boolean isValidIP(@RequestParam("remoteIP") String remoteIP) {
         if (StringUtils.isBlank(remoteIP)) {

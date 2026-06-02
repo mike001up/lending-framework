@@ -74,11 +74,11 @@ public class IpLimitGlobalFilter implements GlobalFilter, Ordered {
 			GatewayFilterChain chain) {
 		RemoteIPLimitService ipLimitService = remoteIPLimitServiceProvider.getIfAvailable();
 		if (ipLimitService == null) {
-			log.warn("RemoteIPLimitService 不可用, 放行请求");
-			return chain.filter(exchange);
+			log.warn("RemoteIPLimitService 不可用, 拒绝访问: {}", remoteIP);
+			return writeForbiddenResponse(request, exchange, remoteIP);
 		}
 
-		return Mono.fromCallable(() -> ipLimitService.isValidIP(SecurityConstants.FROM_IN, remoteIP))
+		return Mono.fromCallable(() -> ipLimitService.isValidIP(remoteIP))
 			.subscribeOn(Schedulers.boundedElastic())
 			.flatMap(isValidIP -> {
 				ipCache.put(remoteIP, isValidIP);
@@ -90,8 +90,8 @@ public class IpLimitGlobalFilter implements GlobalFilter, Ordered {
 			})
 			.onErrorResume(ex -> {
 				log.error("调用 ipLimitService.isValidIP 出错", ex);
-				return writeErrorResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(),
-						"IP validation service error", HttpStatus.INTERNAL_SERVER_ERROR);
+				return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(),
+						"IP validation failed", HttpStatus.FORBIDDEN);
 			});
 	}
 

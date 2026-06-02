@@ -68,5 +68,11 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
         </dependency>
+        <!-- 安全工具包(InternalFeign 签证支持, optional) -->
+        <dependency>
+            <groupId>com.pig4cloud</groupId>
+            <artifactId>pig-common-security</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

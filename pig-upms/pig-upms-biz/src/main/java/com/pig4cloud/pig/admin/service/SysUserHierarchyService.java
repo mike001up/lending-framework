@@ -1,0 +1,20 @@
+package com.pig4cloud.pig.admin.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.pig4cloud.pig.admin.api.entity.SysUserHierarchy;
+
+import java.util.List;
+
+public interface SysUserHierarchyService extends IService<SysUserHierarchy> {
+
+	List<Long> getAncestors(Long userId);
+
+	List<Long> getDescendants(Long userId);
+
+	List<Long> getDirectChildren(Long userId);
+
+	void addRelation(Long ancestor, Long descendant);
+
+	void removeRelation(Long ancestor, Long descendant);
+
+}

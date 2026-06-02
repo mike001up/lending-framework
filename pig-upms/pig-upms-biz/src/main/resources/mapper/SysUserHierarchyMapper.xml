@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pig4cloud.pig.admin.mapper.SysUserHierarchyMapper">
+	<select id="selectAncestors" resultType="java.lang.Long">
+		SELECT ancestor FROM sys_user_hierarchy WHERE descendant = #{descendant}
+	</select>
+
+	<select id="selectDescendants" resultType="java.lang.Long">
+		SELECT descendant FROM sys_user_hierarchy WHERE ancestor = #{ancestor}
+	</select>
+
+	<select id="selectDirectChildren" resultType="java.lang.Long">
+		SELECT descendant FROM sys_user_hierarchy
+		WHERE ancestor = #{ancestor} AND depth = 1
+	</select>
+</mapper>

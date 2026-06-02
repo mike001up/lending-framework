@@ -159,4 +159,6 @@ public interface SecurityConstants {
 
 	String CALLER_SERVICE_ID_VALIDATED = "X-Caller-Service-Id-Validated";
 
+	String TENANT_ID = "X-Tenant-Id";
+
 }

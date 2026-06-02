@@ -20,7 +20,10 @@ import com.alibaba.cloud.sentinel.feign.SentinelFeignAutoConfiguration;
 import com.pig4cloud.pig.common.feign.core.PigFeignInnerRequestInterceptor;
 import com.pig4cloud.pig.common.feign.core.PigFeignRequestCloseInterceptor;
 import com.pig4cloud.pig.common.feign.sentinel.ext.PigSentinelFeign;
+import com.pig4cloud.pig.common.security.service.ServiceTokenCacheService;
 import feign.Feign;
+import org.springframework.beans.factory.ObjectProvider;
+
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -63,8 +66,9 @@ public class PigFeignAutoConfiguration {
 	 * @return PigFeignInnerRequestInterceptor
 	 */
 	@Bean
-	public PigFeignInnerRequestInterceptor pigFeignInnerRequestInterceptor() {
-		return new PigFeignInnerRequestInterceptor();
+	public PigFeignInnerRequestInterceptor pigFeignInnerRequestInterceptor(
+			ObjectProvider<ServiceTokenCacheService> tokenCacheServiceProvider) {
+		return new PigFeignInnerRequestInterceptor(tokenCacheServiceProvider);
 	}
 
 }
