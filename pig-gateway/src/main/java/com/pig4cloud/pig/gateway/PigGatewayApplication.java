@@ -16,10 +16,13 @@
 
 package com.pig4cloud.pig.gateway;
 
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 
 /**
  * @author lengleng
@@ -28,7 +31,14 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * 网关应用
  */
 @EnableDiscoveryClient
-@SpringBootApplication(scanBasePackages = {"com.pig4cloud.pig.common.core","com.pig4cloud.pig.*"})
+@SpringBootApplication
+@ComponentScan(basePackages = {"com.pig4cloud.pig.common.core","com.pig4cloud.pig.*"},
+		excludeFilters = {
+			@ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.pig4cloud\\.pig\\.common\\.mybatis\\..*"),
+			@ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.pig4cloud\\.pig\\.common\\.feign\\.sentinel\\.handle\\..*"),
+			@ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.pig4cloud\\.pig\\.common\\.core\\.config\\.ExcelConfig"),
+			@ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.pig4cloud\\.pig\\.common\\.core\\.util\\.TimestampStringConverter")
+		})
 @EnableFeignClients(basePackages = "com.pig4cloud.pig.gateway.fegin")
 public class PigGatewayApplication {
 

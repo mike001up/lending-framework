@@ -80,6 +80,11 @@ public class PigAuthenticationFilter implements GlobalFilter, Ordered {
 					String userName = user.get(KEY_QUERY_PARAM_USER_NAME).toString();
 					exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, userName);
 
+					Object userId = user.get("userId");
+					if (userId != null) {
+						exchange.getAttributes().put("gateway_user_id", userId.toString());
+					}
+
 					Object tenantId = user.get("tenantId");
 					if (tenantId != null) {
 						exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_TENANT_ATTR, tenantId.toString());

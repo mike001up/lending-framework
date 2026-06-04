@@ -46,6 +46,7 @@ public class GatewayAuditLogFilter implements GlobalFilter, Ordered {
 			SysLog sysLog = new SysLog();
 			sysLog.setLogType("0");
 			sysLog.setTitle("gateway_access");
+			sysLog.setOperationType("GATEWAY_ACCESS");
 			sysLog.setRequestUri(request.getURI().getPath());
 			sysLog.setMethod(request.getMethod().name());
 			sysLog.setRemoteAddr(IpUtil.getIpAddress(request));
@@ -58,13 +59,22 @@ public class GatewayAuditLogFilter implements GlobalFilter, Ordered {
 				sysLog.setCreateBy(username);
 			}
 
+			Object userId = exchange.getAttribute("gateway_user_id");
+			if (userId != null) {
+				sysLog.setUserId(Long.valueOf(userId.toString()));
+			}
+
+			sysLog.setTargetObject(request.getURI().getPath());
+
 			String client = exchange.getAttribute(GatewayAttrConstants.GATEWAY_CLIENT_ATTR);
 			if (client != null) {
+				sysLog.setClientName(client);
 				sysLog.setParams("client=" + client);
 			}
 
 			int statusCode = exchange.getResponse().getStatusCode() != null
 					? exchange.getResponse().getStatusCode().value() : 0;
+			sysLog.setResult(statusCode < 400 ? 1 : 0);
 			if (statusCode >= 400) {
 				sysLog.setLogType("9");
 				sysLog.setException("HTTP " + statusCode);

@@ -33,7 +33,7 @@ public class RequestCleanGlobalFilter implements GlobalFilter, Ordered {
 
 		ServerHttpRequest newRequest = request.mutate().headers(httpHeaders -> {
 			httpHeaders.remove(SecurityConstants.FROM);
-			httpHeaders.put(SecurityConstants.FROM, SecurityConstants.FROM_OUT);
+			httpHeaders.put(SecurityConstants.FROM, Collections.singletonList(SecurityConstants.FROM_OUT));
 
 			httpHeaders.put(CommonConstants.REQUEST_START_TIME,
 					Collections.singletonList(String.valueOf(System.currentTimeMillis())));

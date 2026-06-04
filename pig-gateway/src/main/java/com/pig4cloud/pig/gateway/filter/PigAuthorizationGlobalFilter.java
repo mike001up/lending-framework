@@ -11,6 +11,7 @@ import com.pig4cloud.pig.gateway.fegin.RemotePermService;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -37,7 +38,7 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 
 	private final GatewaySecurityProperties securityProperties;
 
-	private final RemotePermService remotePermService;
+	private final ObjectProvider<RemotePermService> remotePermServiceProvider;
 
 	private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
@@ -48,9 +49,9 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 	private volatile long authorizeRulesLastLoadTime = 0;
 
 	public PigAuthorizationGlobalFilter(GatewaySecurityProperties securityProperties,
-			RemotePermService remotePermService) {
+			ObjectProvider<RemotePermService> remotePermServiceProvider) {
 		this.securityProperties = securityProperties;
-		this.remotePermService = remotePermService;
+		this.remotePermServiceProvider = remotePermServiceProvider;
 		this.permissionCache = Caffeine.newBuilder()
 			.expireAfterWrite(securityProperties.getPermissionCacheTtlMs(), TimeUnit.MILLISECONDS)
 			.maximumSize(securityProperties.getPermissionCacheMaxSize())
@@ -131,6 +132,7 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 		}
 
 		return Mono.fromCallable(() -> {
+			RemotePermService remotePermService = remotePermServiceProvider.getObject();
 			R<List<SysPermission>> result = remotePermService.getAuthorizeRules();
 			if (result != null && result.getData() != null) {
 				authorizeRules = result.getData();
@@ -151,6 +153,7 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 		}
 
 		return Mono.fromCallable(() -> {
+			RemotePermService remotePermService = remotePermServiceProvider.getObject();
 			R<UserInfo> result = remotePermService.getUserInfo(username);
 			Set<String> permissions = new HashSet<>();
 			if (result != null && result.getData() != null) {

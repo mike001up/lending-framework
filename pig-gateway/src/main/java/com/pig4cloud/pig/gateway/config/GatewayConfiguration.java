@@ -45,8 +45,8 @@ public class GatewayConfiguration {
 
 	@Bean
 	public PigAuthorizationGlobalFilter pigAuthorizationGlobalFilter(GatewaySecurityProperties securityProperties,
-			RemotePermService remotePermService) {
-		return new PigAuthorizationGlobalFilter(securityProperties, remotePermService);
+			ObjectProvider<RemotePermService> remotePermServiceProvider) {
+		return new PigAuthorizationGlobalFilter(securityProperties, remotePermServiceProvider);
 	}
 
 	@Bean

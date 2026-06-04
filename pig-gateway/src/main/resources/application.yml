@@ -17,12 +17,28 @@ spring:
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         namespace: ${spring.cloud.nacos.discovery.namespace}
+        username: @nacos.username@
+        password: @nacos.password@
+        import-check:
+          enabled: false
   config:
     import:
       - optional:nacos:application-@profiles.active@.yml
       - optional:nacos:${spring.application.name}-@profiles.active@.yml
-
-
-
-
-
+  main:
+    allow-bean-definition-overriding: true
+    allow-circular-references: true
+  autoconfigure:
+    exclude:
+      - com.pig4cloud.pig.common.feign.sentinel.handle.GlobalBizExceptionHandler
+      - com.pig4cloud.pig.common.security.component.PigSecurityInnerAspect
+      - com.pig4cloud.pig.common.security.component.ServiceAuthAspect
+      - com.pig4cloud.pig.common.security.component.ServiceTokenValidationInterceptor
+      - com.pig4cloud.pig.common.security.component.ServiceTokenAutoConfig
+      - com.pig4cloud.pig.common.security.service.PigUserDetailsServiceImpl
+      - com.pig4cloud.pig.common.security.service.PigAppUserDetailsServiceImpl
+      - com.pig4cloud.pig.common.security.service.PigRedisOAuth2AuthorizationService
+      - com.pig4cloud.pig.common.security.service.PigRedisOAuth2AuthorizationConsentService
+      - com.pig4cloud.pig.common.security.service.PigRemoteRegisteredClientRepository
+      - com.pig4cloud.pig.common.security.component.PigSecurityMessageSourceConfiguration
+      - com.pig4cloud.plugin.excel.ResponseExcelAutoConfiguration
