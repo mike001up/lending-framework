@@ -1,8 +1,8 @@
 package com.pig4cloud.pig.common.security.component;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
-import com.pig4cloud.pig.common.core.util.SpringContextHolder;
 import com.pig4cloud.pig.common.security.service.RemoteServiceAuthClient;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +50,7 @@ public class ServiceAuthAspect implements Ordered {
 			throw new AccessDeniedException("无法识别调用方服务");
 		}
 
-		String providerServiceId = SpringContextHolder.getApplicationName();
+		String providerServiceId = SpringUtil.getApplicationName();
 		String requestPath = request.getRequestURI();
 
 		LocalServiceAuthCache localCache = localCacheProvider.getIfAvailable();

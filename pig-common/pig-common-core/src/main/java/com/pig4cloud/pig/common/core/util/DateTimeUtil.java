@@ -2,7 +2,7 @@ package com.pig4cloud.pig.common.core.util;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class DateTimeUtil {
 
@@ -17,7 +17,7 @@ public class DateTimeUtil {
      * 获取某天的结束时间（yyyy-MM-dd 23:59:59）
      */
     public static Timestamp endOfDay(LocalDate date) {
-        LocalDateTime endOfDay = date.atTime(23, 59, 59);
+        Instant endOfDay = date.atTime(23, 59, 59);
         return Timestamp.valueOf(endOfDay);
     }
 
@@ -36,21 +36,21 @@ public class DateTimeUtil {
 
 
     /**
-     * 获取某月最后一秒的 LocalDateTime
+     * 获取某月最后一秒的 Instant
      * @param date 任意该月中的日期
-     * @return LocalDateTime -> 当月最后一天 23:59:59
+     * @return Instant -> 当月最后一天 23:59:59
      */
-    public static LocalDateTime getLastMomentOfMonth(LocalDate date) {
+    public static Instant getLastMomentOfMonth(LocalDate date) {
         return date.withDayOfMonth(date.lengthOfMonth())
                 .atTime(23, 59, 59);
     }
 
     /**
-     * 获取某月第一秒的 LocalDateTime
+     * 获取某月第一秒的 Instant
      * @param date 任意该月中的日期
-     * @return LocalDateTime -> 当月第一天 00:00:00
+     * @return Instant -> 当月第一天 00:00:00
      */
-    public static LocalDateTime getFirstMomentOfMonth(LocalDate date) {
+    public static Instant getFirstMomentOfMonth(LocalDate date) {
         return date.withDayOfMonth(1).atStartOfDay();
     }
 
@@ -58,7 +58,7 @@ public class DateTimeUtil {
      * 获取当前时间
      */
     public static Timestamp now() {
-        return Timestamp.valueOf(LocalDateTime.now());
+        return Timestamp.valueOf(Instant.now());
     }
 
 }

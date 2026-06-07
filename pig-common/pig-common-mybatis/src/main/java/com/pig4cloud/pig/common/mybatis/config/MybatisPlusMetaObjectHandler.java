@@ -3,6 +3,7 @@ package com.pig4cloud.pig.common.mybatis.config;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -11,7 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.ClassUtils;
 
 import java.nio.charset.Charset;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 /**
@@ -25,7 +26,7 @@ public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
 	@Override
 	public void insertFill(MetaObject metaObject) {
 		log.debug("mybatis plus start insert fill ....");
-		LocalDateTime now = LocalDateTime.now();
+		Instant now = Instant.now();
 
 		fillValIfNullByName("createTime", now, metaObject, true);
 		fillValIfNullByName("updateTime", now, metaObject, true);
@@ -33,13 +34,13 @@ public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
 		fillValIfNullByName("updateBy", getUserName(), metaObject, true);
 
 		// 删除标记自动填充
-		fillValIfNullByName("delFlag", CommonConstants.STATUS_NORMAL, metaObject, true);
+		fillValIfNullByName("isDel", IsDelEnum.NO, metaObject, true);
 	}
 
 	@Override
 	public void updateFill(MetaObject metaObject) {
 		log.debug("mybatis plus start update fill ....");
-		fillValIfNullByName("updateTime", LocalDateTime.now(), metaObject, true);
+		fillValIfNullByName("updateTime", Instant.now(), metaObject, true);
 		fillValIfNullByName("updateBy", getUserName(), metaObject, true);
 	}
 

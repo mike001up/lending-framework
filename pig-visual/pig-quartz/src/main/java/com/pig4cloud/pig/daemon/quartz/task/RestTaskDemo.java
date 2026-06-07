@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * 用于测试REST风格调用的demo
@@ -27,7 +27,7 @@ public class RestTaskDemo {
 	@Inner(value = false)
 	@GetMapping("/{param}")
 	public R demoMethod(@PathVariable("param") String param) {
-		log.info("测试于:{}，传入参数{}", LocalDateTime.now(), param);
+		log.info("测试于:{}，传入参数{}", Instant.now(), param);
 		return R.ok();
 	}
 

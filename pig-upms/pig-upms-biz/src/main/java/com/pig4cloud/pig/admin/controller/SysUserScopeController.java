@@ -1,5 +1,8 @@
 package com.pig4cloud.pig.admin.controller;
 
+import com.pig4cloud.pig.admin.api.dto.BatchGrantScopeDTO;
+import com.pig4cloud.pig.admin.api.dto.GrantScopeDTO;
+import com.pig4cloud.pig.admin.api.dto.RevokeScopeDTO;
 import com.pig4cloud.pig.admin.api.entity.SysUserScope;
 import com.pig4cloud.pig.admin.service.SysUserScopeService;
 import com.pig4cloud.pig.common.core.util.R;
@@ -11,6 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
+
+
 
 @RestController
 @AllArgsConstructor
@@ -29,16 +34,25 @@ public class SysUserScopeController {
 	@SysLog("授权用户范围")
 	@PostMapping
 	@HasPermission("sys_user_scope_grant")
-	public R grantScope(@RequestParam Long userId, @RequestParam Long scopeId) {
-		sysUserScopeService.grantScope(userId, scopeId, SecurityUtils.getUser().getId());
+	public R grantScope(@RequestBody GrantScopeDTO dto) {
+		sysUserScopeService.grantScope(dto.getUserId(), dto.getScopeId(), SecurityUtils.getUser().getId());
+		return R.ok();
+	}
+
+	@SysLog("批量授权用户范围")
+	@PostMapping("/batch")
+	@HasPermission("sys_user_scope_grant")
+	public R batchGrantScope(@RequestBody BatchGrantScopeDTO dto) {
+		Long grantedBy = SecurityUtils.getUser().getId();
+		dto.getScopeIds().forEach(scopeId -> sysUserScopeService.grantScope(dto.getUserId(), scopeId, grantedBy));
 		return R.ok();
 	}
 
 	@SysLog("解除用户范围授权")
 	@DeleteMapping
 	@HasPermission("sys_user_scope_revoke")
-	public R revokeScope(@RequestParam Long userId, @RequestParam Long scopeId) {
-		sysUserScopeService.revokeScope(userId, scopeId);
+	public R revokeScope(@RequestBody RevokeScopeDTO dto) {
+		sysUserScopeService.revokeScope(dto.getUserId(), dto.getScopeId());
 		return R.ok();
 	}
 

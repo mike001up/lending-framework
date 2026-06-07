@@ -7,7 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 @Data
 @Schema(description = "用户范围授权")
@@ -33,13 +34,14 @@ public class SysUserScope extends Model<SysUserScope> {
 	private Long grantedBy;
 
 	@Schema(description = "授权时间")
-	private LocalDateTime grantedAt;
+	private Instant grantedAt;
 
 	@Schema(description = "解除授权时间")
-	private LocalDateTime revokedAt;
+	private Instant revokedAt;
 
-	@TableLogic
+	@TableLogic(value = "'NO'", delval = "'YES'")
+	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "逻辑删除,YES:已删除,NO:未删除")
-	private String isDel;
+	private IsDelEnum isDel;
 
 }

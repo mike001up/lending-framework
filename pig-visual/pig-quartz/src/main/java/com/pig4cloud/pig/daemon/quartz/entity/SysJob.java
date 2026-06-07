@@ -28,7 +28,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * 定时任务调度表
@@ -131,28 +131,28 @@ public class SysJob extends Model<SysJob> {
 	 * 创建时间
 	 */
 	@TableField(fill = FieldFill.INSERT)
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 	/**
 	 * 修改时间
 	 */
 	@TableField(fill = FieldFill.UPDATE)
-	private LocalDateTime updateTime;
+	private Instant updateTime;
 
 	/**
 	 * 首次执行时间
 	 */
-	private LocalDateTime startTime;
+	private Instant startTime;
 
 	/**
 	 * 上次执行时间
 	 */
-	private LocalDateTime previousTime;
+	private Instant previousTime;
 
 	/**
 	 * 下次执行时间
 	 */
-	private LocalDateTime nextTime;
+	private Instant nextTime;
 
 	/**
 	 * 备注信息

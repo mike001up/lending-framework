@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * 自动创建表管理
@@ -78,7 +78,7 @@ public class GenCreateTableVO {
 	 * 创建时间
 	 */
 	@Schema(description = "创建时间")
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 	/**
 	 * 表字段信息

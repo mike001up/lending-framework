@@ -8,7 +8,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 @Data
 @Schema(description = "租户数据源配置")
@@ -25,9 +26,6 @@ public class SysTenantDatasource extends Model<SysTenantDatasource> {
 	@Schema(description = "租户id")
 	private Long tenantId;
 
-	@NotNull(message = "客户端类型ID不能为空")
-	@Schema(description = "客户端类型id")
-	private Long clientTypeId;
 
 	@NotBlank(message = "数据库类型不能为空")
 	@Schema(description = "数据库类型")
@@ -58,20 +56,21 @@ public class SysTenantDatasource extends Model<SysTenantDatasource> {
 
 	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "创建时间")
-	private LocalDateTime createdAt;
+	private Instant createdAt;
 
 	@Schema(description = "创建人id")
 	private Long createdBy;
 
 	@TableField(fill = FieldFill.UPDATE)
 	@Schema(description = "更新时间")
-	private LocalDateTime updatedAt;
+	private Instant updatedAt;
 
 	@Schema(description = "更新人id")
 	private Long updatedBy;
 
-	@TableLogic
+	@TableLogic(value = "'NO'", delval = "'YES'")
+	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "逻辑删除,YES:已删除,NO:未删除")
-	private String isDel;
+	private IsDelEnum isDel;
 
 }

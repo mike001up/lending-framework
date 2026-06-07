@@ -50,9 +50,10 @@ public class PigAppUserDetailsServiceImpl implements PigUserDetailsService {
 	@Override
 	@SneakyThrows
 	public UserDetails loadUserByUsername(String phone) {
+		String cacheKey = CacheConstants.USER_DETAILS_KEY_PREFIX + phone;
 		Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
-		if (cache != null && cache.get(phone) != null) {
-			return (PigUser) cache.get(phone).get();
+		if (cache != null && cache.get(cacheKey) != null) {
+			return (PigUser) cache.get(cacheKey).get();
 		}
 
 		UserDTO userDTO = new UserDTO();
@@ -61,7 +62,7 @@ public class PigAppUserDetailsServiceImpl implements PigUserDetailsService {
 
 		UserDetails userDetails = getUserDetails(result);
 		if (cache != null) {
-			cache.put(phone, userDetails);
+			cache.put(cacheKey, userDetails);
 		}
 		return userDetails;
 	}

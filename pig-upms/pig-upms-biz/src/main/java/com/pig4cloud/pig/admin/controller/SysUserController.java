@@ -22,6 +22,7 @@ package com.pig4cloud.pig.admin.controller;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.admin.api.dto.ResetPasswordDTO;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.vo.UserExcelVO;
@@ -79,6 +80,7 @@ public class SysUserController {
 		}
 		return R.ok(userService.findUserInfo(user));
 	}
+
 
 	/**
 	 * 获取当前用户全部信息
@@ -205,20 +207,69 @@ public class SysUserController {
 	 * @return R
 	 */
 	@PutMapping("/lock/{username}")
+	@HasPermission("sys_user_lock")
 	public R lockUser(@PathVariable String username) {
 		return userService.lockUser(username);
 	}
 
+	@PutMapping("/unlock/{username}")
+	@HasPermission("sys_user_lock")
+	public R unlockUser(@PathVariable String username) {
+		return userService.unlockUser(username);
+	}
+
 	@PutMapping("/password")
+	@HasPermission("sys_user_edit")
 	public R password(@RequestBody UserDTO userDto) {
 		String username = SecurityUtils.getUser().getUsername();
 		userDto.setUsername(username);
 		return userService.changePassword(userDto);
 	}
 
+	@SysLog("管理员重置用户密码")
+	@PutMapping("/password/reset")
+	@HasPermission("sys_user_reset_password")
+	public R resetPassword(@RequestBody ResetPasswordDTO dto) {
+		return userService.resetPassword(dto.getUserId(), dto.getNewPassword());
+	}
+
 	@PostMapping("/check")
 	public R check(String password) {
 		return userService.checkPassword(password);
+	}
+
+	@SysLog("关停用户账户")
+	@PostMapping("/{id}/close")
+	@HasPermission("sys_user_close")
+	public R closeAccount(@PathVariable Long id) {
+		return userService.closeAccount(id);
+	}
+
+	@SysLog("恢复用户账户")
+	@PostMapping("/{id}/restore")
+	@HasPermission("sys_user_restore")
+	public R restoreAccount(@PathVariable Long id) {
+		return userService.restoreAccount(id);
+	}
+
+	@SysLog("启用用户")
+	@PutMapping("/{id}/enable")
+	@HasPermission("sys_user_edit")
+	public R enableUser(@PathVariable Long id) {
+		return userService.enableUser(id);
+	}
+
+	@SysLog("禁用用户")
+	@PutMapping("/{id}/disable")
+	@HasPermission("sys_user_edit")
+	public R disableUser(@PathVariable Long id) {
+		return userService.disableUser(id);
+	}
+
+	@SysLog("更新用户头像")
+	@PutMapping("/{id}/avatar")
+	public R updateAvatar(@PathVariable Long id, @RequestParam String avatarUrl) {
+		return userService.updateAvatar(id, avatarUrl);
 	}
 
 }

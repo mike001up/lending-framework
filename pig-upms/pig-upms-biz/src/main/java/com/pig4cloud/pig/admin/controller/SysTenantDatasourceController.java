@@ -7,12 +7,16 @@ import com.pig4cloud.pig.admin.service.SysTenantDatasourceService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
+import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.security.annotation.RequireServiceAuth;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -25,12 +29,18 @@ public class SysTenantDatasourceController {
 
 	@GetMapping("/{id}")
 	public R getById(@PathVariable Long id) {
-		return R.ok(sysTenantDatasourceService.getById(id));
+		SysTenantDatasource ds = sysTenantDatasourceService.getById(id);
+		if (ds != null) {
+			ds.setPasswordEncrypted("******");
+		}
+		return R.ok(ds);
 	}
 
 	@GetMapping("/page")
 	public R page(Page page, SysTenantDatasource query) {
-		return R.ok(sysTenantDatasourceService.page(page, Wrappers.query(query)));
+		Page<SysTenantDatasource> result = sysTenantDatasourceService.page(page, Wrappers.query(query));
+		result.getRecords().forEach(ds -> ds.setPasswordEncrypted("******"));
+		return R.ok(result);
 	}
 
 	@SysLog("新增数据源配置")
@@ -57,6 +67,14 @@ public class SysTenantDatasourceController {
 	@GetMapping("/test/{id}")
 	public R testConnection(@PathVariable Long id) {
 		return sysTenantDatasourceService.testConnection(id);
+	}
+
+	@Inner
+	@RequireServiceAuth
+	@GetMapping("/tenant/{tenantId}")
+	public R getByTenantId(@PathVariable Long tenantId) {
+		List<SysTenantDatasource> list = sysTenantDatasourceService.listByTenantIdWithDecrypted(tenantId);
+		return R.ok(list);
 	}
 
 }

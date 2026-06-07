@@ -39,7 +39,7 @@ public class UserDTO extends SysUser {
 	 * 角色ID
 	 */
 	@Schema(description = "角色id集合")
-	private List<Long> role;
+	private List<Long> roles;
 
 	/**
 	 * 部门id
@@ -57,5 +57,11 @@ public class UserDTO extends SysUser {
 	 */
 	@Schema(description = "新密码")
 	private String newpassword1;
+
+	@Schema(description = "租户ID（写入层级关系，不存入用户表）")
+	private Long tenantId;
+
+	@Schema(description = "代理ID（写入层级关系，不存入用户表）")
+	private Long agencyId;
 
 }

@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * 角色excel 对应的实体
@@ -60,6 +59,6 @@ public class RoleExcelVO implements Serializable {
 	 * 创建时间
 	 */
 	@ExcelProperty(value = "创建时间")
-	private LocalDateTime createTime;
+	private String createTime;
 
 }

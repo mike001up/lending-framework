@@ -26,7 +26,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 /**
  * <p>
@@ -53,6 +54,10 @@ public class SysOauthClientDetails extends Model<SysOauthClientDetails> {
 	@NotBlank(message = "client_id 不能为空")
 	@Schema(description = "客户端id")
 	private String clientId;
+
+	@NotBlank(message = "客户端名称不能为空")
+	@Schema(description = "客户端名称，支持国际化")
+	private String name;
 
 	/**
 	 * 客户端密钥
@@ -116,13 +121,13 @@ public class SysOauthClientDetails extends Model<SysOauthClientDetails> {
 	@Schema(description = "是否自动放行")
 	private String autoapprove;
 
-	/**
-	 * 删除标记
-	 */
-	@TableLogic
+	@Schema(description = "状态：enabled-启用，disabled-禁用")
+	private String status;
+
+	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "删除标记,1:已删除,0:正常")
-	private String delFlag;
+	@Schema(description = "删除标记,YES:已删除,NO:正常")
+	private IsDelEnum isDel;
 
 	/**
 	 * 创建人
@@ -143,13 +148,13 @@ public class SysOauthClientDetails extends Model<SysOauthClientDetails> {
 	 */
 	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "创建时间")
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 	/**
 	 * 更新时间
 	 */
 	@TableField(fill = FieldFill.UPDATE)
 	@Schema(description = "更新时间")
-	private LocalDateTime updateTime;
+	private Instant updateTime;
 
 }

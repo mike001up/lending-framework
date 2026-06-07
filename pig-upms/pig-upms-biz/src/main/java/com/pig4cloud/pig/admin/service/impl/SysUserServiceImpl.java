@@ -27,14 +27,16 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.dto.RegisterUserDTO;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.*;
 import com.pig4cloud.pig.admin.api.util.ParamResolver;
 import com.pig4cloud.pig.admin.api.vo.UserExcelVO;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
+import com.pig4cloud.pig.admin.api.feign.RemoteTokenService;
 import com.pig4cloud.pig.admin.mapper.SysUserMapper;
-import com.pig4cloud.pig.admin.mapper.SysUserPostMapper;
+
 import com.pig4cloud.pig.admin.mapper.SysUserRoleMapper;
 import com.pig4cloud.pig.admin.service.*;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
@@ -56,7 +58,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -75,15 +77,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 	private final SysRoleService sysRoleService;
 
-	private final SysPostService sysPostService;
 
 	private final SysDeptService sysDeptService;
 
+	private final SysUserHierarchyService sysUserHierarchyService;
+
 	private final SysUserRoleMapper sysUserRoleMapper;
 
-	private final SysUserPostMapper sysUserPostMapper;
 
 	private final CacheManager cacheManager;
+
+	private final RemoteTokenService remoteTokenService;
 
 	/**
 	 * 保存用户信息
@@ -93,34 +97,58 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public Boolean saveUser(UserDTO userDto) {
+		SysUser existing = this.getOne(Wrappers.<SysUser>lambdaQuery()
+			.eq(SysUser::getUsername, userDto.getUsername()));
+		if (existing != null) {
+			throw new RuntimeException(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERNAME_EXISTING, userDto.getUsername()));
+		}
+
 		SysUser sysUser = new SysUser();
 		BeanUtils.copyProperties(userDto, sysUser);
-		sysUser.setDelFlag(CommonConstants.STATUS_NORMAL);
+		sysUser.setIsDel(IsDelEnum.NO);
 		sysUser.setCreateBy(userDto.getUsername());
 		sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
 		baseMapper.insert(sysUser);
-		// 保存用户岗位信息
-		Optional.ofNullable(userDto.getPost()).ifPresent(posts -> {
-			posts.stream().map(postId -> {
-				SysUserPost userPost = new SysUserPost();
-				userPost.setUserId(sysUser.getUserId());
-				userPost.setPostId(postId);
-				return userPost;
-			}).forEach(sysUserPostMapper::insert);
-		});
 
-		// 如果角色为空，赋默认角色
-		if (CollUtil.isEmpty(userDto.getRole())) {
-			// 获取默认角色编码
-			String defaultRole = ParamResolver.getStr("USER_DEFAULT_ROLE");
-			// 默认角色
-			SysRole sysRole = sysRoleService
-				.getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, defaultRole));
-			userDto.setRole(Collections.singletonList(sysRole.getRoleId()));
+		if (userDto.getTenantId() != null) {
+			SysUserHierarchy tenantRel = new SysUserHierarchy();
+			tenantRel.setAncestor(userDto.getTenantId());
+			tenantRel.setDescendant(sysUser.getUserId());
+			tenantRel.setDepth(1);
+			tenantRel.setHierarchyType("tenant");
+			sysUserHierarchyService.save(tenantRel);
 		}
 
-		// 插入用户角色关系表
-		userDto.getRole().stream().map(roleId -> {
+		if (userDto.getAgencyId() != null) {
+			SysUserHierarchy agencyRel = new SysUserHierarchy();
+			agencyRel.setAncestor(userDto.getAgencyId());
+			agencyRel.setDescendant(sysUser.getUserId());
+			agencyRel.setDepth(1);
+			agencyRel.setHierarchyType("agency");
+			sysUserHierarchyService.save(agencyRel);
+		}
+
+		SysUserHierarchy selfRel = new SysUserHierarchy();
+		selfRel.setAncestor(sysUser.getUserId());
+		selfRel.setDescendant(sysUser.getUserId());
+		selfRel.setDepth(0);
+		selfRel.setHierarchyType("self");
+		sysUserHierarchyService.save(selfRel);
+
+
+		// 如果角色为空，赋默认角色
+		if (CollUtil.isEmpty(userDto.getRoles())) {
+			String defaultRole = ParamResolver.getStr("USER_DEFAULT_ROLE");
+			if (StrUtil.isNotBlank(defaultRole)) {
+				SysRole sysRole = sysRoleService
+					.getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, defaultRole));
+				if (sysRole != null) {
+					userDto.setRoles(Collections.singletonList(sysRole.getRoleId()));
+				}
+			}
+		}
+
+		userDto.getRoles().stream().map(roleId -> {
 			SysUserRole userRole = new SysUserRole();
 			userRole.setUserId(sysUser.getUserId());
 			userRole.setRoleId(roleId);
@@ -138,6 +166,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	public UserInfo findUserInfo(SysUser sysUser) {
 		UserInfo userInfo = new UserInfo();
 		userInfo.setSysUser(sysUser);
+
+		Long tenantId = sysUserHierarchyService.getAncestorByType(sysUser.getUserId(), "tenant");
+		userInfo.setTenantId(tenantId);
+
 		// 设置角色列表 （ID）
 		List<Long> roleIds = sysRoleService.findRolesByUserId(sysUser.getUserId())
 			.stream()
@@ -188,12 +220,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public Boolean deleteUserByIds(Long[] ids) {
-		// 删除 spring cache
 		List<SysUser> userList = baseMapper.selectBatchIds(CollUtil.toList(ids));
-		Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
 		for (SysUser sysUser : userList) {
-			// 立即删除
-			cache.evictIfPresent(sysUser.getUsername());
+			evictUserCache(sysUser.getUsername());
 		}
 
 		sysUserRoleMapper.delete(Wrappers.<SysUserRole>lambdaQuery().in(SysUserRole::getUserId, CollUtil.toList(ids)));
@@ -202,7 +231,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	}
 
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "T(com.pig4cloud.pig.common.core.constant.CacheConstants).USER_DETAILS_KEY_PREFIX + #userDto.username")
 	public R<Boolean> updateUserInfo(UserDTO userDto) {
 		SysUser sysUser = new SysUser();
 		sysUser.setPhone(userDto.getPhone());
@@ -216,41 +245,30 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "T(com.pig4cloud.pig.common.core.constant.CacheConstants).USER_DETAILS_KEY_PREFIX + #userDto.username")
 	public Boolean updateUser(UserDTO userDto) {
 		// 更新用户表信息
 		SysUser sysUser = new SysUser();
 		BeanUtils.copyProperties(userDto, sysUser);
-		sysUser.setUpdateTime(LocalDateTime.now());
+		sysUser.setUpdateTime(Instant.now());
 		if (StrUtil.isNotBlank(userDto.getPassword())) {
 			sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
 		}
 		this.updateById(sysUser);
 
 		// 更新用户角色表
-		if (Objects.nonNull(userDto.getRole())) {
-			// 删除用户角色关系
+		if (Objects.nonNull(userDto.getRoles())) {
 			sysUserRoleMapper
 				.delete(Wrappers.<SysUserRole>lambdaQuery().eq(SysUserRole::getUserId, userDto.getUserId()));
-			userDto.getRole().stream().map(roleId -> {
+			userDto.getRoles().stream().map(roleId -> {
 				SysUserRole userRole = new SysUserRole();
 				userRole.setUserId(sysUser.getUserId());
 				userRole.setRoleId(roleId);
 				return userRole;
-			}).forEach(SysUserRole::insert);
+			}).forEach(sysUserRoleMapper::insert);
 		}
 
-		if (Objects.nonNull(userDto.getPost())) {
-			// 删除用户岗位关系
-			sysUserPostMapper
-				.delete(Wrappers.<SysUserPost>lambdaQuery().eq(SysUserPost::getUserId, userDto.getUserId()));
-			userDto.getPost().stream().map(postId -> {
-				SysUserPost userPost = new SysUserPost();
-				userPost.setUserId(sysUser.getUserId());
-				userPost.setPostId(postId);
-				return userPost;
-			}).forEach(SysUserPost::insert);
-		}
+
 		return Boolean.TRUE;
 	}
 
@@ -261,9 +279,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	 */
 	@Override
 	public List<UserExcelVO> listUser(UserDTO userDTO) {
-		// 根据数据权限查询全部的用户信息
 		List<UserVO> voList = baseMapper.selectVoList(userDTO);
-		// 转换成execl 对象输出
 		return voList.stream().map(userVO -> {
 			UserExcelVO excelVO = new UserExcelVO();
 			BeanUtils.copyProperties(userVO, excelVO);
@@ -272,44 +288,26 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 				.map(SysRole::getRoleName)
 				.collect(Collectors.joining(StrUtil.COMMA));
 			excelVO.setRoleNameList(roleNameList);
-			String postNameList = userVO.getPostList()
-				.stream()
-				.map(SysPost::getPostName)
-				.collect(Collectors.joining(StrUtil.COMMA));
-			excelVO.setPostNameList(postNameList);
 			return excelVO;
 		}).collect(Collectors.toList());
 	}
 
-	/**
-	 * excel 导入用户, 插入正确的 错误的提示行号
-	 * @param excelVOList excel 列表数据
-	 * @param bindingResult 错误数据
-	 * @return ok fail
-	 */
 	@Override
 	public R importUser(List<UserExcelVO> excelVOList, BindingResult bindingResult) {
-		// 通用校验获取失败的数据
 		List<ErrorMessage> errorMessageList = (List<ErrorMessage>) bindingResult.getTarget();
 		List<SysDept> deptList = sysDeptService.list();
 		List<SysRole> roleList = sysRoleService.list();
-		List<SysPost> postList = sysPostService.list();
+		List<SysUser> allUsers = this.list();
 
-		// 执行数据插入操作 组装 UserDto
 		for (UserExcelVO excel : excelVOList) {
-			// 个性化校验逻辑
-			List<SysUser> userList = this.list();
-
 			Set<String> errorMsg = new HashSet<>();
-			// 校验用户名是否存在
-			boolean exsitUserName = userList.stream()
+			boolean exsitUserName = allUsers.stream()
 				.anyMatch(sysUser -> excel.getUsername().equals(sysUser.getUsername()));
 
 			if (exsitUserName) {
 				errorMsg.add(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERNAME_EXISTING, excel.getUsername()));
 			}
 
-			// 判断输入的部门名称列表是否合法
 			Optional<SysDept> deptOptional = deptList.stream()
 				.filter(dept -> excel.getDeptName().equals(dept.getName()))
 				.findFirst();
@@ -317,7 +315,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 				errorMsg.add(MsgUtils.getMessage(ErrorCodes.SYS_DEPT_DEPTNAME_INEXISTENCE, excel.getDeptName()));
 			}
 
-			// 判断输入的角色名称列表是否合法
 			List<String> roleNameList = StrUtil.split(excel.getRoleNameList(), StrUtil.COMMA);
 			List<SysRole> roleCollList = roleList.stream()
 				.filter(role -> roleNameList.stream().anyMatch(name -> role.getRoleName().equals(name)))
@@ -327,22 +324,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 				errorMsg.add(MsgUtils.getMessage(ErrorCodes.SYS_ROLE_ROLENAME_INEXISTENCE, excel.getRoleNameList()));
 			}
 
-			// 判断输入的部门名称列表是否合法
-			List<String> postNameList = StrUtil.split(excel.getPostNameList(), StrUtil.COMMA);
-			List<SysPost> postCollList = postList.stream()
-				.filter(post -> postNameList.stream().anyMatch(name -> post.getPostName().equals(name)))
-				.collect(Collectors.toList());
-
-			if (postCollList.size() != postNameList.size()) {
-				errorMsg.add(MsgUtils.getMessage(ErrorCodes.SYS_POST_POSTNAME_INEXISTENCE, excel.getPostNameList()));
-			}
-
-			// 数据合法情况
 			if (CollUtil.isEmpty(errorMsg)) {
-				insertExcelUser(excel, deptOptional, roleCollList, postCollList);
+				insertExcelUser(excel, deptOptional, roleCollList);
 			}
 			else {
-				// 数据不合法情况
 				errorMessageList.add(new ErrorMessage(excel.getLineNum(), errorMsg));
 			}
 
@@ -354,28 +339,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		return R.ok();
 	}
 
-	/**
-	 * 插入excel User
-	 */
-	private void insertExcelUser(UserExcelVO excel, Optional<SysDept> deptOptional, List<SysRole> roleCollList,
-			List<SysPost> postCollList) {
+	private void insertExcelUser(UserExcelVO excel, Optional<SysDept> deptOptional, List<SysRole> roleCollList) {
 		UserDTO userDTO = new UserDTO();
 		userDTO.setUsername(excel.getUsername());
 		userDTO.setPhone(excel.getPhone());
 		userDTO.setNickname(excel.getNickname());
 		userDTO.setName(excel.getName());
 		userDTO.setEmail(excel.getEmail());
-		// 批量导入初始密码为手机号
 		userDTO.setPassword(userDTO.getPhone());
-		// 根据部门名称查询部门ID
 		userDTO.setDeptId(deptOptional.get().getDeptId());
-		// 插入岗位名称
-		List<Long> postIdList = postCollList.stream().map(SysPost::getPostId).collect(Collectors.toList());
-		userDTO.setPost(postIdList);
-		// 根据角色名称查询角色ID
 		List<Long> roleIdList = roleCollList.stream().map(SysRole::getRoleId).collect(Collectors.toList());
-		userDTO.setRole(roleIdList);
-		// 插入用户
+		userDTO.setRoles(roleIdList);
 		this.saveUser(userDTO);
 	}
 
@@ -405,19 +379,33 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	 * @return
 	 */
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#username")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "T(com.pig4cloud.pig.common.core.constant.CacheConstants).USER_DETAILS_KEY_PREFIX + #username")
 	public R<Boolean> lockUser(String username) {
 		SysUser sysUser = baseMapper.selectOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, username));
 
 		if (Objects.nonNull(sysUser)) {
 			sysUser.setLockFlag(CommonConstants.STATUS_LOCK);
+			sysUser.setLockUntil(Instant.now().plusSeconds(900));
 			baseMapper.updateById(sysUser);
 		}
 		return R.ok();
 	}
 
 	@Override
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "T(com.pig4cloud.pig.common.core.constant.CacheConstants).USER_DETAILS_KEY_PREFIX + #username")
+	public R<Boolean> unlockUser(String username) {
+		SysUser sysUser = baseMapper.selectOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, username));
+
+		if (Objects.nonNull(sysUser)) {
+			sysUser.setLockFlag(CommonConstants.STATUS_NORMAL);
+			sysUser.setLockUntil(null);
+			baseMapper.updateById(sysUser);
+		}
+		return R.ok();
+	}
+
+	@Override
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "T(com.pig4cloud.pig.common.core.constant.CacheConstants).USER_DETAILS_KEY_PREFIX + #userDto.username")
 	public R changePassword(UserDTO userDto) {
 		SysUser sysUser = baseMapper.selectById(SecurityUtils.getUser().getId());
 		if (Objects.isNull(sysUser)) {
@@ -441,7 +429,30 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		this.update(Wrappers.<SysUser>lambdaUpdate()
 			.set(SysUser::getPassword, password)
 			.eq(SysUser::getUserId, sysUser.getUserId()));
+
+		remoteTokenService.removeTokenByUsername(sysUser.getUsername());
 		return R.ok();
+	}
+
+	@Override
+	public R resetPassword(Long userId, String newPassword) {
+		SysUser sysUser = baseMapper.selectById(userId);
+		if (Objects.isNull(sysUser)) {
+			return R.failed("用户不存在");
+		}
+
+		if (StrUtil.isEmpty(newPassword)) {
+			return R.failed("新密码不能为空");
+		}
+
+		String password = ENCODER.encode(newPassword);
+		this.update(Wrappers.<SysUser>lambdaUpdate()
+			.set(SysUser::getPassword, password)
+			.eq(SysUser::getUserId, userId));
+
+		remoteTokenService.removeTokenByUsername(sysUser.getUsername());
+		evictUserCache(sysUser.getUsername());
+		return R.ok(sysUser);
 	}
 
 	@Override
@@ -454,6 +465,79 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		}
 		else {
 			return R.ok();
+		}
+	}
+
+	@Override
+	public R closeAccount(Long id) {
+		SysUser sysUser = baseMapper.selectById(id);
+		if (Objects.isNull(sysUser)) {
+			return R.failed("用户不存在");
+		}
+		sysUser.setStatus("closed");
+		baseMapper.updateById(sysUser);
+		evictUserCache(sysUser.getUsername());
+		return R.ok(sysUser);
+	}
+
+	@Override
+	public R restoreAccount(Long id) {
+		SysUser sysUser = baseMapper.selectById(id);
+		if (Objects.isNull(sysUser)) {
+			return R.failed("用户不存在");
+		}
+		sysUser.setStatus("enabled");
+		baseMapper.updateById(sysUser);
+		evictUserCache(sysUser.getUsername());
+		return R.ok(sysUser);
+	}
+
+	@Override
+	public R enableUser(Long id) {
+		SysUser sysUser = baseMapper.selectById(id);
+		if (Objects.isNull(sysUser)) {
+			return R.failed("用户不存在");
+		}
+		if ("ENABLED".equalsIgnoreCase(sysUser.getStatus())) {
+			return R.ok(sysUser);
+		}
+		sysUser.setStatus("ENABLED");
+		baseMapper.updateById(sysUser);
+		evictUserCache(sysUser.getUsername());
+		return R.ok(sysUser);
+	}
+
+	@Override
+	public R disableUser(Long id) {
+		SysUser sysUser = baseMapper.selectById(id);
+		if (Objects.isNull(sysUser)) {
+			return R.failed("用户不存在");
+		}
+		if ("DISABLED".equalsIgnoreCase(sysUser.getStatus())) {
+			return R.ok(sysUser);
+		}
+		sysUser.setStatus("DISABLED");
+		baseMapper.updateById(sysUser);
+		evictUserCache(sysUser.getUsername());
+		return R.ok(sysUser);
+	}
+
+	@Override
+	public R updateAvatar(Long id, String avatarUrl) {
+		SysUser sysUser = baseMapper.selectById(id);
+		if (Objects.isNull(sysUser)) {
+			return R.failed("用户不存在");
+		}
+		sysUser.setAvatar(avatarUrl);
+		baseMapper.updateById(sysUser);
+		evictUserCache(sysUser.getUsername());
+		return R.ok(sysUser);
+	}
+
+	private void evictUserCache(String username) {
+		Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
+		if (cache != null) {
+			cache.evictIfPresent(CacheConstants.USER_DETAILS_KEY_PREFIX + username);
 		}
 	}
 

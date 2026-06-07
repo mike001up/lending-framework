@@ -1,22 +1,3 @@
-/*
- *
- *      Copyright (c) 2018-2025, lengleng All rights reserved.
- *
- *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice,
- *  this list of conditions and the following disclaimer.
- *  Redistributions in binary form must reproduce the above copyright
- *  notice, this list of conditions and the following disclaimer in the
- *  documentation and/or other materials provided with the distribution.
- *  Neither the name of the pig4cloud.com developer nor the names of its
- *  contributors may be used to endorse or promote products derived from
- *  this software without specific prior written permission.
- *  Author: lengleng (wangiegie@gmail.com)
- *
- */
-
 package com.pig4cloud.pig.admin.api.entity;
 
 import cn.idev.excel.annotation.ExcelIgnore;
@@ -27,132 +8,100 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
-/**
- * <p>
- * 日志表
- * </p>
- *
- * @author lengleng
- * @since 2017-11-20
- */
 @Data
-@Schema(description = "日志")
+@Schema(description = "审计日志")
 public class SysLog implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 * 编号
-	 */
 	@TableId(type = IdType.ASSIGN_ID)
 	@ExcelProperty("日志编号")
 	@Schema(description = "日志编号")
 	private Long id;
 
-	/**
-	 * 日志类型
-	 */
+	@Schema(description = "操作人ID")
+	private Long userId;
+
+	@ExcelProperty("操作人")
+	@TableField(fill = FieldFill.INSERT)
+	@Schema(description = "操作人登录名（快照）")
+	private String createBy;
+
+	@NotBlank(message = "操作类型不能为空")
+	@ExcelProperty("操作类型")
+	@Schema(description = "操作类型（如 LOGIN, CREATE_USER）")
+	private String operationType;
+
+	@ExcelProperty("操作对象")
+	@Schema(description = "操作对象描述")
+	private String targetObject;
+
+	@Schema(description = "操作结果：1-成功，0-失败")
+	private Integer result;
+
+	@ExcelProperty("操作ip地址")
+	@Schema(description = "请求来源IP")
+	private String remoteAddr;
+
+	@Schema(description = "客户端标识")
+	private String clientName;
+
+	@Schema(description = "附加详情JSON")
+	private String detail;
+
+	@ExcelProperty("创建时间")
+	@TableField(fill = FieldFill.INSERT)
+	@Schema(description = "操作时间")
+	private Instant createTime;
+
+	@ExcelIgnore
+	@TableField(fill = FieldFill.UPDATE)
+	@Schema(description = "更新时间")
+	private Instant updateTime;
+
 	@NotBlank(message = "日志类型不能为空")
-	@ExcelProperty("日志类型（0-正常 9-错误）")
-	@Schema(description = "日志类型")
+	@ExcelIgnore
+	@Schema(description = "日志类型（0-正常 9-错误）")
 	private String logType;
 
-	/**
-	 * 日志标题
-	 */
-	@NotBlank(message = "日志标题不能为空")
 	@ExcelProperty("日志标题")
 	@Schema(description = "日志标题")
 	private String title;
 
-	/**
-	 * 创建者
-	 */
-	@ExcelProperty("创建人")
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建人")
-	private String createBy;
-
-	/**
-	 * 创建时间
-	 */
-	@ExcelProperty("创建时间")
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建时间")
-	private LocalDateTime createTime;
-
-	/**
-	 * 更新时间
-	 */
-	@ExcelIgnore
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "更新时间")
-	private LocalDateTime updateTime;
-
-	/**
-	 * 操作IP地址
-	 */
-	@ExcelProperty("操作ip地址")
-	@Schema(description = "操作ip地址")
-	private String remoteAddr;
-
-	/**
-	 * 用户代理
-	 */
 	@Schema(description = "用户代理")
 	private String userAgent;
 
-	/**
-	 * 请求URI
-	 */
-	@ExcelProperty("浏览器")
+	@ExcelProperty("请求uri")
 	@Schema(description = "请求uri")
 	private String requestUri;
 
-	/**
-	 * 操作方式
-	 */
 	@ExcelProperty("操作方式")
-	@Schema(description = "操作方式")
+	@Schema(description = "HTTP方法")
 	private String method;
 
-	/**
-	 * 操作提交的数据
-	 */
 	@ExcelProperty("提交数据")
 	@Schema(description = "提交数据")
 	private String params;
 
-	/**
-	 * 执行时间
-	 */
 	@ExcelProperty("执行时间")
 	@Schema(description = "方法执行时间")
 	private Long time;
 
-	/**
-	 * 异常信息
-	 */
 	@ExcelProperty("异常信息")
 	@Schema(description = "异常信息")
 	private String exception;
 
-	/**
-	 * 服务ID
-	 */
 	@ExcelProperty("应用标识")
 	@Schema(description = "应用标识")
 	private String serviceId;
 
-	/**
-	 * 删除标记
-	 */
-	@TableLogic
+	@TableLogic(value = "'NO'", delval = "'YES'")
 	@ExcelIgnore
 	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "删除标记,1:已删除,0:正常")
-	private String delFlag;
+	@Schema(description = "删除标记,YES:已删除,NO:正常")
+	private IsDelEnum isDel;
 
 }

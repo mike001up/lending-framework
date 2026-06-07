@@ -97,11 +97,11 @@ public class TaskInvokUtil {
 			// 记录执行时间 立刻执行使用的是simpleTeigger
 			if (trigger instanceof CronTrigger) {
 				updateSysjob
-					.setStartTime(trigger.getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+					.setStartTime(trigger.getStartTime().toInstant());
 				updateSysjob.setPreviousTime(
-						trigger.getPreviousFireTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+						trigger.getPreviousFireTime().toInstant());
 				updateSysjob.setNextTime(
-						trigger.getNextFireTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+						trigger.getNextFireTime().toInstant());
 			}
 			// 记录执行时长
 			endTime = System.currentTimeMillis();

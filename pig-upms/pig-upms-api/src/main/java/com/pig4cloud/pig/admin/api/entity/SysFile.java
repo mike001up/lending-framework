@@ -23,7 +23,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 /**
  * 文件管理
@@ -87,7 +88,7 @@ public class SysFile extends Model<SysFile> {
 	 */
 	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "创建时间")
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 	/**
 	 * 更新人
@@ -101,14 +102,11 @@ public class SysFile extends Model<SysFile> {
 	 */
 	@TableField(fill = FieldFill.UPDATE)
 	@Schema(description = "更新时间")
-	private LocalDateTime updateTime;
+	private Instant updateTime;
 
-	/**
-	 * 删除标识：1-删除，0-正常
-	 */
-	@TableLogic
+	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "删除标记,1:已删除,0:正常")
-	private String delFlag;
+	@Schema(description = "删除标记,YES:已删除,NO:正常")
+	private IsDelEnum isDel;
 
 }

@@ -27,7 +27,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 /**
  * <p>
@@ -81,14 +82,14 @@ public class SysDept extends Model<SysDept> {
 	 */
 	@Schema(description = "创建时间")
 	@TableField(fill = FieldFill.INSERT)
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 	/**
 	 * 修改时间
 	 */
 	@Schema(description = "修改时间")
 	@TableField(fill = FieldFill.UPDATE)
-	private LocalDateTime updateTime;
+	private Instant updateTime;
 
 	/**
 	 * 父级部门id
@@ -96,12 +97,9 @@ public class SysDept extends Model<SysDept> {
 	@Schema(description = "父级部门id")
 	private Long parentId;
 
-	/**
-	 * 是否删除 1：已删除 0：正常
-	 */
-	@TableLogic
-	@Schema(description = "删除标记,1:已删除,0:正常")
+	@TableLogic(value = "'NO'", delval = "'YES'")
+	@Schema(description = "删除标记,YES:已删除,NO:正常")
 	@TableField(fill = FieldFill.INSERT)
-	private String delFlag;
+	private IsDelEnum isDel;
 
 }

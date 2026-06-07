@@ -118,6 +118,8 @@ public interface SysUserService extends IService<SysUser> {
 	 */
 	R<Boolean> lockUser(String username);
 
+	R<Boolean> unlockUser(String username);
+
 	/**
 	 * 修改密码
 	 * @param userDto 用户信息
@@ -126,10 +128,28 @@ public interface SysUserService extends IService<SysUser> {
 	R changePassword(UserDTO userDto);
 
 	/**
+	 * 管理员重置他人密码
+	 * @param userId 用户ID
+	 * @param newPassword 新密码
+	 * @return
+	 */
+	R resetPassword(Long userId, String newPassword);
+
+	/**
 	 * 校验密码
 	 * @param password 密码明文
 	 * @return
 	 */
 	R checkPassword(String password);
+
+	R closeAccount(Long id);
+
+	R restoreAccount(Long id);
+
+	R enableUser(Long id);
+
+	R disableUser(Long id);
+
+	R updateAvatar(Long id, String avatarUrl);
 
 }

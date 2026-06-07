@@ -27,8 +27,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnablePigFeignClients
 @EnableDiscoveryClient
 @SpringBootApplication(exclude = {
-		org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class,
-		com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration.class
+		org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class
 })
 public class PigAuthApplication {
 

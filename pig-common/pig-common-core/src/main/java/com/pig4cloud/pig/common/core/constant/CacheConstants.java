@@ -44,6 +44,8 @@ public interface CacheConstants {
 	 */
 	String USER_DETAILS = "user_details";
 
+	String USER_DETAILS_KEY_PREFIX = "pig-upms:user:";
+
 	/**
 	 * 字典信息缓存
 	 */

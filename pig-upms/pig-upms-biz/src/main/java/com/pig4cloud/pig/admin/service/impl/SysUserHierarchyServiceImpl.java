@@ -45,4 +45,25 @@ public class SysUserHierarchyServiceImpl extends ServiceImpl<SysUserHierarchyMap
 			.eq(SysUserHierarchy::getDescendant, descendant));
 	}
 
+	@Override
+	public Long getAncestorByType(Long userId, String hierarchyType) {
+		SysUserHierarchy hierarchy = this.getOne(Wrappers.<SysUserHierarchy>lambdaQuery()
+			.eq(SysUserHierarchy::getDescendant, userId)
+			.eq(SysUserHierarchy::getHierarchyType, hierarchyType)
+			.eq(SysUserHierarchy::getDepth, 1)
+			.last("LIMIT 1"));
+		return hierarchy != null ? hierarchy.getAncestor() : null;
+	}
+
+	@Override
+	public List<Long> getDescendantsByAncestorAndType(Long ancestorId, String hierarchyType) {
+		return this.list(Wrappers.<SysUserHierarchy>lambdaQuery()
+			.eq(SysUserHierarchy::getAncestor, ancestorId)
+			.eq(SysUserHierarchy::getHierarchyType, hierarchyType))
+			.stream()
+			.map(SysUserHierarchy::getDescendant)
+			.distinct()
+			.collect(java.util.stream.Collectors.toList());
+	}
+
 }

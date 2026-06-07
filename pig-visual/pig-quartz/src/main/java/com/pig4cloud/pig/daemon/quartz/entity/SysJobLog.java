@@ -28,7 +28,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * 定时任务执行日志表
@@ -125,6 +125,6 @@ public class SysJobLog extends Model<SysJobLog> {
 	 * 创建时间
 	 */
 	@TableField(fill = FieldFill.INSERT)
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 }

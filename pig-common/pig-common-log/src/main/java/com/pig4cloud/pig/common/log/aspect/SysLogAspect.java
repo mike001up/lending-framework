@@ -79,6 +79,7 @@ public class SysLogAspect {
 		}
 		catch (Exception e) {
 			logVo.setLogType(LogTypeEnum.ERROR.getType());
+			logVo.setResult(0);
 			logVo.setException(e.getMessage());
 			throw e;
 		}

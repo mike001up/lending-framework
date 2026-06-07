@@ -14,10 +14,11 @@ spring:
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         namespace: ${NACOS_NS}
+        username: @nacos.username@
+        password: @nacos.password@
+        import-check:
+          enabled: false
   config:
     import:
-      - nacos:application-@profiles.active@.yml
-      - nacos:${spring.application.name}-@profiles.active@.yml
-
-
-
+      - optional:nacos:application-@profiles.active@.yml
+      - optional:nacos:${spring.application.name}-@profiles.active@.yml

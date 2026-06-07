@@ -58,5 +58,6 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-oauth2-core</artifactId>
         </dependency>
+
     </dependencies>
 </project>

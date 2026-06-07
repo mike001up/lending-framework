@@ -7,7 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 @Data
 @Schema(description = "租户")
@@ -36,17 +37,18 @@ public class SysTenant extends Model<SysTenant> {
 
 	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "创建时间")
-	private LocalDateTime createdAt;
+	private Instant createdAt;
 
 	@Schema(description = "创建人id")
 	private Long createdBy;
 
 	@TableField(fill = FieldFill.UPDATE)
 	@Schema(description = "更新时间")
-	private LocalDateTime updatedAt;
+	private Instant updatedAt;
 
-	@TableLogic
+	@TableLogic(value = "'NO'", delval = "'YES'")
+	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "逻辑删除,YES:已删除,NO:未删除")
-	private String isDel;
+	private IsDelEnum isDel;
 
 }

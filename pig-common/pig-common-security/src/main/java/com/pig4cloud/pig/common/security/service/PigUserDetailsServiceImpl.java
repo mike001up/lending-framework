@@ -21,7 +21,7 @@ import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
-import com.pig4cloud.pig.common.core.util.GetClient;
+
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.security.exception.UserBlockedException;
 import com.pig4cloud.pig.common.security.exception.UserNotExistException;
@@ -59,8 +59,7 @@ public class PigUserDetailsServiceImpl implements PigUserDetailsService {
     @Override
     @SneakyThrows
     public UserDetails loadUserByUsername(String username) {
-        String client = GetClient.get();
-        String cacheKey = client + ":" + username;
+        String cacheKey = CacheConstants.USER_DETAILS_KEY_PREFIX + username;
         Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
         if (cache != null && cache.get(cacheKey) != null) {
             PigUser pigUser = (PigUser) cache.get(cacheKey).get();
@@ -68,12 +67,7 @@ public class PigUserDetailsServiceImpl implements PigUserDetailsService {
         }
         UserDTO userDTO = new UserDTO();
         userDTO.setUsername(username);
-        R<UserInfo> result;
-        if (client.equalsIgnoreCase(CommonConstants.BMS)) {
-            result = remoteUserService.info(userDTO);
-        } else {
-            result = remoteUserService.infoApp(userDTO);
-        }
+        R<UserInfo> result = remoteUserService.info(userDTO);
 		int code = result.getCode();
         if (code == 1) {
             throw new UserBlockedException(result.getMsg());

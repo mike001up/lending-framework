@@ -74,6 +74,8 @@ public class PigAuthenticationSuccessEventHandler implements AuthenticationSucce
 			SecurityContextHolder.getContext().setAuthentication(accessTokenAuthentication);
 			SysLog logVo = SysLogUtils.getSysLog();
 			logVo.setTitle("登录成功");
+			logVo.setOperationType("LOGIN");
+			logVo.setResult(1);
 			String startTimeStr = request.getHeader(CommonConstants.REQUEST_START_TIME);
 			if (StrUtil.isNotBlank(startTimeStr)) {
 				Long startTime = Long.parseLong(startTimeStr);

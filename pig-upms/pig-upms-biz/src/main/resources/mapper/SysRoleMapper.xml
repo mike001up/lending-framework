@@ -28,7 +28,7 @@
 		<result column="role_desc" property="roleDesc"/>
 		<result column="create_time" property="createTime"/>
 		<result column="update_time" property="updateTime"/>
-		<result column="del_flag" property="delFlag"/>
+		<result column="is_del" property="isDel"/>
 	</resultMap>
 
 	<!-- 通过用户ID，查询角色信息-->
@@ -39,11 +39,11 @@
 			   sys_role.role_desc,
 			   sys_role.create_time,
 			   sys_role.update_time,
-			   sys_role.del_flag
+sys_role.is_del
 		FROM sys_role,
 			 sys_user_role
 		WHERE sys_role.role_id = sys_user_role.role_id
-		  AND sys_role.del_flag = '0'
+		  AND sys_role.is_del = 'NO'
 		  and sys_user_role.user_id = #{userId}
 	</select>
 </mapper>

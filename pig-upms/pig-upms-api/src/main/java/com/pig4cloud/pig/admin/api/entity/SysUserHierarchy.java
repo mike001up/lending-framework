@@ -18,4 +18,10 @@ public class SysUserHierarchy extends Model<SysUserHierarchy> {
 	@Schema(description = "后代节点")
 	private Long descendant;
 
+	@Schema(description = "边数距离：自身为0，父子为1")
+	private Integer depth;
+
+	@Schema(description = "层级类型（如 agency, region）")
+	private String hierarchyType;
+
 }

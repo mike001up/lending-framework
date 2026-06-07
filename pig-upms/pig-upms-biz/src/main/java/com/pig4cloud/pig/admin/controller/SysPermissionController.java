@@ -1,5 +1,7 @@
 package com.pig4cloud.pig.admin.controller;
 
+import com.pig4cloud.pig.admin.api.dto.BatchCheckPermissionDTO;
+import com.pig4cloud.pig.admin.api.dto.CheckPermissionDTO;
 import com.pig4cloud.pig.admin.api.entity.SysPermission;
 import com.pig4cloud.pig.admin.service.SysPermissionService;
 import com.pig4cloud.pig.common.core.util.R;
@@ -13,6 +15,9 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 
 @RestController
 @AllArgsConstructor
@@ -59,6 +64,16 @@ public class SysPermissionController {
 	@GetMapping("/authorize-rules")
 	public R<List<SysPermission>> getAuthorizeRules() {
 		return R.ok(sysPermissionService.listAuthorizeRules());
+	}
+
+	@PostMapping("/check")
+	public R checkPermission(@RequestBody CheckPermissionDTO dto) {
+		return R.ok(sysPermissionService.checkPermission(dto.getUserId(), dto.getPermCode()));
+	}
+
+	@PostMapping("/batch-check")
+	public R batchCheckPermission(@RequestBody BatchCheckPermissionDTO dto) {
+		return R.ok(sysPermissionService.batchCheckPermission(dto.getUserId(), dto.getPermCodes()));
 	}
 
 }

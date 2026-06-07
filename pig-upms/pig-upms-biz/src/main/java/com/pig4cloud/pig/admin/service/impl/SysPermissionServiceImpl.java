@@ -9,8 +9,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.entity.SysPermission;
 import com.pig4cloud.pig.admin.api.entity.SysRolePermission;
+import com.pig4cloud.pig.admin.api.entity.SysUserRole;
 import com.pig4cloud.pig.admin.mapper.SysPermissionMapper;
 import com.pig4cloud.pig.admin.mapper.SysRolePermissionMapper;
+import com.pig4cloud.pig.admin.mapper.SysUserRoleMapper;
 import com.pig4cloud.pig.admin.service.SysPermissionService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
@@ -34,6 +36,8 @@ import java.util.stream.Collectors;
 public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, SysPermission> implements SysPermissionService {
 
 	private final SysRolePermissionMapper sysRolePermissionMapper;
+
+	private final SysUserRoleMapper sysUserRoleMapper;
 
 	@Override
 	@Cacheable(value = CacheConstants.PERMISSION_DETAILS, key = "#roleId", unless = "#result.isEmpty()")
@@ -105,6 +109,30 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 			.ne(SysPermission::getPath, "")
 			.isNotNull(SysPermission::getPermission)
 			.ne(SysPermission::getPermission, ""));
+	}
+
+	@Override
+	public Boolean checkPermission(Long userId, String permCode) {
+		List<SysUserRole> userRoles = sysUserRoleMapper
+			.selectList(Wrappers.<SysUserRole>lambdaQuery().eq(SysUserRole::getUserId, userId));
+		if (CollUtil.isEmpty(userRoles)) {
+			return false;
+		}
+		List<Long> roleIds = userRoles.stream().map(SysUserRole::getRoleId).collect(Collectors.toList());
+		for (Long roleId : roleIds) {
+			List<SysPermission> perms = findPermissionByRoleId(roleId);
+			boolean has = perms.stream()
+				.anyMatch(p -> permCode.equals(p.getPermCode()) || permCode.equals(p.getPermission()));
+			if (has) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public List<Boolean> batchCheckPermission(Long userId, List<String> permCodes) {
+		return permCodes.stream().map(code -> checkPermission(userId, code)).collect(Collectors.toList());
 	}
 
 }

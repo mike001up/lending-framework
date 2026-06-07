@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * 后台IP白名单
@@ -52,7 +52,7 @@ public class BizIpLimit extends Model<BizIpLimit> {
 	*/
 	@TableField(fill = FieldFill.INSERT)
     @Schema(description="创建时间")
-    private LocalDateTime createTime;
+    private Instant createTime;
 
 	/**
 	* 更新人
@@ -66,5 +66,5 @@ public class BizIpLimit extends Model<BizIpLimit> {
 	*/
 	@TableField(fill = FieldFill.INSERT_UPDATE)
     @Schema(description="更新时间")
-    private LocalDateTime updateTime;
+    private Instant updateTime;
 }

@@ -51,4 +51,7 @@ public class UserInfo implements Serializable {
 	@Schema(description = "角色标识集合")
 	private Long[] roles;
 
+	@Schema(description = "租户ID（来自用户层级关系）")
+	private Long tenantId;
+
 }

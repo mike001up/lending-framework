@@ -1,91 +1,47 @@
 package com.pig4cloud.pig.admin.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-/**
- * @author lengleng
- * @date 2020/10/9
- * <p>
- * 日志查询传输对象
- */
 @Data
-@Schema(description = "日志查询对象")
+@Schema(description = "审计日志查询对象")
 public class SysLogDTO {
 
-	/**
-	 * 编号
-	 */
 	private Long id;
 
-	/**
-	 * 日志类型
-	 */
-	@NotBlank(message = "日志类型不能为空")
-	private String logType;
+	@Schema(description = "操作人ID")
+	private Long userId;
 
-	/**
-	 * 日志标题
-	 */
-	@NotBlank(message = "日志标题不能为空")
-	private String title;
-
-	/**
-	 * 创建者
-	 */
+	@Schema(description = "操作人登录名")
 	private String createBy;
 
-	/**
-	 * 更新时间
-	 */
-	private LocalDateTime updateTime;
+	@Schema(description = "操作类型")
+	private String operationType;
 
-	/**
-	 * 操作IP地址
-	 */
+	@Schema(description = "操作对象描述")
+	private String targetObject;
+
+	@Schema(description = "操作结果：1-成功，0-失败")
+	private Integer result;
+
+	@Schema(description = "请求来源IP")
 	private String remoteAddr;
 
-	/**
-	 * 用户代理
-	 */
-	private String userAgent;
+	@Schema(description = "客户端标识")
+	private String clientName;
 
-	/**
-	 * 请求URI
-	 */
-	private String requestUri;
+	@Schema(description = "日志类型")
+	private String logType;
 
-	/**
-	 * 操作方式
-	 */
-	private String method;
+	@Schema(description = "日志标题")
+	private String title;
 
-	/**
-	 * 操作提交的数据
-	 */
-	private String params;
-
-	/**
-	 * 执行时间
-	 */
-	private Long time;
-
-	/**
-	 * 异常信息
-	 */
-	private String exception;
-
-	/**
-	 * 服务ID
-	 */
+	@Schema(description = "应用标识")
 	private String serviceId;
 
-	/**
-	 * 创建时间区间 [开始时间，结束时间]
-	 */
-	private LocalDateTime[] createTime;
+	@Schema(description = "创建时间区间 [开始时间，结束时间]")
+	private Instant[] createTime;
 
 }

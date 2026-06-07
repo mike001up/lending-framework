@@ -31,9 +31,9 @@ public enum CommonColumnFiledEnum {
 	 */
 	update_time("0", "0", AutoFillEnum.INSERT_UPDATE.name(), 103),
 	/**
-	 * del_flag 字段
+	 * is_del 字段
 	 */
-	del_flag("0", "0", AutoFillEnum.DEFAULT.name(), 104),
+	is_del("NO", "NO", AutoFillEnum.DEFAULT.name(), 104),
 	/**
 	 * tenant_id 字段
 	 */

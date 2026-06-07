@@ -35,7 +35,7 @@
         <result column="ucreate_time" property="createTime"/>
         <result column="uupdate_time" property="updateTime"/>
         <result column="lock_flag" property="lockFlag"/>
-        <result column="del_flag" property="delFlag"/>
+        <result column="is_del" property="isDel"/>
         <result column="dept_id" property="deptId"/>
         <result column="dept_name" property="deptName"/>
         <result column="nickname" property="nickname"/>
@@ -44,9 +44,7 @@
         <collection property="roleList" ofType="com.pig4cloud.pig.admin.api.entity.SysRole"
                     select="com.pig4cloud.pig.admin.mapper.SysRoleMapper.listRolesByUserId" column="user_id">
         </collection>
-        <collection property="postList" ofType="com.pig4cloud.pig.admin.api.entity.SysPost"
-                    select="com.pig4cloud.pig.admin.mapper.SysPostMapper.listPostsByUserId" column="user_id">
-        </collection>
+
     </resultMap>
 
     <sql id="userRoleSql">
@@ -59,7 +57,7 @@
         u.wx_openid,
         u.qq_openid,
         u.dept_id,
-        u.del_flag,
+        u.is_del,
         u.lock_flag,
         u.create_by,
         u.create_time  ucreate_time,
@@ -83,7 +81,7 @@
         u.qq_openid,
         u.gitee_login,
         u.osc_id,
-        u.del_flag,
+        u.is_del,
         u.lock_flag,
         u.nickname,
         u.name,
@@ -101,8 +99,8 @@
         FROM
         sys_user u
         LEFT JOIN sys_user_role urole ON urole.user_id = u.user_id
-        LEFT JOIN sys_role r ON r.role_id = urole.role_id and r.del_flag = '0'
-        WHERE u.username = #{username} and u.del_flag = '0'
+        LEFT JOIN sys_role r ON r.role_id = urole.role_id and r.is_del = 'NO'
+        WHERE u.username = #{username} and u.is_del = 'NO'
     </select>
 
     <select id="getUserVoById" resultMap="baseResultMap">
@@ -110,9 +108,9 @@
         <include refid="userRoleDeptSql"/>
         FROM
         sys_user u
-        LEFT JOIN sys_dept d ON d.dept_id = u.dept_id and d.del_flag = '0'
+        LEFT JOIN sys_dept d ON d.dept_id = u.dept_id and d.is_del = 'NO'
         WHERE
-        u.user_id = #{id} and u.del_flag = '0'
+        u.user_id = #{id} and u.is_del = 'NO'
     </select>
 
     <select id="getUserVosPage" resultMap="baseResultMap">
@@ -129,7 +127,7 @@
         u.create_by,
         u.create_time ucreate_time,
         u.update_time uupdate_time,
-        u.del_flag,
+        u.is_del,
         u.lock_flag,
         u.nickname,
         u.name,
@@ -139,7 +137,7 @@
         sys_user u
         LEFT JOIN sys_dept d ON d.dept_id = u.dept_id
         <where>
-            u.del_flag = '0'
+            u.is_del = 'NO'
             <if test="query.username != null and query.username != ''">
                 <bind name="usernameLike" value="'%'+query.username+'%'"/>
                 AND u.username LIKE #{usernameLike}
@@ -172,7 +170,7 @@
         u.create_by,
         u.create_time ucreate_time,
         u.update_time uupdate_time,
-        u.del_flag,
+        u.is_del,
         u.lock_flag,
         u.nickname,
         u.name,
@@ -182,7 +180,7 @@
         sys_user u
         LEFT JOIN sys_dept d ON d.dept_id = u.dept_id
         <where>
-            u.del_flag = '0'
+            u.is_del = 'NO'
             <if test="query.username != null and query.username != ''">
                 <bind name="usernameLike" value="'%'+query.username+'%'"/>
                 AND u.username LIKE #{usernameLike}

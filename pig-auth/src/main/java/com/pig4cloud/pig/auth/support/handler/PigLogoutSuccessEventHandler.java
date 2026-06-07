@@ -59,6 +59,8 @@ public class PigLogoutSuccessEventHandler implements ApplicationListener<LogoutS
 		log.info("用户：{} 退出成功", authentication.getPrincipal());
 		SysLog logVo = SysLogUtils.getSysLog();
 		logVo.setTitle("退出成功");
+		logVo.setOperationType("LOGOUT");
+		logVo.setResult(1);
 
 		// 设置对应的token
 		WebUtils.getRequest().ifPresent(request -> {

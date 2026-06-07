@@ -8,7 +8,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 @Data
 @Schema(description = "权限资源")
@@ -25,11 +26,17 @@ public class SysPermission extends Model<SysPermission> {
 	@Schema(description = "权限名称")
 	private String name;
 
+	@Schema(description = "权限编码")
+	private String permCode;
+
 	@Schema(description = "权限标识")
 	private String permission;
 
 	@Schema(description = "描述")
 	private String description;
+
+	@Schema(description = "资源类型：module/menu/button/api")
+	private String resourceType;
 
 	@Schema(description = "请求路径")
 	private String path;
@@ -44,6 +51,9 @@ public class SysPermission extends Model<SysPermission> {
 	@Schema(description = "排序值")
 	private Integer sortOrder;
 
+	@Schema(description = "状态：enabled-启用，disabled-禁用")
+	private String status;
+
 	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "创建人")
 	private String createBy;
@@ -54,15 +64,15 @@ public class SysPermission extends Model<SysPermission> {
 
 	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "创建时间")
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 	@TableField(fill = FieldFill.UPDATE)
 	@Schema(description = "更新时间")
-	private LocalDateTime updateTime;
+	private Instant updateTime;
 
-	@TableLogic
+	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "删除标记,1:已删除,0:正常")
-	private String delFlag;
+	@Schema(description = "删除标记,YES:已删除,NO:正常")
+	private IsDelEnum isDel;
 
 }

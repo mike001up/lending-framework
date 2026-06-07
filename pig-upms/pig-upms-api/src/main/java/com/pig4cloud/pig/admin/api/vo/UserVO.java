@@ -20,14 +20,14 @@
 package com.pig4cloud.pig.admin.api.vo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.pig4cloud.pig.admin.api.entity.SysPost;
+
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.List;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 /**
  * @author lengleng
@@ -91,19 +91,16 @@ public class UserVO implements Serializable {
 	 * 创建时间
 	 */
 	@Schema(description = "创建时间")
-	private LocalDateTime createTime;
+	private String createTime;
 
 	/**
 	 * 修改时间
 	 */
 	@Schema(description = "修改时间")
-	private LocalDateTime updateTime;
+	private String updateTime;
 
-	/**
-	 * 0-正常，1-删除
-	 */
-	@Schema(description = "删除标记,1:已删除,0:正常")
-	private String delFlag;
+	@Schema(description = "删除标记,YES:已删除,NO:正常")
+	private IsDelEnum isDel;
 
 	/**
 	 * 锁定标记
@@ -142,11 +139,7 @@ public class UserVO implements Serializable {
 	private List<SysRole> roleList;
 
 	/**
-	 * 岗位列表
-	 */
-	private List<SysPost> postList;
 
-	/**
 	 * 昵称
 	 */
 	@Schema(description = "昵称")

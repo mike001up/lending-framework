@@ -17,4 +17,8 @@ public interface SysUserHierarchyService extends IService<SysUserHierarchy> {
 
 	void removeRelation(Long ancestor, Long descendant);
 
+	Long getAncestorByType(Long userId, String hierarchyType);
+
+	List<Long> getDescendantsByAncestorAndType(Long ancestorId, String hierarchyType);
+
 }

@@ -154,4 +154,23 @@ public class SysClientController {
 		return clientDetailsService.list(Wrappers.query(sysOauthClientDetails));
 	}
 
+	@GetMapping("/list")
+	public R listEnabled() {
+		return R.ok(clientDetailsService.list(Wrappers.<SysOauthClientDetails>lambdaQuery()
+			.eq(SysOauthClientDetails::getStatus, "enabled")));
+	}
+
+	@SysLog("启用/禁用客户端")
+	@PutMapping("/toggle-status/{clientId}")
+	@HasPermission("sys_client_edit")
+	public R toggleStatus(@PathVariable String clientId) {
+		SysOauthClientDetails details = clientDetailsService
+			.getOne(Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, clientId));
+		if (details == null) {
+			return R.failed("客户端不存在");
+		}
+		details.setStatus("enabled".equals(details.getStatus()) ? "disabled" : "enabled");
+		return R.ok(clientDetailsService.updateById(details));
+	}
+
 }

@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,7 +51,7 @@ public class SysTokenController {
 	 * @param params 参数集
 	 * @return token集合
 	 */
-	@RequestMapping("/page")
+	@PostMapping("/page")
 	public R getTokenPage(@RequestBody Map<String, Object> params) {
 		return remoteTokenService.getTokenPage(params);
 	}

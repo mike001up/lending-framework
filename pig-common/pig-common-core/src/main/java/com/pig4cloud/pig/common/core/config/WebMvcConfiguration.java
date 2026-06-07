@@ -43,7 +43,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 	 * <ul>
 	 * <li>HH:mm:ss -> LocalTime</li>
 	 * <li>yyyy-MM-dd -> LocalDate</li>
-	 * <li>yyyy-MM-dd HH:mm:ss -> LocalDateTime</li>
+	 * <li>yyyy-MM-dd HH:mm:ss -> Instant</li>
 	 * </ul>
 	 * @param registry
 	 */

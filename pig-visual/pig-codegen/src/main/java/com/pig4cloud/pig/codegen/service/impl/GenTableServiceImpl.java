@@ -48,7 +48,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -197,7 +197,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 		// 模块名称默认为 admin
 		table.setModuleName(configurationProperties.getModuleName());
 		table.setFunctionName(GenKit.getFunctionName(tableName));
-		table.setCreateTime(LocalDateTime.now());
+		table.setCreateTime(Instant.now());
 
 		// 使用默认数据源
 		DynamicDataSourceContextHolder.clear();

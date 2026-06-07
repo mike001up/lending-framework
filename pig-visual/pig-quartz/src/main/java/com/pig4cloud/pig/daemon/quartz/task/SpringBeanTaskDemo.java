@@ -22,7 +22,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * @author 郑健楠
@@ -36,7 +36,7 @@ public class SpringBeanTaskDemo {
 	 */
 	@SneakyThrows
 	public String demoMethod(String para) {
-		log.info("测试于:{}，输入参数{}", LocalDateTime.now(), para);
+		log.info("测试于:{}，输入参数{}", Instant.now(), para);
 		return PigQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
 	}
 

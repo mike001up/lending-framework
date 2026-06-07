@@ -112,10 +112,10 @@
         <module>pig-upms</module>
         <module>pig-common</module>
         <module>pig-visual</module>
-        <module>pig-workflow</module>
+        <!-- <module>pig-workflow</module>
         <module>pig-guaranty</module>
         <module>pig-risk</module>
-        <module>pig-finance</module>
+        <module>pig-finance</module> -->
     </modules>
 
     <dependencyManagement>

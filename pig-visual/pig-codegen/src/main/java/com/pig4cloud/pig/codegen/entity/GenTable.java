@@ -26,7 +26,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -150,7 +150,7 @@ public class GenTable extends Model<GenTable> {
 	 * 创建时间
 	 */
 	@Schema(description = "创建时间")
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 	/**
 	 * 代码生成风格

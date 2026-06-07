@@ -35,7 +35,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -116,7 +116,7 @@ public class SysDeptController {
 	@PutMapping
 	@HasPermission("sys_dept_edit")
 	public R update(@Valid @RequestBody SysDept sysDept) {
-		sysDept.setUpdateTime(LocalDateTime.now());
+		sysDept.setUpdateTime(Instant.now());
 		return R.ok(sysDeptService.updateById(sysDept));
 	}
 

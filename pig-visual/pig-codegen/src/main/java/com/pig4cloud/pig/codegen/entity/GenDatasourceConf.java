@@ -21,7 +21,8 @@ import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 /**
  * 数据源表
@@ -96,19 +97,17 @@ public class GenDatasourceConf extends Model<GenDatasourceConf> {
 	 * 创建时间
 	 */
 	@TableField(fill = FieldFill.INSERT)
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 	/**
 	 * 修改时间
 	 */
 	@TableField(fill = FieldFill.UPDATE)
-	private LocalDateTime updateTime;
+	private Instant updateTime;
 
-	/**
-	 * 0-正常，1-删除
-	 */
-	@TableLogic
+	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)
-	private String delFlag;
+	@Schema(description = "删除标记,YES:已删除,NO:正常")
+	private IsDelEnum isDel;
 
 }

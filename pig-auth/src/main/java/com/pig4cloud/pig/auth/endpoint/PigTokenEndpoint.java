@@ -16,6 +16,7 @@
 
 package com.pig4cloud.pig.auth.endpoint;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.TemporalAccessorUtil;
 import cn.hutool.core.map.MapUtil;
@@ -42,6 +43,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -65,6 +67,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -190,7 +193,7 @@ public class PigTokenEndpoint {
 			return R.ok();
 		}
 		// 清空用户信息（立即删除）
-		cacheManager.getCache(CacheConstants.USER_DETAILS).evictIfPresent(authorization.getPrincipalName());
+		cacheManager.getCache(CacheConstants.USER_DETAILS).evictIfPresent(CacheConstants.USER_DETAILS_KEY_PREFIX + authorization.getPrincipalName());
 		// 清空access token
 		authorizationService.remove(authorization);
 		// 处理自定义退出事件，保存相关日志
@@ -199,6 +202,35 @@ public class PigTokenEndpoint {
 		return R.ok();
 	}
 
+
+	@Inner
+	@DeleteMapping("/token/removeByUsername/{username}")
+	public R<Boolean> removeTokenByUsername(@PathVariable("username") String username) {
+		String key = String.format("%s::*", CacheConstants.PROJECT_OAUTH_ACCESS);
+		Set<String> keys = redisTemplate.keys(key);
+		if (CollUtil.isEmpty(keys)) {
+			return R.ok();
+		}
+
+		redisTemplate.setValueSerializer(RedisSerializer.java());
+		List<Object> authorizations = redisTemplate.opsForValue().multiGet(keys);
+		if (CollUtil.isEmpty(authorizations)) {
+			return R.ok();
+		}
+
+		authorizations.stream()
+			.filter(Objects::nonNull)
+			.map(obj -> (OAuth2Authorization) obj)
+			.filter(auth -> username.equals(auth.getPrincipalName()))
+			.forEach(auth -> {
+				authorizationService.remove(auth);
+				SpringContextHolder.publishEvent(new LogoutSuccessEvent(new PreAuthenticatedAuthenticationToken(
+						auth.getPrincipalName(), auth.getRegisteredClientId())));
+			});
+
+		cacheManager.getCache(CacheConstants.USER_DETAILS).evictIfPresent(CacheConstants.USER_DETAILS_KEY_PREFIX + username);
+		return R.ok();
+	}
 
 	@SneakyThrows
 	@GetMapping("/token/getUser")

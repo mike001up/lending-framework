@@ -16,7 +16,7 @@
 		FROM gen_template t ,
 			 gen_template_group tg
 		WHERE t.id = tg.template_id
-		  AND t.del_flag = '0'
+		  AND t.is_del = 'NO'
 		  and tg.group_id = #{groupId}
 	</select>
 </mapper>

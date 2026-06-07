@@ -22,7 +22,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 /**
  * 字典表
@@ -61,14 +62,14 @@ public class SysDict extends Model<SysDict> {
 	 */
 	@Schema(description = "创建时间")
 	@TableField(fill = FieldFill.INSERT)
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 	/**
 	 * 更新时间
 	 */
 	@Schema(description = "更新时间")
 	@TableField(fill = FieldFill.UPDATE)
-	private LocalDateTime updateTime;
+	private Instant updateTime;
 
 	/**
 	 * 是否是系统内置
@@ -96,12 +97,9 @@ public class SysDict extends Model<SysDict> {
 	@Schema(description = "修改人")
 	private String updateBy;
 
-	/**
-	 * 删除标记
-	 */
-	@TableLogic
+	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "删除标记,1:已删除,0:正常")
-	private String delFlag;
+	@Schema(description = "删除标记,YES:已删除,NO:正常")
+	private IsDelEnum isDel;
 
 }

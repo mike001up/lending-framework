@@ -44,7 +44,7 @@ public class SysTenantController {
 	@DeleteMapping("/{id}")
 	@HasPermission("sys_tenant_del")
 	public R removeById(@PathVariable Long id) {
-		return R.ok(sysTenantService.removeById(id));
+		return sysTenantService.removeTenantById(id);
 	}
 
 	@SysLog("更新租户")
@@ -52,6 +52,20 @@ public class SysTenantController {
 	@HasPermission("sys_tenant_edit")
 	public R update(@Valid @RequestBody SysTenant sysTenant) {
 		return R.ok(sysTenantService.updateById(sysTenant));
+	}
+
+	@SysLog("启用租户")
+	@PutMapping("/enable/{id}")
+	@HasPermission("sys_tenant_edit")
+	public R enableTenant(@PathVariable Long id) {
+		return sysTenantService.enableTenant(id);
+	}
+
+	@SysLog("禁用租户")
+	@PutMapping("/disable/{id}")
+	@HasPermission("sys_tenant_edit")
+	public R disableTenant(@PathVariable Long id) {
+		return sysTenantService.disableTenant(id);
 	}
 
 }

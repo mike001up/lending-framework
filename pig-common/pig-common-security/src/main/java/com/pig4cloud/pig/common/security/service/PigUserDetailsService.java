@@ -65,10 +65,16 @@ public interface PigUserDetailsService extends UserDetailsService, Ordered {
 			.createAuthorityList(dbAuthsSet.toArray(new String[0]));
 		SysUser user = info.getSysUser();
 
-		// 构造security用户
+		boolean accountNonLocked = StrUtil.equals(user.getLockFlag(), CommonConstants.STATUS_NORMAL);
+		if (!accountNonLocked && user.getLockUntil() != null && user.getLockUntil().isBefore(java.time.Instant.now())) {
+			accountNonLocked = true;
+		}
+
+		boolean enabled = StrUtil.equalsIgnoreCase(user.getStatus(), "ENABLED");
+
 		return new PigUser(user.getUserId(), user.getDeptId(), user.getUsername(),
-				SecurityConstants.BCRYPT + user.getPassword(), user.getPhone(), user.getTenantId(), true, true, true,
-				StrUtil.equals(user.getLockFlag(), CommonConstants.STATUS_NORMAL), authorities);
+				SecurityConstants.BCRYPT + user.getPassword(), user.getPhone(), info.getTenantId(), enabled, true, true,
+				accountNonLocked, authorities);
 	}
 
 	/**

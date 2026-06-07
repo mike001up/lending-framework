@@ -8,7 +8,7 @@ import com.pig4cloud.pig.admin.service.SysUserScopeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -16,17 +16,26 @@ public class SysUserScopeServiceImpl extends ServiceImpl<SysUserScopeMapper, Sys
 
 	@Override
 	public List<SysUserScope> findByUserId(Long userId) {
-		return this.list(Wrappers.<SysUserScope>lambdaQuery().eq(SysUserScope::getUserId, userId));
+		return this.list(Wrappers.<SysUserScope>lambdaQuery()
+			.eq(SysUserScope::getUserId, userId)
+			.isNull(SysUserScope::getRevokedAt));
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public void grantScope(Long userId, Long scopeId, Long grantedBy) {
+		SysUserScope existing = this.getOne(Wrappers.<SysUserScope>lambdaQuery()
+			.eq(SysUserScope::getUserId, userId)
+			.eq(SysUserScope::getScopeId, scopeId)
+			.isNull(SysUserScope::getRevokedAt));
+		if (existing != null) {
+			return;
+		}
 		SysUserScope scope = new SysUserScope();
 		scope.setUserId(userId);
 		scope.setScopeId(scopeId);
 		scope.setGrantedBy(grantedBy);
-		scope.setGrantedAt(LocalDateTime.now());
+		scope.setGrantedAt(Instant.now());
 		baseMapper.insert(scope);
 	}
 
@@ -36,7 +45,7 @@ public class SysUserScopeServiceImpl extends ServiceImpl<SysUserScopeMapper, Sys
 		this.update(Wrappers.<SysUserScope>lambdaUpdate()
 			.eq(SysUserScope::getUserId, userId)
 			.eq(SysUserScope::getScopeId, scopeId)
-			.set(SysUserScope::getRevokedAt, LocalDateTime.now()));
+			.set(SysUserScope::getRevokedAt, Instant.now()));
 	}
 
 }

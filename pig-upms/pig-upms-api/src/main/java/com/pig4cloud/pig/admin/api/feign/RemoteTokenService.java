@@ -51,6 +51,10 @@ public interface RemoteTokenService {
 	@DeleteMapping("/token/remove/{token}")
 	R<Boolean> removeTokenById(@PathVariable("token") String token);
 
+	@NoToken
+	@DeleteMapping("/token/removeByUsername/{username}")
+	R<Boolean> removeTokenByUsername(@PathVariable("username") String username);
+
 	/**
 	 * 校验令牌获取用户信息
 	 * @param token

@@ -19,4 +19,8 @@ public interface SysPermissionService extends IService<SysPermission> {
 
 	List<SysPermission> listAuthorizeRules();
 
+	Boolean checkPermission(Long userId, String permCode);
+
+	List<Boolean> batchCheckPermission(Long userId, List<String> permCodes);
+
 }

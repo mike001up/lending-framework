@@ -21,11 +21,12 @@ package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * <p>
@@ -86,22 +87,19 @@ public class SysUser implements Serializable {
 	 */
 	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "创建时间")
-	private LocalDateTime createTime;
+	private Instant createTime;
 
 	/**
 	 * 修改时间
 	 */
 	@TableField(fill = FieldFill.UPDATE)
 	@Schema(description = "修改时间")
-	private LocalDateTime updateTime;
+	private Instant updateTime;
 
-	/**
-	 * 0-正常，1-删除
-	 */
-	@TableLogic
+	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "删除标记,1:已删除,0:正常")
-	private String delFlag;
+	@Schema(description = "删除标记,YES:已删除,NO:正常")
+	private IsDelEnum isDel;
 
 	/**
 	 * 锁定标记
@@ -175,7 +173,17 @@ public class SysUser implements Serializable {
 	@Schema(description = "邮箱")
 	private String email;
 
-	@Schema(description = "租户id")
-	private Long tenantId;
+
+	@Schema(description = "用户状态：enabled-启用，disabled-禁用，closed-已关停")
+	private String status;
+
+	@Schema(description = "锁定到期时间")
+	private Instant lockUntil;
+
+	@Schema(description = "认证状态：not_certified-未认证，in_progress-认证中，certified-已认证，failed-认证失败")
+	private String certificationStatus;
+
+	@Schema(description = "提交的身份信息JSON")
+	private String certificationInfo;
 
 }

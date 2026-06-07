@@ -18,6 +18,7 @@ package com.pig4cloud.pig.common.log.util;
 
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.extra.servlet.JakartaServletUtil;
 import cn.hutool.extra.spring.SpringUtil;
@@ -35,6 +36,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -62,6 +64,21 @@ public class SysLogUtils {
 		sysLog.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
 		sysLog.setCreateBy(getUsername());
 		sysLog.setServiceId(SpringUtil.getProperty("spring.application.name"));
+		sysLog.setResult(1);
+		sysLog.setOperationType("OPERATION");
+
+		String clientId = request.getHeader("X-Client-Id");
+		if (StrUtil.isNotBlank(clientId)) {
+			sysLog.setClientName(clientId);
+		}
+
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication != null && authentication.getPrincipal() instanceof OAuth2AuthenticatedPrincipal principal) {
+			Object userId = principal.getAttribute("user_id");
+			if (userId instanceof Number num) {
+				sysLog.setUserId(num.longValue());
+			}
+		}
 
 		// get 参数脱敏
 		PigLogProperties logProperties = SpringContextHolder.getBean(PigLogProperties.class);
