@@ -9,6 +9,7 @@ import com.pig4cloud.pig.admin.mapper.SysTenantMapper;
 import com.pig4cloud.pig.admin.mapper.SysUserHierarchyMapper;
 import com.pig4cloud.pig.admin.mapper.SysUserMapper;
 import com.pig4cloud.pig.admin.service.SysTenantService;
+import com.pig4cloud.pig.common.core.constant.enums.TenantStatusEnum;
 import com.pig4cloud.pig.common.core.util.R;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,10 +32,10 @@ public class SysTenantServiceImpl extends ServiceImpl<SysTenantMapper, SysTenant
 		if (tenant == null) {
 			return R.failed("租户不存在");
 		}
-		if ("ENABLED".equalsIgnoreCase(tenant.getStatus())) {
+		if (TenantStatusEnum.ENABLED.equals(tenant.getStatus())) {
 			return R.ok();
 		}
-		tenant.setStatus("ENABLED");
+		tenant.setStatus(TenantStatusEnum.ENABLED);
 		baseMapper.updateById(tenant);
 		return R.ok();
 	}
@@ -45,10 +46,10 @@ public class SysTenantServiceImpl extends ServiceImpl<SysTenantMapper, SysTenant
 		if (tenant == null) {
 			return R.failed("租户不存在");
 		}
-		if ("DISABLED".equalsIgnoreCase(tenant.getStatus())) {
+		if (TenantStatusEnum.DISABLED.equals(tenant.getStatus())) {
 			return R.ok();
 		}
-		tenant.setStatus("DISABLED");
+		tenant.setStatus(TenantStatusEnum.DISABLED);
 		baseMapper.updateById(tenant);
 		return R.ok();
 	}

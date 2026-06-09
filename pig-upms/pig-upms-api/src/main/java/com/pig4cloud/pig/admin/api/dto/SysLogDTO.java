@@ -1,5 +1,6 @@
 package com.pig4cloud.pig.admin.api.dto;
 
+import com.pig4cloud.pig.common.core.constant.enums.LogTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -33,7 +34,7 @@ public class SysLogDTO {
 	private String clientName;
 
 	@Schema(description = "日志类型")
-	private String logType;
+	private LogTypeEnum logType;
 
 	@Schema(description = "日志标题")
 	private String title;

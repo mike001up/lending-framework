@@ -1,4 +1,4 @@
-package com.pig4cloud.pig.common.core.util;
+package com.pig4cloud.pig.common.excel;
 
 import cn.idev.excel.converters.Converter;
 import cn.idev.excel.metadata.GlobalConfiguration;

@@ -22,10 +22,12 @@ package com.pig4cloud.pig.admin.api.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
+import com.pig4cloud.pig.common.core.constant.enums.UserStatusEnum;
+import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
 import java.time.Instant;
 
 /**
@@ -38,7 +40,8 @@ import java.time.Instant;
  */
 @Data
 @Schema(description = "用户")
-public class SysUser implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+public class SysUser extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -68,33 +71,6 @@ public class SysUser implements Serializable {
 	@Schema(description = "随机盐")
 	private String salt;
 
-	/**
-	 * 创建人
-	 */
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建人")
-	private String createBy;
-
-	/**
-	 * 修改人
-	 */
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "修改人")
-	private String updateBy;
-
-	/**
-	 * 创建时间
-	 */
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建时间")
-	private Instant createTime;
-
-	/**
-	 * 修改时间
-	 */
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "修改时间")
-	private Instant updateTime;
 
 	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)
@@ -119,13 +95,9 @@ public class SysUser implements Serializable {
 	@Schema(description = "头像地址")
 	private String avatar;
 
-	/**
-	 * 部门ID
-	 */
-	@Schema(description = "用户所属部门id")
-	private Long deptId;
 
 	/**
+
 	 * 微信openid
 	 */
 	@Schema(description = "微信openid")
@@ -175,7 +147,7 @@ public class SysUser implements Serializable {
 
 
 	@Schema(description = "用户状态：enabled-启用，disabled-禁用，closed-已关停")
-	private String status;
+	private UserStatusEnum status;
 
 	@Schema(description = "锁定到期时间")
 	private Instant lockUntil;

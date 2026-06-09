@@ -1,6 +1,7 @@
 package com.pig4cloud.pig.admin;
 
 import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.common.core.constant.enums.UserStatusEnum;
 import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -63,20 +64,20 @@ public class UM08_09_KycAndCloseTest {
 	@DisplayName("UM-09-01: 关停账户→closed")
 	void testCloseAccount() {
 		SysUser user = new SysUser();
-		user.setStatus("enabled");
+		user.setStatus(UserStatusEnum.ENABLED);
 
-		user.setStatus("closed");
-		assertEquals("closed", user.getStatus());
+		user.setStatus(UserStatusEnum.CLOSED);
+		assertEquals(UserStatusEnum.CLOSED, user.getStatus());
 	}
 
 	@Test
 	@DisplayName("UM-09-03: 恢复账户→enabled")
 	void testRestoreAccount() {
 		SysUser user = new SysUser();
-		user.setStatus("closed");
+		user.setStatus(UserStatusEnum.CLOSED);
 
-		user.setStatus("enabled");
-		assertEquals("enabled", user.getStatus());
+		user.setStatus(UserStatusEnum.ENABLED);
+		assertEquals(UserStatusEnum.ENABLED, user.getStatus());
 	}
 
 	@Test

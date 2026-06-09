@@ -21,8 +21,8 @@ import com.pig4cloud.pig.admin.api.entity.SysLog;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.core.util.SpringContextHolder;
+import com.pig4cloud.pig.common.core.constant.enums.LogTypeEnum;
 import com.pig4cloud.pig.common.log.event.SysLogEvent;
-import com.pig4cloud.pig.common.log.util.LogTypeEnum;
 import com.pig4cloud.pig.common.log.util.SysLogUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -64,14 +64,13 @@ public class PigAuthenticationFailureEventHandler implements AuthenticationFailu
 		log.info("用户：{} 登录失败，异常：{}", username, exception.getLocalizedMessage());
 		SysLog logVo = SysLogUtils.getSysLog();
 		logVo.setTitle("登录失败");
-		logVo.setLogType(LogTypeEnum.ERROR.getType());
+		logVo.setLogType(LogTypeEnum.ERROR);
 		logVo.setException(exception.getLocalizedMessage());
 		// 发送异步日志事件
 		String startTimeStr = request.getHeader(CommonConstants.REQUEST_START_TIME);
 		if (StrUtil.isNotBlank(startTimeStr)) {
 			Long startTime = Long.parseLong(startTimeStr);
-			Long endTime = System.currentTimeMillis();
-			logVo.setTime(endTime - startTime);
+			logVo.setTime(System.currentTimeMillis() - startTime);
 		}
 		logVo.setCreateBy(username);
 		SpringContextHolder.publishEvent(new SysLogEvent(logVo));

@@ -3,17 +3,21 @@ package com.pig4cloud.pig.admin.api.entity;
 import cn.idev.excel.annotation.ExcelIgnore;
 import cn.idev.excel.annotation.ExcelProperty;
 import com.baomidou.mybatisplus.annotation.*;
+import com.pig4cloud.pig.common.core.constant.enums.HttpMethodEnum;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
+import com.pig4cloud.pig.common.core.constant.enums.LogTypeEnum;
+import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
-import java.time.Instant;
-import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 @Data
 @Schema(description = "审计日志")
-public class SysLog implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+public class SysLog extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -24,11 +28,6 @@ public class SysLog implements Serializable {
 
 	@Schema(description = "操作人ID")
 	private Long userId;
-
-	@ExcelProperty("操作人")
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "操作人登录名（快照）")
-	private String createBy;
 
 	@NotBlank(message = "操作类型不能为空")
 	@ExcelProperty("操作类型")
@@ -52,27 +51,14 @@ public class SysLog implements Serializable {
 	@Schema(description = "附加详情JSON")
 	private String detail;
 
-	@ExcelProperty("创建时间")
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "操作时间")
-	private Instant createTime;
-
+	@NotNull(message = "日志类型不能为空")
 	@ExcelIgnore
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "更新时间")
-	private Instant updateTime;
-
-	@NotBlank(message = "日志类型不能为空")
-	@ExcelIgnore
-	@Schema(description = "日志类型（0-正常 9-错误）")
-	private String logType;
+	@Schema(description = "日志类型")
+	private LogTypeEnum logType;
 
 	@ExcelProperty("日志标题")
 	@Schema(description = "日志标题")
 	private String title;
-
-	@Schema(description = "用户代理")
-	private String userAgent;
 
 	@ExcelProperty("请求uri")
 	@Schema(description = "请求uri")
@@ -80,14 +66,14 @@ public class SysLog implements Serializable {
 
 	@ExcelProperty("操作方式")
 	@Schema(description = "HTTP方法")
-	private String method;
+	private HttpMethodEnum method;
 
 	@ExcelProperty("提交数据")
 	@Schema(description = "提交数据")
 	private String params;
 
 	@ExcelProperty("执行时间")
-	@Schema(description = "方法执行时间")
+	@Schema(description = "方法执行时间(ms)")
 	private Long time;
 
 	@ExcelProperty("异常信息")

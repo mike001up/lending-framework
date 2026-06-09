@@ -88,7 +88,7 @@ public class SysRoleController {
 	@HasPermission("sys_role_add")
 	@CacheEvict(value = CacheConstants.ROLE_DETAILS, allEntries = true)
 	public R save(@Valid @RequestBody SysRole sysRole) {
-		return R.ok(sysRoleService.save(sysRole));
+		return sysRoleService.saveRole(sysRole);
 	}
 
 	/**

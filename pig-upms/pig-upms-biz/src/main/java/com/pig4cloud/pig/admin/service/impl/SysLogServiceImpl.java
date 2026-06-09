@@ -37,7 +37,7 @@ public class SysLogServiceImpl extends ServiceImpl<SysLogMapper, SysLog> impleme
 
 	private LambdaQueryWrapper buildQuery(SysLogDTO sysLog) {
 		LambdaQueryWrapper<SysLog> wrapper = Wrappers.lambdaQuery();
-		if (StrUtil.isNotBlank(sysLog.getLogType())) {
+		if (sysLog.getLogType() != null) {
 			wrapper.eq(SysLog::getLogType, sysLog.getLogType());
 		}
 		if (StrUtil.isNotBlank(sysLog.getOperationType())) {

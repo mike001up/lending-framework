@@ -31,9 +31,17 @@ public class SysUserHierarchyServiceImpl extends ServiceImpl<SysUserHierarchyMap
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public void addRelation(Long ancestor, Long descendant) {
+		addRelation(ancestor, descendant, "agency", 1);
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public void addRelation(Long ancestor, Long descendant, String hierarchyType, int depth) {
 		SysUserHierarchy hierarchy = new SysUserHierarchy();
 		hierarchy.setAncestor(ancestor);
 		hierarchy.setDescendant(descendant);
+		hierarchy.setDepth(depth);
+		hierarchy.setHierarchyType(hierarchyType);
 		baseMapper.insert(hierarchy);
 	}
 

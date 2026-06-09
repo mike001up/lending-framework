@@ -7,7 +7,7 @@ import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.gateway.config.GatewaySecurityProperties;
-import com.pig4cloud.pig.gateway.fegin.RemotePermService;
+import com.pig4cloud.pig.admin.api.feign.RemotePermService;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
@@ -132,7 +132,10 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 		}
 
 		return Mono.fromCallable(() -> {
-			RemotePermService remotePermService = remotePermServiceProvider.getObject();
+			RemotePermService remotePermService = remotePermServiceProvider.getIfAvailable();
+			if (remotePermService == null) {
+				return authorizeRules;
+			}
 			R<List<SysPermission>> result = remotePermService.getAuthorizeRules();
 			if (result != null && result.getData() != null) {
 				authorizeRules = result.getData();
@@ -153,7 +156,10 @@ public class PigAuthorizationGlobalFilter implements GlobalFilter, Ordered {
 		}
 
 		return Mono.fromCallable(() -> {
-			RemotePermService remotePermService = remotePermServiceProvider.getObject();
+			RemotePermService remotePermService = remotePermServiceProvider.getIfAvailable();
+			if (remotePermService == null) {
+				return null;
+			}
 			R<UserInfo> result = remotePermService.getUserInfo(username);
 			Set<String> permissions = new HashSet<>();
 			if (result != null && result.getData() != null) {

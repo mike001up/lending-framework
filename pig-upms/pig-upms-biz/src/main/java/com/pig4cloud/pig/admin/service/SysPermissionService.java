@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface SysPermissionService extends IService<SysPermission> {
 
+	R<Boolean> savePermission(SysPermission sysPermission);
+
 	List<SysPermission> findPermissionByRoleId(Long roleId);
 
 	R removePermissionById(Long id);

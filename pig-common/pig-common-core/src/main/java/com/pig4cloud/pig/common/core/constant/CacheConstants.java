@@ -61,9 +61,5 @@ public interface CacheConstants {
 	 */
 	String CLIENT_DETAILS_KEY = "client:details";
 
-	/**
-	 * 参数缓存
-	 */
-	String PARAMS_DETAILS = "params_details";
 
 }

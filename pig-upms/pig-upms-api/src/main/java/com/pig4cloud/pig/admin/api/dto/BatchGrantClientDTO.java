@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class GrantScopeDTO {
+public class BatchGrantClientDTO {
 	private Long userId;
-	private Long scopeId;
+	private List<Long> clientIds;
 }

@@ -121,18 +121,7 @@ public class UserVO implements Serializable {
 	private String avatar;
 
 	/**
-	 * 部门ID
-	 */
-	@Schema(description = "所属部门")
-	private Long deptId;
 
-	/**
-	 * 部门名称
-	 */
-	@Schema(description = "所属部门名称")
-	private String deptName;
-
-	/**
 	 * 角色列表
 	 */
 	@Schema(description = "拥有的角色列表")

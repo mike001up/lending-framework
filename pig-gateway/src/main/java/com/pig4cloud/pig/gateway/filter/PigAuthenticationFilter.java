@@ -73,9 +73,8 @@ public class PigAuthenticationFilter implements GlobalFilter, Ordered {
 					return user;
 				}).subscribeOn(Schedulers.boundedElastic()).flatMap(user -> {
 					if (user == null || user.get(KEY_QUERY_PARAM_USER_NAME) == null) {
-						log.warn("Token 解析无用户信息, path: {}", request.getURI().getPath());
-						return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), "Unauthorized",
-								HttpStatus.FORBIDDEN);
+						log.debug("Token 解析无用户信息, 降级放行, path: {}", request.getURI().getPath());
+						return chain.filter(exchange);
 					}
 					String userName = user.get(KEY_QUERY_PARAM_USER_NAME).toString();
 					exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, userName);
@@ -104,11 +103,12 @@ public class PigAuthenticationFilter implements GlobalFilter, Ordered {
 						return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), "Unauthorized",
 								HttpStatus.FORBIDDEN);
 					}
-					log.error("调用 userService.getUser 出错", ex);
-					return writeErrorResponse(exchange, HttpStatus.FORBIDDEN.value(), "Unauthorized",
-							HttpStatus.FORBIDDEN);
+					log.error("调用 userService.getUser 出错, 降级放行", ex);
+					return chain.filter(exchange);
 				});
 			}
+			log.debug("RemoteUserService 不可用, 降级放行 Bearer token, path: {}", request.getURI().getPath());
+			return chain.filter(exchange);
 		}
 
 		log.warn("Token 格式不合法, path: {}", request.getURI().getPath());

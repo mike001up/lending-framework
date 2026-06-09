@@ -28,6 +28,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.dto.RegisterUserDTO;
 import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
+import com.pig4cloud.pig.common.core.constant.enums.UserStatusEnum;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.*;
@@ -78,7 +79,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	private final SysRoleService sysRoleService;
 
 
-	private final SysDeptService sysDeptService;
 
 	private final SysUserHierarchyService sysUserHierarchyService;
 
@@ -136,7 +136,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		sysUserHierarchyService.save(selfRel);
 
 
-		// 如果角色为空，赋默认角色
 		if (CollUtil.isEmpty(userDto.getRoles())) {
 			String defaultRole = ParamResolver.getStr("USER_DEFAULT_ROLE");
 			if (StrUtil.isNotBlank(defaultRole)) {
@@ -148,12 +147,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 			}
 		}
 
-		userDto.getRoles().stream().map(roleId -> {
-			SysUserRole userRole = new SysUserRole();
-			userRole.setUserId(sysUser.getUserId());
-			userRole.setRoleId(roleId);
-			return userRole;
-		}).forEach(sysUserRoleMapper::insert);
+		if (CollUtil.isNotEmpty(userDto.getRoles())) {
+			userDto.getRoles().stream().map(roleId -> {
+				SysUserRole userRole = new SysUserRole();
+				userRole.setUserId(sysUser.getUserId());
+				userRole.setRoleId(roleId);
+				return userRole;
+			}).forEach(sysUserRoleMapper::insert);
+		}
 		return Boolean.TRUE;
 	}
 
@@ -247,9 +248,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Transactional(rollbackFor = Exception.class)
 	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "T(com.pig4cloud.pig.common.core.constant.CacheConstants).USER_DETAILS_KEY_PREFIX + #userDto.username")
 	public Boolean updateUser(UserDTO userDto) {
-		// 更新用户表信息
 		SysUser sysUser = new SysUser();
 		BeanUtils.copyProperties(userDto, sysUser);
+		sysUser.setUsername(null);
 		sysUser.setUpdateTime(Instant.now());
 		if (StrUtil.isNotBlank(userDto.getPassword())) {
 			sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
@@ -295,7 +296,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Override
 	public R importUser(List<UserExcelVO> excelVOList, BindingResult bindingResult) {
 		List<ErrorMessage> errorMessageList = (List<ErrorMessage>) bindingResult.getTarget();
-		List<SysDept> deptList = sysDeptService.list();
 		List<SysRole> roleList = sysRoleService.list();
 		List<SysUser> allUsers = this.list();
 
@@ -308,13 +308,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 				errorMsg.add(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERNAME_EXISTING, excel.getUsername()));
 			}
 
-			Optional<SysDept> deptOptional = deptList.stream()
-				.filter(dept -> excel.getDeptName().equals(dept.getName()))
-				.findFirst();
-			if (!deptOptional.isPresent()) {
-				errorMsg.add(MsgUtils.getMessage(ErrorCodes.SYS_DEPT_DEPTNAME_INEXISTENCE, excel.getDeptName()));
-			}
-
 			List<String> roleNameList = StrUtil.split(excel.getRoleNameList(), StrUtil.COMMA);
 			List<SysRole> roleCollList = roleList.stream()
 				.filter(role -> roleNameList.stream().anyMatch(name -> role.getRoleName().equals(name)))
@@ -325,7 +318,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 			}
 
 			if (CollUtil.isEmpty(errorMsg)) {
-				insertExcelUser(excel, deptOptional, roleCollList);
+				insertExcelUser(excel, roleCollList);
 			}
 			else {
 				errorMessageList.add(new ErrorMessage(excel.getLineNum(), errorMsg));
@@ -339,7 +332,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		return R.ok();
 	}
 
-	private void insertExcelUser(UserExcelVO excel, Optional<SysDept> deptOptional, List<SysRole> roleCollList) {
+	private void insertExcelUser(UserExcelVO excel, List<SysRole> roleCollList) {
 		UserDTO userDTO = new UserDTO();
 		userDTO.setUsername(excel.getUsername());
 		userDTO.setPhone(excel.getPhone());
@@ -347,7 +340,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		userDTO.setName(excel.getName());
 		userDTO.setEmail(excel.getEmail());
 		userDTO.setPassword(userDTO.getPhone());
-		userDTO.setDeptId(deptOptional.get().getDeptId());
 		List<Long> roleIdList = roleCollList.stream().map(SysRole::getRoleId).collect(Collectors.toList());
 		userDTO.setRoles(roleIdList);
 		this.saveUser(userDTO);
@@ -474,7 +466,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		if (Objects.isNull(sysUser)) {
 			return R.failed("用户不存在");
 		}
-		sysUser.setStatus("closed");
+		sysUser.setStatus(UserStatusEnum.CLOSED);
 		baseMapper.updateById(sysUser);
 		evictUserCache(sysUser.getUsername());
 		return R.ok(sysUser);
@@ -486,7 +478,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		if (Objects.isNull(sysUser)) {
 			return R.failed("用户不存在");
 		}
-		sysUser.setStatus("enabled");
+		sysUser.setStatus(UserStatusEnum.ENABLED);
 		baseMapper.updateById(sysUser);
 		evictUserCache(sysUser.getUsername());
 		return R.ok(sysUser);
@@ -498,10 +490,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		if (Objects.isNull(sysUser)) {
 			return R.failed("用户不存在");
 		}
-		if ("ENABLED".equalsIgnoreCase(sysUser.getStatus())) {
+		if (UserStatusEnum.ENABLED.equals(sysUser.getStatus())) {
 			return R.ok(sysUser);
 		}
-		sysUser.setStatus("ENABLED");
+		sysUser.setStatus(UserStatusEnum.ENABLED);
 		baseMapper.updateById(sysUser);
 		evictUserCache(sysUser.getUsername());
 		return R.ok(sysUser);
@@ -513,10 +505,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		if (Objects.isNull(sysUser)) {
 			return R.failed("用户不存在");
 		}
-		if ("DISABLED".equalsIgnoreCase(sysUser.getStatus())) {
+		if (UserStatusEnum.DISABLED.equals(sysUser.getStatus())) {
 			return R.ok(sysUser);
 		}
-		sysUser.setStatus("DISABLED");
+		sysUser.setStatus(UserStatusEnum.DISABLED);
 		baseMapper.updateById(sysUser);
 		evictUserCache(sysUser.getUsername());
 		return R.ok(sysUser);

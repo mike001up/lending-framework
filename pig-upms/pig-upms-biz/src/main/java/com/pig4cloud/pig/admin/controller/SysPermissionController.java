@@ -42,7 +42,7 @@ public class SysPermissionController {
 	@PostMapping
 	@HasPermission("sys_permission_add")
 	public R save(@Valid @RequestBody SysPermission sysPermission) {
-		return R.ok(sysPermissionService.save(sysPermission));
+		return sysPermissionService.savePermission(sysPermission);
 	}
 
 	@SysLog("删除权限资源")

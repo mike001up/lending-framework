@@ -3,7 +3,7 @@ package com.pig4cloud.pig.admin.api.dto;
 import lombok.Data;
 
 @Data
-public class RevokeScopeDTO {
+public class GrantClientDTO {
 	private Long userId;
-	private Long scopeId;
+	private Long clientId;
 }

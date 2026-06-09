@@ -60,6 +60,17 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
 	private SysRolePermissionService rolePermissionService;
 
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public R<Boolean> saveRole(SysRole sysRole) {
+		long count = baseMapper.countByCodeOrName(sysRole.getRoleCode(), sysRole.getRoleName());
+		if (count > 0) {
+			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_ROLE_NAMEORCODE_EXISTING,
+				sysRole.getRoleName(), sysRole.getRoleCode()));
+		}
+		return R.ok(this.save(sysRole));
+	}
+
 	/**
 	 * 通过用户ID，查询角色信息
 	 * @param userId

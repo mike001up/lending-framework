@@ -20,7 +20,7 @@ import cn.hutool.core.util.StrUtil;
 import com.pig4cloud.pig.common.core.util.SpringContextHolder;
 import com.pig4cloud.pig.common.log.event.SysLogEvent;
 import com.pig4cloud.pig.common.log.event.SysLogEventSource;
-import com.pig4cloud.pig.common.log.util.LogTypeEnum;
+import com.pig4cloud.pig.common.core.constant.enums.LogTypeEnum;
 import com.pig4cloud.pig.common.log.util.SysLogUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -78,14 +78,13 @@ public class SysLogAspect {
 			obj = point.proceed();
 		}
 		catch (Exception e) {
-			logVo.setLogType(LogTypeEnum.ERROR.getType());
+			logVo.setLogType(LogTypeEnum.ERROR);
 			logVo.setResult(0);
 			logVo.setException(e.getMessage());
 			throw e;
 		}
 		finally {
-			Long endTime = System.currentTimeMillis();
-			logVo.setTime(endTime - startTime);
+			logVo.setTime(System.currentTimeMillis() - startTime);
 			SpringContextHolder.publishEvent(new SysLogEvent(logVo));
 		}
 

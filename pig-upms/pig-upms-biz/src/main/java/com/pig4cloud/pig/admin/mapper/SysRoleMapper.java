@@ -22,6 +22,8 @@ package com.pig4cloud.pig.admin.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -42,5 +44,8 @@ public interface SysRoleMapper extends BaseMapper<SysRole> {
 	 * @return
 	 */
 	List<SysRole> listRolesByUserId(Long userId);
+
+	@Select("SELECT COUNT(*) FROM sys_role WHERE role_code = #{roleCode} OR role_name = #{roleName}")
+	long countByCodeOrName(@Param("roleCode") String roleCode, @Param("roleName") String roleName);
 
 }

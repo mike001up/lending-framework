@@ -40,8 +40,10 @@ public class SysUserHierarchyController {
 
 	@PostMapping
 	@HasPermission("sys_user_hierarchy_add")
-	public R addRelation(@RequestParam Long ancestor, @RequestParam Long descendant) {
-		sysUserHierarchyService.addRelation(ancestor, descendant);
+	public R addRelation(@RequestParam Long ancestor, @RequestParam Long descendant,
+						 @RequestParam(defaultValue = "agency") String hierarchyType,
+						 @RequestParam(defaultValue = "1") int depth) {
+		sysUserHierarchyService.addRelation(ancestor, descendant, hierarchyType, depth);
 		return R.ok();
 	}
 

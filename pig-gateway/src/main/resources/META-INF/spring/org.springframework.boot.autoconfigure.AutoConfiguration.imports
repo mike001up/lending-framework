@@ -1,0 +1,3 @@
+org.springframework.cloud.openfeign.FeignAutoConfiguration
+org.springframework.cloud.openfeign.loadbalancer.FeignLoadBalancerAutoConfiguration
+com.pig4cloud.pig.common.feign.PigFeignAutoConfiguration

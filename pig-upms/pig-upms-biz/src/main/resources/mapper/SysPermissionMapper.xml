@@ -3,7 +3,7 @@
 <mapper namespace="com.pig4cloud.pig.admin.mapper.SysPermissionMapper">
 	<resultMap id="BaseResultMap" type="com.pig4cloud.pig.admin.api.entity.SysPermission">
 		<id column="permission_id" property="permissionId"/>
-		<result column="name" property="name"/>
+		<result column="perm_name" property="permName"/>
 		<result column="permission" property="permission"/>
 		<result column="description" property="description"/>
 		<result column="path" property="path"/>
@@ -18,7 +18,7 @@
 	</resultMap>
 
 	<select id="listPermissionsByRoleId" resultMap="BaseResultMap">
-		SELECT p.permission_id, p.name, p.permission, p.description, p.path, p.method,
+		SELECT p.permission_id, p.perm_name, p.permission, p.description, p.path, p.method,
 			   p.parent_id, p.sort_order, p.create_by, p.update_by, p.create_time, p.update_time, p.is_del
 		FROM sys_permission p
 				 LEFT JOIN sys_role_permission rp ON p.permission_id = rp.permission_id

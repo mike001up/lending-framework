@@ -2,10 +2,8 @@ package com.pig4cloud.pig.admin.api.dto;
 
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-public class BatchGrantScopeDTO {
+public class RevokeClientDTO {
 	private Long userId;
-	private List<Long> scopeIds;
+	private Long clientId;
 }

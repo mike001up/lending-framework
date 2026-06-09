@@ -6,6 +6,7 @@ import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
+import com.pig4cloud.pig.common.core.constant.enums.UserStatusEnum;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.core.util.RetOps;
 import org.springframework.core.Ordered;
@@ -70,9 +71,9 @@ public interface PigUserDetailsService extends UserDetailsService, Ordered {
 			accountNonLocked = true;
 		}
 
-		boolean enabled = StrUtil.equalsIgnoreCase(user.getStatus(), "ENABLED");
+		boolean enabled = UserStatusEnum.ENABLED.equals(user.getStatus());
 
-		return new PigUser(user.getUserId(), user.getDeptId(), user.getUsername(),
+		return new PigUser(user.getUserId(), user.getUsername(),
 				SecurityConstants.BCRYPT + user.getPassword(), user.getPhone(), info.getTenantId(), enabled, true, true,
 				accountNonLocked, authorities);
 	}

@@ -1,6 +1,7 @@
 package com.pig4cloud.pig.admin;
 
 import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.common.core.constant.enums.UserStatusEnum;
 import com.pig4cloud.pig.common.core.util.R;
 import org.junit.jupiter.api.*;
 
@@ -14,10 +15,10 @@ public class UM03_EnableDisableUserTest {
 	void testEnableUserStatus() {
 		SysUser user = new SysUser();
 		user.setUserId(1L);
-		user.setStatus("disabled");
+		user.setStatus(UserStatusEnum.DISABLED);
 
-		user.setStatus("enabled");
-		assertEquals("enabled", user.getStatus(), "启用后status应为enabled");
+		user.setStatus(UserStatusEnum.ENABLED);
+		assertEquals(UserStatusEnum.ENABLED, user.getStatus(), "启用后status应为ENABLED");
 	}
 
 	@Test
@@ -25,24 +26,24 @@ public class UM03_EnableDisableUserTest {
 	void testDisableUserStatus() {
 		SysUser user = new SysUser();
 		user.setUserId(1L);
-		user.setStatus("enabled");
+		user.setStatus(UserStatusEnum.ENABLED);
 
-		user.setStatus("disabled");
-		assertEquals("disabled", user.getStatus(), "禁用后status应为disabled");
+		user.setStatus(UserStatusEnum.DISABLED);
+		assertEquals(UserStatusEnum.DISABLED, user.getStatus(), "禁用后status应为DISABLED");
 	}
 
 	@Test
 	@DisplayName("UM-03-03: status字段支持三种状态")
 	void testStatusEnum() {
 		SysUser user = new SysUser();
-		user.setStatus("enabled");
-		assertEquals("enabled", user.getStatus());
+		user.setStatus(UserStatusEnum.ENABLED);
+		assertEquals(UserStatusEnum.ENABLED, user.getStatus());
 
-		user.setStatus("disabled");
-		assertEquals("disabled", user.getStatus());
+		user.setStatus(UserStatusEnum.DISABLED);
+		assertEquals(UserStatusEnum.DISABLED, user.getStatus());
 
-		user.setStatus("closed");
-		assertEquals("closed", user.getStatus());
+		user.setStatus(UserStatusEnum.CLOSED);
+		assertEquals(UserStatusEnum.CLOSED, user.getStatus());
 	}
 
 }

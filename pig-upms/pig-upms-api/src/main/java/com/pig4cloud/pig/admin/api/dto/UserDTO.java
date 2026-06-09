@@ -42,12 +42,7 @@ public class UserDTO extends SysUser {
 	private List<Long> roles;
 
 	/**
-	 * 部门id
-	 */
-	@Schema(description = "部门id")
-	private Long deptId;
 
-	/**
 	 * 岗位ID
 	 */
 	private List<Long> post;

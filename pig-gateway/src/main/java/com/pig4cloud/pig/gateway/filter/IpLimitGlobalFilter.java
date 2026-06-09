@@ -7,7 +7,7 @@ import com.pig4cloud.pig.common.core.exception.ErrorCodes;
 import com.pig4cloud.pig.common.core.util.IpUtil;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.gateway.config.GatewaySecurityProperties;
-import com.pig4cloud.pig.gateway.fegin.RemoteIPLimitService;
+import com.pig4cloud.pig.admin.api.feign.RemoteIPLimitService;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
@@ -74,8 +74,8 @@ public class IpLimitGlobalFilter implements GlobalFilter, Ordered {
 			GatewayFilterChain chain) {
 		RemoteIPLimitService ipLimitService = remoteIPLimitServiceProvider.getIfAvailable();
 		if (ipLimitService == null) {
-			log.warn("RemoteIPLimitService 不可用, 拒绝访问: {}", remoteIP);
-			return writeForbiddenResponse(request, exchange, remoteIP);
+			log.warn("RemoteIPLimitService 不可用, 降级放行: {}", remoteIP);
+			return chain.filter(exchange);
 		}
 
 		return Mono.fromCallable(() -> ipLimitService.isValidIP(remoteIP))

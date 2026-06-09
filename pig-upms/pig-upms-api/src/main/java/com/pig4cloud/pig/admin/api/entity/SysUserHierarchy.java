@@ -1,16 +1,20 @@
 package com.pig4cloud.pig.admin.api.entity;
 
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import java.io.Serializable;
 
 @Data
 @Schema(description = "用户层级关系")
-@EqualsAndHashCode(callSuper = true)
-public class SysUserHierarchy extends Model<SysUserHierarchy> {
+public class SysUserHierarchy implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+
+	@TableId(value = "id", type = IdType.ASSIGN_ID)
+	@Schema(description = "主键")
+	private Long id;
 
 	@Schema(description = "祖先节点")
 	private Long ancestor;

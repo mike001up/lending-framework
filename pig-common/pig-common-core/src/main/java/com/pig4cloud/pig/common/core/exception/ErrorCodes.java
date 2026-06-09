@@ -108,4 +108,9 @@ public interface ErrorCodes {
 	 */
 	String USER_IS_BLACK = "sys.user.is.black";
 
+	/**
+	 * 权限编码已存在
+	 */
+	String SYS_PERMISSION_PERMCODE_EXISTING = "sys.permission.permCode.existing";
+
 }

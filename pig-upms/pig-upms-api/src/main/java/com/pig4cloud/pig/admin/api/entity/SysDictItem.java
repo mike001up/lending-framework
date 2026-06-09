@@ -17,14 +17,12 @@
 package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
+import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.Instant;
-import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 /**
  * 字典项
@@ -35,7 +33,7 @@ import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 @Data
 @Schema(description = "字典项")
 @EqualsAndHashCode(callSuper = true)
-public class SysDictItem extends Model<SysDictItem> {
+public class SysDictItem extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -84,34 +82,7 @@ public class SysDictItem extends Model<SysDictItem> {
 	private Integer sortOrder;
 
 	/**
-	 * 创建人
-	 */
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建人")
-	private String createBy;
 
-	/**
-	 * 修改人
-	 */
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "修改人")
-	private String updateBy;
-
-	/**
-	 * 创建时间
-	 */
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建时间")
-	private Instant createTime;
-
-	/**
-	 * 更新时间
-	 */
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "更新时间")
-	private Instant updateTime;
-
-	/**
 	 * 备注信息
 	 */
 	@Schema(description = "备注信息")

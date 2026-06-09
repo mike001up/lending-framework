@@ -1,20 +1,18 @@
 package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
+import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.Instant;
-import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
-
 @Data
 @Schema(description = "租户数据源配置")
 @EqualsAndHashCode(callSuper = true)
-public class SysTenantDatasource extends Model<SysTenantDatasource> {
+public class SysTenantDatasource extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -54,19 +52,6 @@ public class SysTenantDatasource extends Model<SysTenantDatasource> {
 	@Schema(description = "连接池参数")
 	private String poolParams;
 
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建时间")
-	private Instant createdAt;
-
-	@Schema(description = "创建人id")
-	private Long createdBy;
-
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "更新时间")
-	private Instant updatedAt;
-
-	@Schema(description = "更新人id")
-	private Long updatedBy;
 
 	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)

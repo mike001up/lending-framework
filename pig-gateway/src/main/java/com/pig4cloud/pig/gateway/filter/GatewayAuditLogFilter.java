@@ -2,6 +2,8 @@ package com.pig4cloud.pig.gateway.filter;
 
 import com.pig4cloud.pig.admin.api.entity.SysLog;
 import com.pig4cloud.pig.admin.api.feign.RemoteLogService;
+import com.pig4cloud.pig.common.core.constant.enums.HttpMethodEnum;
+import com.pig4cloud.pig.common.core.constant.enums.LogTypeEnum;
 import com.pig4cloud.pig.common.core.util.IpUtil;
 import com.pig4cloud.pig.common.core.util.R;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +11,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpHeaders;
+
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -44,13 +46,12 @@ public class GatewayAuditLogFilter implements GlobalFilter, Ordered {
 			}
 
 			SysLog sysLog = new SysLog();
-			sysLog.setLogType("0");
+			sysLog.setLogType(LogTypeEnum.NORMAL);
 			sysLog.setTitle("gateway_access");
 			sysLog.setOperationType("GATEWAY_ACCESS");
 			sysLog.setRequestUri(request.getURI().getPath());
-			sysLog.setMethod(request.getMethod().name());
+			sysLog.setMethod(HttpMethodEnum.valueOf(request.getMethod().name()));
 			sysLog.setRemoteAddr(IpUtil.getIpAddress(request));
-			sysLog.setUserAgent(request.getHeaders().getFirst(HttpHeaders.USER_AGENT));
 			sysLog.setServiceId("pig-gateway");
 			sysLog.setTime(duration);
 
@@ -76,7 +77,7 @@ public class GatewayAuditLogFilter implements GlobalFilter, Ordered {
 					? exchange.getResponse().getStatusCode().value() : 0;
 			sysLog.setResult(statusCode < 400 ? 1 : 0);
 			if (statusCode >= 400) {
-				sysLog.setLogType("9");
+				sysLog.setLogType(LogTypeEnum.ERROR);
 				sysLog.setException("HTTP " + statusCode);
 			}
 

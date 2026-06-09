@@ -18,13 +18,11 @@
 package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
+import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.Instant;
-import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 
 /**
  * 文件管理
@@ -35,7 +33,7 @@ import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 @Data
 @Schema(description = "文件")
 @EqualsAndHashCode(callSuper = true)
-public class SysFile extends Model<SysFile> {
+public class SysFile extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -76,33 +74,6 @@ public class SysFile extends Model<SysFile> {
 	@Schema(description = "文件大小")
 	private Long fileSize;
 
-	/**
-	 * 上传人
-	 */
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建者")
-	private String createBy;
-
-	/**
-	 * 上传时间
-	 */
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建时间")
-	private Instant createTime;
-
-	/**
-	 * 更新人
-	 */
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "更新者")
-	private String updateBy;
-
-	/**
-	 * 更新时间
-	 */
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "更新时间")
-	private Instant updateTime;
 
 	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)

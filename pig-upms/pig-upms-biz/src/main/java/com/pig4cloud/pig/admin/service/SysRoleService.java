@@ -38,6 +38,8 @@ import java.util.List;
  */
 public interface SysRoleService extends IService<SysRole> {
 
+	R<Boolean> saveRole(SysRole sysRole);
+
 	/**
 	 * 通过用户ID，查询角色信息
 	 * @param userId

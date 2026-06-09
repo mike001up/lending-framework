@@ -3,7 +3,7 @@ package com.pig4cloud.pig.gateway.filter;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.SpringContextHolder;
 import com.pig4cloud.pig.gateway.config.GatewaySecurityProperties;
-import com.pig4cloud.pig.gateway.fegin.RemoteIPLimitService;
+import com.pig4cloud.pig.admin.api.feign.RemoteIPLimitService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;

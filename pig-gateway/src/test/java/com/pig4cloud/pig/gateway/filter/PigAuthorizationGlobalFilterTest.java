@@ -6,7 +6,7 @@ import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.core.util.SpringContextHolder;
 import com.pig4cloud.pig.gateway.config.GatewaySecurityProperties;
-import com.pig4cloud.pig.gateway.fegin.RemotePermService;
+import com.pig4cloud.pig.admin.api.feign.RemotePermService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;

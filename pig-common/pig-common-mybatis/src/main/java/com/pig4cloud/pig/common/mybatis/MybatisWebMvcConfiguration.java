@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.List;
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnWebApplication(ConditionalOnWebApplication.Type.SERVLET)
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class MybatisWebMvcConfiguration implements WebMvcConfigurer {
 
 	@Override

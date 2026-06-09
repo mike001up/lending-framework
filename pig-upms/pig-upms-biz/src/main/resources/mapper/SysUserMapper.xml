@@ -36,8 +36,7 @@
         <result column="uupdate_time" property="updateTime"/>
         <result column="lock_flag" property="lockFlag"/>
         <result column="is_del" property="isDel"/>
-        <result column="dept_id" property="deptId"/>
-        <result column="dept_name" property="deptName"/>
+
         <result column="nickname" property="nickname"/>
         <result column="name" property="name"/>
         <result column="email" property="email"/>
@@ -56,7 +55,7 @@
         u.avatar,
         u.wx_openid,
         u.qq_openid,
-        u.dept_id,
+
         u.is_del,
         u.lock_flag,
         u.create_by,
@@ -88,9 +87,7 @@
         u.email,
         u.create_by,
         u.create_time  ucreate_time,
-        u.update_time  uupdate_time,
-        d.name  dept_name,
-        d.dept_id
+        u.update_time  uupdate_time
     </sql>
 
     <select id="getUserVoByUsername" resultMap="baseResultMap">
@@ -108,7 +105,7 @@
         <include refid="userRoleDeptSql"/>
         FROM
         sys_user u
-        LEFT JOIN sys_dept d ON d.dept_id = u.dept_id and d.is_del = 'NO'
+
         WHERE
         u.user_id = #{id} and u.is_del = 'NO'
     </select>
@@ -123,7 +120,6 @@
         u.avatar,
         u.wx_openid,
         u.qq_openid,
-        u.dept_id,
         u.create_by,
         u.create_time ucreate_time,
         u.update_time uupdate_time,
@@ -131,19 +127,14 @@
         u.lock_flag,
         u.nickname,
         u.name,
-        u.email,
-        d.name dept_name
+        u.email
         FROM
         sys_user u
-        LEFT JOIN sys_dept d ON d.dept_id = u.dept_id
         <where>
             u.is_del = 'NO'
             <if test="query.username != null and query.username != ''">
                 <bind name="usernameLike" value="'%'+query.username+'%'"/>
                 AND u.username LIKE #{usernameLike}
-            </if>
-            <if test="query.deptId != null and query.deptId != ''">
-                AND u.dept_id = #{query.deptId}
             </if>
             <if test="query.phone != null and query.phone != ''">
                 <bind name="phoneLike" value="'%'+query.phone+'%'"/>
@@ -166,7 +157,6 @@
         u.avatar,
         u.wx_openid,
         u.qq_openid,
-        u.dept_id,
         u.create_by,
         u.create_time ucreate_time,
         u.update_time uupdate_time,
@@ -174,19 +164,14 @@
         u.lock_flag,
         u.nickname,
         u.name,
-        u.email,
-        d.name dept_name
+        u.email
         FROM
         sys_user u
-        LEFT JOIN sys_dept d ON d.dept_id = u.dept_id
         <where>
             u.is_del = 'NO'
             <if test="query.username != null and query.username != ''">
                 <bind name="usernameLike" value="'%'+query.username+'%'"/>
                 AND u.username LIKE #{usernameLike}
-            </if>
-            <if test="query.deptId != null and query.deptId != ''">
-                AND u.dept_id = #{query.deptId}
             </if>
         </where>
 

@@ -1,0 +1,20 @@
+package com.pig4cloud.pig.common.core.constant.enums;
+
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
+public enum UserStatusEnum {
+
+	ENABLED("enabled", "启用"),
+	DISABLED("disabled", "禁用"),
+	CLOSED("closed", "已关停");
+
+	@EnumValue
+	private final String value;
+
+	private final String description;
+
+}

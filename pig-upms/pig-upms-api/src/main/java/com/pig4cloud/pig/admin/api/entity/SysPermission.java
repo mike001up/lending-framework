@@ -1,20 +1,19 @@
 package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
+import com.pig4cloud.pig.common.core.constant.enums.PermissionStatusEnum;
+import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.Instant;
-import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
-
 @Data
 @Schema(description = "权限资源")
 @EqualsAndHashCode(callSuper = true)
-public class SysPermission extends Model<SysPermission> {
+public class SysPermission extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -24,7 +23,7 @@ public class SysPermission extends Model<SysPermission> {
 
 	@NotBlank(message = "权限名称不能为空")
 	@Schema(description = "权限名称")
-	private String name;
+	private String permName;
 
 	@Schema(description = "权限编码")
 	private String permCode;
@@ -52,23 +51,8 @@ public class SysPermission extends Model<SysPermission> {
 	private Integer sortOrder;
 
 	@Schema(description = "状态：enabled-启用，disabled-禁用")
-	private String status;
+	private PermissionStatusEnum status;
 
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建人")
-	private String createBy;
-
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "修改人")
-	private String updateBy;
-
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建时间")
-	private Instant createTime;
-
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "更新时间")
-	private Instant updateTime;
 
 	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)

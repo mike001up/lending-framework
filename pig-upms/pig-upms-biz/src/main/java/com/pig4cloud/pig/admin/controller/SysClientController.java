@@ -26,6 +26,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.SysOauthClientDetails;
 import com.pig4cloud.pig.admin.service.SysOauthClientDetailsService;
+import com.pig4cloud.pig.common.core.constant.enums.ClientStatusEnum;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
@@ -157,7 +158,7 @@ public class SysClientController {
 	@GetMapping("/list")
 	public R listEnabled() {
 		return R.ok(clientDetailsService.list(Wrappers.<SysOauthClientDetails>lambdaQuery()
-			.eq(SysOauthClientDetails::getStatus, "enabled")));
+			.eq(SysOauthClientDetails::getStatus, ClientStatusEnum.ENABLED)));
 	}
 
 	@SysLog("启用/禁用客户端")
@@ -169,7 +170,7 @@ public class SysClientController {
 		if (details == null) {
 			return R.failed("客户端不存在");
 		}
-		details.setStatus("enabled".equals(details.getStatus()) ? "disabled" : "enabled");
+		details.setStatus(ClientStatusEnum.ENABLED.equals(details.getStatus()) ? ClientStatusEnum.DISABLED : ClientStatusEnum.ENABLED);
 		return R.ok(clientDetailsService.updateById(details));
 	}
 

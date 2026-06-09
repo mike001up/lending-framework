@@ -40,6 +40,18 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 	private final SysUserRoleMapper sysUserRoleMapper;
 
 	@Override
+	public R<Boolean> savePermission(SysPermission sysPermission) {
+		if (StrUtil.isNotBlank(sysPermission.getPermCode())) {
+			long count = baseMapper.countByPermCode(sysPermission.getPermCode());
+			if (count > 0) {
+				return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_PERMISSION_PERMCODE_EXISTING,
+					sysPermission.getPermCode()));
+			}
+		}
+		return R.ok(this.save(sysPermission));
+	}
+
+	@Override
 	@Cacheable(value = CacheConstants.PERMISSION_DETAILS, key = "#roleId", unless = "#result.isEmpty()")
 	public List<SysPermission> findPermissionByRoleId(Long roleId) {
 		return baseMapper.listPermissionsByRoleId(roleId);
@@ -69,7 +81,7 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 
 		List<TreeNode<Long>> collect = baseMapper
 			.selectList(Wrappers.<SysPermission>lambdaQuery()
-				.like(StrUtil.isNotBlank(name), SysPermission::getName, name)
+				.like(StrUtil.isNotBlank(name), SysPermission::getPermName, name)
 				.orderByAsc(SysPermission::getSortOrder))
 			.stream()
 			.map(this::toTreeNode)
@@ -89,7 +101,7 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 	private TreeNode<Long> toTreeNode(SysPermission perm) {
 		TreeNode<Long> node = new TreeNode<>();
 		node.setId(perm.getPermissionId());
-		node.setName(perm.getName());
+		node.setName(perm.getPermName());
 		node.setParentId(perm.getParentId());
 		node.setWeight(perm.getSortOrder());
 		Map<String, Object> extra = new HashMap<>();
