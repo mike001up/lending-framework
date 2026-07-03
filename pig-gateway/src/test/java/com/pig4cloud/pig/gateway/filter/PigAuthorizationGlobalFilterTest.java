@@ -1,18 +1,17 @@
 package com.pig4cloud.pig.gateway.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysPermission;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.R;
-import com.pig4cloud.pig.common.core.util.SpringContextHolder;
 import com.pig4cloud.pig.gateway.config.GatewaySecurityProperties;
 import com.pig4cloud.pig.admin.api.feign.RemotePermService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.StaticMessageSource;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -20,7 +19,6 @@ import org.springframework.mock.web.server.MockServerWebExchange;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -29,258 +27,260 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class PigAuthorizationGlobalFilterTest {
+class PigAuthorizationFilterTest {
 
-	private RemotePermService remotePermService;
-	private ObjectProvider<RemotePermService> remotePermServiceProvider;
-	private GatewaySecurityProperties securityProperties;
-	private PigAuthorizationGlobalFilter filter;
+    private RemotePermService remotePermService;
+    private ObjectProvider<RemotePermService> remotePermServiceProvider;
+    private GatewaySecurityProperties securityProperties;
+    private RedisTemplate<String, Object> redisTemplate;
+    private ObjectMapper objectMapper;
+    private PigAuthorizationFilter filter;
 
-	@BeforeEach
-	void setUp() {
-		remotePermService = mock(RemotePermService.class);
-		remotePermServiceProvider = mock(ObjectProvider.class);
-		when(remotePermServiceProvider.getObject()).thenReturn(remotePermService);
-		securityProperties = new GatewaySecurityProperties();
-		securityProperties.setPermissionCacheTtlMs(300000);
-		securityProperties.setPermissionCacheMaxSize(1000);
-		filter = new PigAuthorizationGlobalFilter(securityProperties, remotePermServiceProvider);
+    @BeforeEach
+    void setUp() {
+        remotePermService = mock(RemotePermService.class);
+        remotePermServiceProvider = mock(ObjectProvider.class);
+        when(remotePermServiceProvider.getIfAvailable()).thenReturn(remotePermService);
 
-		ApplicationContext mockCtx = mock(ApplicationContext.class);
-		StaticMessageSource messageSource = new StaticMessageSource();
-		when(mockCtx.getBean(eq("messageSource"))).thenReturn(messageSource);
-		when(mockCtx.getBean(any(String.class))).thenReturn(null);
-		when(mockCtx.getBean(eq("messageSource"))).thenReturn(messageSource);
-		try {
-			Field field = SpringContextHolder.class.getDeclaredField("applicationContext");
-			field.setAccessible(true);
-			field.set(null, mockCtx);
-		} catch (Exception ignored) {}
-	}
+        securityProperties = new GatewaySecurityProperties();
+        securityProperties.setAuthorizeEnabled(true);
+        securityProperties.setPermissionCacheTtlMs(300000);
+        securityProperties.setPermissionCacheMaxSize(1000);
 
-	@Test
-	void getOrder_returns1() {
-		assertEquals(1, filter.getOrder());
-	}
+        redisTemplate = mock(RedisTemplate.class);
+        objectMapper = mock(ObjectMapper.class);
 
-	@Test
-	void filter_authorizeDisabled_passesThrough() {
-		securityProperties.setAuthorizeEnabled(false);
-		filter = new PigAuthorizationGlobalFilter(securityProperties, remotePermServiceProvider);
+        filter = new PigAuthorizationFilter(securityProperties, remotePermServiceProvider, redisTemplate, objectMapper);
+    }
 
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+    @Test
+    void getOrder_returnsAuthorizationOrder() {
+        assertEquals(GatewayAttrConstants.GATEWAY_ORDER_FILTER_AUTHORIZATION, filter.getOrder());
+    }
 
-		Mono<Void> result = filter.filter(exchange, chain);
+    @Test
+    void filter_authorizeDisabled_passesThrough() {
+        securityProperties.setAuthorizeEnabled(false);
+        filter = new PigAuthorizationFilter(securityProperties, remotePermServiceProvider, redisTemplate, objectMapper);
 
-		StepVerifier.create(result).verifyComplete();
-		verify(chain, times(1)).filter(any());
-	}
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
-	@Test
-	void filter_whitelistRequest_passesThrough() {
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/auth/token/check_token").build());
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_WHITELIST_ATTR, Boolean.TRUE);
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+        Mono<Void> result = filter.filter(exchange, chain);
+        StepVerifier.create(result).verifyComplete();
+        verify(chain, times(1)).filter(any());
+        verify(remotePermService, never()).getAuthorizeRules();
+    }
 
-		Mono<Void> result = filter.filter(exchange, chain);
+    @Test
+    void filter_whitelistRequest_passesThrough() {
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/auth/token/check_token").build());
+        exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_WHITELIST_ATTR, Boolean.TRUE);
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
-		StepVerifier.create(result).verifyComplete();
-		verify(chain, times(1)).filter(any());
-	}
+        Mono<Void> result = filter.filter(exchange, chain);
+        StepVerifier.create(result).verifyComplete();
+        verify(chain, times(1)).filter(any());
+        verify(remotePermService, never()).getAuthorizeRules();
+    }
 
-	@Test
-	void filter_missingUsername_returns401() {
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
+    @Test
+    void filter_missingUsername_returns401() {
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
 
-		filter.filter(exchange, chain).block();
+        filter.filter(exchange, chain).block();
 
-		assertEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
-	}
+        assertEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+        verify(chain, never()).filter(any());
+    }
 
-	@Test
-	void filter_adminUser_skipsAuthorization() {
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, SecurityConstants.ADMIN);
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+    @Test
+    void filter_adminUser_doesNotSkipAuth() {
+        // 移除了 admin 硬编码跳过，所以 admin 也需要权限校验
+        SysPermission rule = new SysPermission();
+        rule.setPath("/admin/**");
+        rule.setMethod(null);
+        rule.setPermission("admin_perm");
+        when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Collections.singletonList(rule)));
 
-		filter.filter(exchange, chain).block();
+        UserInfo userInfo = new UserInfo();
+        userInfo.setPermissions(new String[]{"admin_perm"});
+        when(remotePermService.getUserInfo("admin")).thenReturn(R.ok(userInfo));
 
-		verify(chain, times(1)).filter(any());
-		verify(remotePermService, never()).getAuthorizeRules();
-	}
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info")
+                        .header(SecurityConstants.HEADER_USERNAME, "admin").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
-	@Test
-	void filter_noMatchingRule_passesThrough() {
-		SysPermission rule = new SysPermission();
-		rule.setPath("/code/**");
-		rule.setMethod(null);
-		rule.setPermission("codegen_view");
-		when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Arrays.asList(rule)));
+        filter.filter(exchange, chain).block();
 
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, "normal");
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+        verify(chain, times(1)).filter(any());
+        verify(remotePermService, times(1)).getAuthorizeRules();
+        verify(remotePermService, times(1)).getUserInfo("admin");
+    }
 
-		filter.filter(exchange, chain).block();
+    @Test
+    void filter_noMatchingRule_passesThrough() {
+        SysPermission rule = new SysPermission();
+        rule.setPath("/code/**");
+        rule.setMethod(null);
+        rule.setPermission("codegen_view");
+        when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Collections.singletonList(rule)));
 
-		verify(chain, times(1)).filter(any());
-	}
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info")
+                        .header(SecurityConstants.HEADER_USERNAME, "normal").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
-	@Test
-	void filter_matchingRuleWithEmptyPermission_passesThrough() {
-		SysPermission rule = new SysPermission();
-		rule.setPath("/admin/**");
-		rule.setMethod(null);
-		rule.setPermission("");
-		when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Arrays.asList(rule)));
+        filter.filter(exchange, chain).block();
 
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, "normal");
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+        verify(chain, times(1)).filter(any());
+        verify(remotePermService, times(1)).getAuthorizeRules();
+        verify(remotePermService, never()).getUserInfo(any());
+    }
 
-		filter.filter(exchange, chain).block();
+    @Test
+    void filter_matchingRuleWithEmptyPermission_passesThrough() {
+        SysPermission rule = new SysPermission();
+        rule.setPath("/admin/**");
+        rule.setMethod(null);
+        rule.setPermission("");
+        when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Collections.singletonList(rule)));
 
-		verify(chain, times(1)).filter(any());
-	}
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info")
+                        .header(SecurityConstants.HEADER_USERNAME, "normal").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
-	@Test
-	void filter_userHasPermission_passesThrough() {
-		SysPermission rule = new SysPermission();
-		rule.setPath("/admin/**");
-		rule.setMethod(null);
-		rule.setPermission("sys_user_view");
-		when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Arrays.asList(rule)));
+        filter.filter(exchange, chain).block();
 
-		UserInfo userInfo = new UserInfo();
-		userInfo.setPermissions(new String[]{"sys_user_view", "sys_dept_view"});
-		when(remotePermService.getUserInfo("normal")).thenReturn(R.ok(userInfo));
+        verify(chain, times(1)).filter(any());
+        verify(remotePermService, times(1)).getAuthorizeRules();
+        verify(remotePermService, never()).getUserInfo(any());
+    }
 
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, "normal");
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+    @Test
+    void filter_userHasPermission_passesThrough() {
+        SysPermission rule = new SysPermission();
+        rule.setPath("/admin/**");
+        rule.setMethod(null);
+        rule.setPermission("sys_user_view");
+        when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Collections.singletonList(rule)));
 
-		filter.filter(exchange, chain).block();
+        UserInfo userInfo = new UserInfo();
+        userInfo.setPermissions(new String[]{"sys_user_view", "sys_dept_view"});
+        when(remotePermService.getUserInfo("normal")).thenReturn(R.ok(userInfo));
 
-		verify(chain, times(1)).filter(any());
-	}
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info")
+                        .header(SecurityConstants.HEADER_USERNAME, "normal").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
-	@Test
-	void filter_userLacksPermission_returns403() {
-		SysPermission rule = new SysPermission();
-		rule.setPath("/admin/**");
-		rule.setMethod(null);
-		rule.setPermission("sys_user_del");
-		when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Arrays.asList(rule)));
+        filter.filter(exchange, chain).block();
 
-		UserInfo userInfo = new UserInfo();
-		userInfo.setPermissions(new String[]{"sys_user_view"});
-		when(remotePermService.getUserInfo("normal")).thenReturn(R.ok(userInfo));
+        verify(chain, times(1)).filter(any());
+    }
 
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, "normal");
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
+    @Test
+    void filter_userLacksPermission_returns403() {
+        SysPermission rule = new SysPermission();
+        rule.setPath("/admin/**");
+        rule.setMethod(null);
+        rule.setPermission("sys_user_del");
+        when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Collections.singletonList(rule)));
 
-		filter.filter(exchange, chain).block();
+        UserInfo userInfo = new UserInfo();
+        userInfo.setPermissions(new String[]{"sys_user_view"});
+        when(remotePermService.getUserInfo("normal")).thenReturn(R.ok(userInfo));
 
-		assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode());
-	}
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info")
+                        .header(SecurityConstants.HEADER_USERNAME, "normal").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
 
-	@Test
-	void filter_getUserInfoFails_returns403() {
-		SysPermission rule = new SysPermission();
-		rule.setPath("/admin/**");
-		rule.setMethod(null);
-		rule.setPermission("sys_user_view");
-		when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Arrays.asList(rule)));
+        filter.filter(exchange, chain).block();
 
-		R<UserInfo> failedResult = R.failed("Service error");
-		when(remotePermService.getUserInfo("normal")).thenReturn(failedResult);
+        assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode());
+        verify(chain, never()).filter(any());
+    }
 
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, "normal");
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
+    @Test
+    void filter_getUserInfoFails_returns403() {
+        SysPermission rule = new SysPermission();
+        rule.setPath("/admin/**");
+        rule.setMethod(null);
+        rule.setPermission("sys_user_view");
+        when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Collections.singletonList(rule)));
 
-		Mono<Void> result = filter.filter(exchange, chain);
-		StepVerifier.create(result).verifyComplete();
-		assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode());
-	}
+        when(remotePermService.getUserInfo("normal")).thenReturn(R.failed("Service error"));
 
-	@Test
-	void filter_getAuthorizeRulesFails_usesCachedRules() {
-		SysPermission rule = new SysPermission();
-		rule.setPath("/admin/**");
-		rule.setMethod(null);
-		rule.setPermission("sys_user_view");
-		when(remotePermService.getAuthorizeRules())
-			.thenReturn(R.ok(Arrays.asList(rule)))
-			.thenThrow(new RuntimeException("Service error"));
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info")
+                        .header(SecurityConstants.HEADER_USERNAME, "normal").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
 
-		UserInfo userInfo = new UserInfo();
-		userInfo.setPermissions(new String[]{"sys_user_view"});
-		when(remotePermService.getUserInfo("normal")).thenReturn(R.ok(userInfo));
+        filter.filter(exchange, chain).block();
 
-		MockServerWebExchange exchange1 = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		exchange1.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, "normal");
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+        assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode());
+        verify(chain, never()).filter(any());
+    }
 
-		filter.filter(exchange1, chain).block();
-		verify(chain, times(1)).filter(any());
+    @Test
+    void filter_getAuthorizeRulesFails_returns401() {
+        when(remotePermService.getAuthorizeRules()).thenReturn(R.failed("Auth service error"));
 
-		filter.evictAllCache();
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info")
+                        .header(SecurityConstants.HEADER_USERNAME, "normal").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
 
-		MockServerWebExchange exchange2 = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		exchange2.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, "normal");
+        filter.filter(exchange, chain).block();
 
-		filter.filter(exchange2, chain).block();
-	}
+        assertEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+        verify(chain, never()).filter(any());
+    }
 
-	@Test
-	void filter_httpMethodMatching() {
-		SysPermission rule = new SysPermission();
-		rule.setPath("/admin/**");
-		rule.setMethod("POST");
-		rule.setPermission("sys_user_add");
-		when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Arrays.asList(rule)));
+    @Test
+    void filter_httpMethodMatching() {
+        // 规则只匹配 POST，GET 请求应不匹配
+        SysPermission rule = new SysPermission();
+        rule.setPath("/admin/**");
+        rule.setMethod("POST");
+        rule.setPermission("sys_user_add");
+        when(remotePermService.getAuthorizeRules()).thenReturn(R.ok(Collections.singletonList(rule)));
 
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, "normal");
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info")
+                        .header(SecurityConstants.HEADER_USERNAME, "normal").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
-		filter.filter(exchange, chain).block();
+        filter.filter(exchange, chain).block();
 
-		verify(chain, times(1)).filter(any());
-	}
+        // 不匹配规则，直接放行
+        verify(chain, times(1)).filter(any());
+        verify(remotePermService, never()).getUserInfo(any());
+    }
 
-	@Test
-	void evictCache_clearsSpecificUser() {
-		filter.evictCache("testuser");
-	}
+    @Test
+    void filter_evictCache_clearsSpecificUser() {
+        filter.evictCache("testuser");
+        // 无返回值，仅验证不抛异常
+    }
 
-	@Test
-	void evictAllCache_clearsAll() {
-		filter.evictAllCache();
-	}
-
+    @Test
+    void filter_evictAllCache_clearsAll() {
+        filter.evictAllCache();
+        // 无返回值，仅验证不抛异常
+    }
 }

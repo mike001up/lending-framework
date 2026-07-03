@@ -20,8 +20,15 @@
 package com.pig4cloud.pig.admin.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.pig4cloud.pig.admin.api.dto.UserDTO;
+import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysUserRole;
+import com.pig4cloud.pig.admin.api.vo.UserVO;
+
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * <p>
@@ -33,5 +40,10 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface SysUserRoleMapper extends BaseMapper<SysUserRole> {
-
+    /**
+     * 查询授予用户的所有角色
+     * @param userId 用户ID
+     * @return
+     */    
+    List<SysRole> selectGrantRoles(@Param("userId") Long userId);
 }

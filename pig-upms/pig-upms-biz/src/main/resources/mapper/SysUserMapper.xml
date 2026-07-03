@@ -49,16 +49,17 @@
     <sql id="userRoleSql">
         u.user_id,
         u.username,
-        u.password,
-        u.salt,
+		u.name,
+		u.nickname,
+		u.email,
         u.phone,
         u.avatar,
-        u.wx_openid,
-        u.qq_openid,
-
-        u.is_del,
         u.lock_flag,
         u.create_by,
+		u.`status`,
+		u.certification_status,
+		u.certification_info,
+		u.lock_until,
         u.create_time  ucreate_time,
         u.update_time  uupdate_time,
         r.role_id,
@@ -89,14 +90,30 @@
         u.create_time  ucreate_time,
         u.update_time  uupdate_time
     </sql>
+    <sql id="userVoSql">
+        u.user_id,
+        u.username,
+		u.name,
+		u.nickname,
+		u.email,
+        u.phone,
+        u.avatar,
+        u.lock_flag,
+        u.create_by,
+		u.`status`,
+		u.certification_status,
+		u.certification_info,
+		u.lock_until,
+        u.create_time  create_time,
+        u.update_time  update_time
+        
+    </sql>
 
-    <select id="getUserVoByUsername" resultMap="baseResultMap">
+    <select id="getUserVoByUsername" resultType="com.pig4cloud.pig.admin.api.vo.UserVO">
         SELECT
-        <include refid="userRoleSql"/>
+        <include refid="userVoSql"/>
         FROM
-        sys_user u
-        LEFT JOIN sys_user_role urole ON urole.user_id = u.user_id
-        LEFT JOIN sys_role r ON r.role_id = urole.role_id and r.is_del = 'NO'
+        sys_user u        
         WHERE u.username = #{username} and u.is_del = 'NO'
     </select>
 
@@ -110,42 +127,58 @@
         u.user_id = #{id} and u.is_del = 'NO'
     </select>
 
-    <select id="getUserVosPage" resultMap="baseResultMap">
-        SELECT
+<select id="getUserVosPage" resultType="com.pig4cloud.pig.admin.api.vo.UserVO">
+    SELECT
         u.user_id,
         u.username,
-        u.password,
-        u.salt,
-        u.phone,
-        u.avatar,
-        u.wx_openid,
-        u.qq_openid,
-        u.create_by,
-        u.create_time ucreate_time,
-        u.update_time uupdate_time,
-        u.is_del,
-        u.lock_flag,
-        u.nickname,
         u.name,
-        u.email
-        FROM
-        sys_user u
-        <where>
-            u.is_del = 'NO'
-            <if test="query.username != null and query.username != ''">
-                <bind name="usernameLike" value="'%'+query.username+'%'"/>
-                AND u.username LIKE #{usernameLike}
-            </if>
-            <if test="query.phone != null and query.phone != ''">
-                <bind name="phoneLike" value="'%'+query.phone+'%'"/>
-                AND u.phone LIKE #{phoneLike}
-            </if>
-        </where>
-
-        <if test="_databaseId != 'mssql'">
-            ORDER BY u.create_time DESC
+        u.nickname,    
+        u.email,
+        u.phone, 
+        u.avatar,
+        u.lock_flag,
+        u.lock_until,
+        u.status,
+        u.certification_status,
+        u.certification_info,
+        u.create_by,
+        u.create_time,
+        u.update_time
+    FROM sys_user u
+    <where>
+        u.is_del = 'NO'
+        <if test="query.username != null and query.username != ''">
+            <bind name="usernameLike" value="'%'+query.username+'%'"/>
+            AND u.username LIKE #{usernameLike}
         </if>
-    </select>
+        <if test="query.phone != null and query.phone != ''">
+            <bind name="phoneLike" value="'%'+query.phone+'%'"/>
+            AND u.phone LIKE #{phoneLike}
+        </if>
+        <if test="query.email != null and query.email != ''">
+            <bind name="emailLike" value="'%'+query.email+'%'"/>
+            AND u.email LIKE #{emailLike}   <!-- 注意：此处原SQL有笔误，应为 u.email -->
+        </if>
+        <if test="query.lockFlag != null">
+            AND u.lock_flag = #{query.lockFlag}
+        </if>
+        <if test="query.status != null">
+            AND u.status = #{query.status}
+        </if>
+        <if test="query.certificationStatus != null">
+            AND u.certification_status = #{query.certificationStatus}
+        </if>
+        <if test="query.createTimeStart != null">
+            AND u.create_time >= #{query.createTimeStart}
+        </if>
+        <if test="query.createTimeEnd != null">
+            AND u.create_time <![CDATA[ <= ]]> #{query.createTimeEnd}
+        </if>
+    </where>
+    <if test="_databaseId != 'mssql'">
+        ORDER BY u.create_time DESC
+    </if>
+</select>
 
     <select id="selectVoList" resultMap="baseResultMap">
         SELECT
@@ -178,5 +211,17 @@
         <if test="_databaseId != 'mssql'">
             ORDER BY u.create_time DESC
         </if>
+    </select>
+    <select id="selectGrantRoles" resultType="com.pig4cloud.pig.admin.api.entity.SysRole">
+        SELECT
+            r.role_id,
+            r.role_code,
+            r.role_name
+        FROM
+            sys_user_role ur
+            INNER JOIN sys_role r ON ur.role_id = r.role_id 
+        WHERE
+            r.is_del = 'NO'
+            AND ur.user_id = #{userId}
     </select>
 </mapper>

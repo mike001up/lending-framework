@@ -14,8 +14,6 @@ spring:
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         namespace: ${spring.cloud.nacos.discovery.namespace}
-        username: @nacos.username@
-        password: @nacos.password@
         import-check:
           enabled: false
   config:

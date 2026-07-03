@@ -23,4 +23,6 @@ public interface SysUserHierarchyService extends IService<SysUserHierarchy> {
 
 	List<Long> getDescendantsByAncestorAndType(Long ancestorId, String hierarchyType);
 
+	void buildHierarchy(Long agencyId, Long tenantId, Long userId);
+
 }

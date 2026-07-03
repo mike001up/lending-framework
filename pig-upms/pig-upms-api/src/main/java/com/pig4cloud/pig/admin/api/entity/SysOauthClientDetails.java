@@ -16,7 +16,7 @@ public class SysOauthClientDetails extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	@TableId(value = "id", type = IdType.ASSIGN_ID)
+	@TableId(value = "id", type = IdType.AUTO)
 	@Schema(description = "id")
 	private Long id;
 
@@ -40,7 +40,7 @@ public class SysOauthClientDetails extends BaseEntity {
 	private String scope;
 
 	@Schema(description = "授权方式")
-	private String[] authorizedGrantTypes;
+	private String authorizedGrantTypes;
 
 	@Schema(description = "回调地址")
 	private String webServerRedirectUri;

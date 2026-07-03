@@ -27,13 +27,13 @@ class WhitelistGlobalFilterTest {
 
 	@Test
 	void getOrder_returnsNegative2() {
-		WhitelistGlobalFilter filter = new WhitelistGlobalFilter(securityProperties);
+		PigWhitelistFilter filter = new PigWhitelistFilter(securityProperties);
 		assertEquals(-2, filter.getOrder());
 	}
 
 	@Test
 	void filter_matchesDefaultWhitelist_setsAttr() {
-		WhitelistGlobalFilter filter = new WhitelistGlobalFilter(securityProperties);
+		PigWhitelistFilter filter = new PigWhitelistFilter(securityProperties);
 		MockServerWebExchange exchange = MockServerWebExchange
 			.from(MockServerHttpRequest.get("/auth/token/check_token").build());
 		GatewayFilterChain chain = mock(GatewayFilterChain.class);
@@ -48,7 +48,7 @@ class WhitelistGlobalFilterTest {
 
 	@Test
 	void filter_noMatch_doesNotSetAttr() {
-		WhitelistGlobalFilter filter = new WhitelistGlobalFilter(securityProperties);
+		PigWhitelistFilter filter = new PigWhitelistFilter(securityProperties);
 		MockServerWebExchange exchange = MockServerWebExchange
 			.from(MockServerHttpRequest.get("/admin/user/info").build());
 		GatewayFilterChain chain = mock(GatewayFilterChain.class);
@@ -62,7 +62,7 @@ class WhitelistGlobalFilterTest {
 	@Test
 	void filter_antPathMatcher_wildcard() {
 		securityProperties.setIgnoreUrls(Arrays.asList("/auth/**"));
-		WhitelistGlobalFilter filter = new WhitelistGlobalFilter(securityProperties);
+		PigWhitelistFilter filter = new PigWhitelistFilter(securityProperties);
 		MockServerWebExchange exchange = MockServerWebExchange
 			.from(MockServerHttpRequest.get("/auth/token/login").build());
 		GatewayFilterChain chain = mock(GatewayFilterChain.class);
@@ -76,7 +76,7 @@ class WhitelistGlobalFilterTest {
 	@Test
 	void filter_emptyIgnoreUrls_noMatch() {
 		securityProperties.setIgnoreUrls(Collections.emptyList());
-		WhitelistGlobalFilter filter = new WhitelistGlobalFilter(securityProperties);
+		PigWhitelistFilter filter = new PigWhitelistFilter(securityProperties);
 		MockServerWebExchange exchange = MockServerWebExchange
 			.from(MockServerHttpRequest.get("/auth/token/check_token").build());
 		GatewayFilterChain chain = mock(GatewayFilterChain.class);

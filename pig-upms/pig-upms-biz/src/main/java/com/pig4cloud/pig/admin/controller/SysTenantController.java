@@ -48,9 +48,9 @@ public class SysTenantController {
 	}
 
 	@SysLog("更新租户")
-	@PutMapping
+	@PutMapping(path = "/{id}")
 	@HasPermission("sys_tenant_edit")
-	public R update(@Valid @RequestBody SysTenant sysTenant) {
+	public R update(@PathVariable Long id, @Valid @RequestBody SysTenant sysTenant) {
 		return R.ok(sysTenantService.updateById(sysTenant));
 	}
 

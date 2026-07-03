@@ -60,6 +60,10 @@ public interface CacheConstants {
 	 * oauth 客户端信息
 	 */
 	String CLIENT_DETAILS_KEY = "client:details";
-
-
+	/**
+	 * permission 缓存关键字
+	 */
+	String CACHE_KEY_UPMS_PERMISSION = "cache:upms:permission";
+	
+	String CACHE_KEY_UPMS_PERMISSION_USER = "cache:upms:permission:%s";
 }

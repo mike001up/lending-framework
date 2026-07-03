@@ -17,12 +17,16 @@
 package com.pig4cloud.pig.common.security.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pig4cloud.pig.common.core.service.ServiceTokenCacheService;
 import com.pig4cloud.pig.common.security.service.RemoteServiceAuthClient;
+import com.pig4cloud.pig.common.security.service.ServiceTokenCacheServiceImpl;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authorization.method.PrePostTemplateDefaults;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;

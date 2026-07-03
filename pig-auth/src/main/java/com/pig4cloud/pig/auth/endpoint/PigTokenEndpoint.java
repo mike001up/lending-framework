@@ -28,11 +28,16 @@ import com.pig4cloud.pig.admin.api.vo.TokenVo;
 import com.pig4cloud.pig.auth.support.handler.PigAuthenticationFailureEventHandler;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.core.constant.SecurityConstants;
+import com.pig4cloud.pig.common.core.constant.enums.GrantTypeEnum;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.core.util.RetOps;
 import com.pig4cloud.pig.common.core.util.SpringContextHolder;
 import com.pig4cloud.pig.common.feign.sentinel.handle.GlobalBizExceptionHandler;
 import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.security.annotation.RequireServiceAuth;
+import com.pig4cloud.pig.common.security.dto.TokenPayloadDTO;
+import com.pig4cloud.pig.common.security.service.PigUser;
 import com.pig4cloud.pig.common.security.util.OAuth2EndpointUtils;
 import com.pig4cloud.pig.common.security.util.OAuth2ErrorCodesExpand;
 import com.pig4cloud.pig.common.security.util.OAuthClientException;
@@ -65,9 +70,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.security.Principal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -204,6 +211,7 @@ public class PigTokenEndpoint {
 
 
 	@Inner
+	@RequireServiceAuth
 	@DeleteMapping("/token/removeByUsername/{username}")
 	public R<Boolean> removeTokenByUsername(@PathVariable("username") String username) {
 		String key = String.format("%s::*", CacheConstants.PROJECT_OAUTH_ACCESS);
@@ -233,18 +241,40 @@ public class PigTokenEndpoint {
 	}
 
 	@SneakyThrows
-	@GetMapping("/token/getUser")
-	@Inner
-	public Map<String, Object> getUser(@RequestParam("token") String token) {
-		log.info("------------------------------进入getUser----------------------------");
-		token = token.replaceFirst("Bearer ", "");
+	@GetMapping("/token/parsing")
+	public R<TokenPayloadDTO> parsingToken(@RequestParam("token") String token) {
 		OAuth2Authorization authorization = authorizationService.findByToken(token, OAuth2TokenType.ACCESS_TOKEN);
 		if (authorization == null) {
-			throw new GlobalBizExceptionHandler.UnauthorizedException("Unauthorized");
+			return R.failed("无效token");
 		}
 		Map<String, Object> claims = authorization.getAccessToken().getClaims();
-		log.info("user: {}", claims.get("username").toString());
-		return claims;
+		log.debug("user: {}", claims.keySet());
+		// 直接从 claims 中取值并转换类型，所有转换内联处理
+		TokenPayloadDTO dto = TokenPayloadDTO.builder()
+            .sub(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_SUB)).map(Object::toString).orElse(null))
+            .aud(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_AUD)).map(Object::toString).orElse(null))
+            .iss(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_ISS)).map(Object::toString).orElse(null))
+            .exp(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_EXP))
+                    .map(v -> v instanceof Instant ? ((Instant) v) : null)
+                    .orElse(null))
+            .nbf(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_NBF))
+                    .map(v -> v instanceof Instant ? ((Instant) v) : null)
+                    .orElse(null))
+            .iat(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_IAT))
+                    .map(v -> v instanceof Instant ? ((Instant) v) : null)
+                    .orElse(null))
+            .jti(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_JTI)).map(Object::toString).orElse(null))
+            .clientId(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_CLIENTID)).map(Object::toString).orElse(null))
+            .scope(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_SCOPE)).map(Object::toString).orElse(null))
+            .license(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_LICENSE)).map(Object::toString).orElse(null))            
+            .userId(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_USERID))
+                    .map(v -> v instanceof Number ? ((Number) v).longValue() : Long.valueOf(v.toString()))
+                    .orElse(null))
+			.username(Optional.ofNullable(claims.get(SecurityConstants.TOKEN_PAY_LOAD_USERNAME)).map(Object::toString).orElse(null))
+			.tenantId(claims.get(SecurityConstants.TOKEN_PAY_LOAD_USER_INFO) == null?null:((PigUser)claims.get(SecurityConstants.TOKEN_PAY_LOAD_USER_INFO)).getTenantId())
+			.grantType(claims.get(SecurityConstants.TOKEN_PAY_LOAD_USERID) != null ? GrantTypeEnum.PASSWORD : GrantTypeEnum.CLIENT_CREDENTIALS)
+            .build();
+    	return R.ok(dto);
 	}
 
 	/**

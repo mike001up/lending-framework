@@ -9,6 +9,7 @@ import com.pig4cloud.pig.admin.mapper.SysTenantMapper;
 import com.pig4cloud.pig.admin.mapper.SysUserHierarchyMapper;
 import com.pig4cloud.pig.admin.mapper.SysUserMapper;
 import com.pig4cloud.pig.admin.service.SysTenantService;
+import com.pig4cloud.pig.common.core.constant.enums.GrantTypeEnum;
 import com.pig4cloud.pig.common.core.constant.enums.TenantStatusEnum;
 import com.pig4cloud.pig.common.core.util.R;
 import lombok.AllArgsConstructor;

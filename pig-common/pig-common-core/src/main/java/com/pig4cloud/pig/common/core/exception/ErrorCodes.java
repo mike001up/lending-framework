@@ -112,5 +112,9 @@ public interface ErrorCodes {
 	 * 权限编码已存在
 	 */
 	String SYS_PERMISSION_PERMCODE_EXISTING = "sys.permission.permCode.existing";
+	/**
+	 * clients 不存在，但是实际必要
+	 */
+	String SYS_CLIENTS_NON_EXISTING = "sys.clients.non.existing";
 
 }

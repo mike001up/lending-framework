@@ -22,9 +22,11 @@ package com.pig4cloud.pig.admin.controller;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.entity.SysOauthClientDetails;
+import com.pig4cloud.pig.admin.convertor.ClientConverter;
 import com.pig4cloud.pig.admin.service.SysOauthClientDetailsService;
 import com.pig4cloud.pig.common.core.constant.enums.ClientStatusEnum;
 import com.pig4cloud.pig.common.core.util.R;
@@ -32,7 +34,9 @@ import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
 import com.pig4cloud.pig.common.security.annotation.Inner;
 import com.pig4cloud.pig.common.security.annotation.RequireServiceAuth;
+import com.pig4cloud.pig.common.security.dto.ClientRegisteredDTO;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
+
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -59,6 +63,8 @@ import java.util.List;
 public class SysClientController {
 
 	private final SysOauthClientDetailsService clientDetailsService;
+
+	private final ClientConverter clientConverter;
 
 	/**
 	 * 通过ID查询
@@ -128,10 +134,14 @@ public class SysClientController {
 
 	@Inner
 	@RequireServiceAuth
-	@GetMapping("/getClientDetailsById/{clientId}")
-	public R getClientDetailsById(@PathVariable String clientId) {
-		return R.ok(clientDetailsService.getOne(
-				Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, clientId), false));
+	@GetMapping("/details")
+	public R<ClientRegisteredDTO> getClientDetailsById(@RequestParam String clientId) {
+		SysOauthClientDetails client = clientDetailsService.getOne(
+				Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, clientId), false);
+		if (client == null) {
+			return R.failed("无效的clientId");
+		}
+		return R.ok(clientConverter.toClientRegisteredDTO(client));
 	}
 
 	/**
@@ -174,4 +184,27 @@ public class SysClientController {
 		return R.ok(clientDetailsService.updateById(details));
 	}
 
+	/**
+	 * 内部服务，用于验证服务访问权限
+	 * 目前只验证已授权服务，不验证具体资源
+	 * @param callerServiceId
+	 * @param providerServiceId
+	 * @param requestPath
+	 * @return
+	 */
+	@PutMapping("/serviceAuth/check")
+	@HasPermission("sys_client_edit")
+	@Inner
+	@RequireServiceAuth
+	public Boolean checkServiceAuth(@RequestParam("callerServiceId") String callerServiceId,
+									@RequestParam("providerServiceId") String providerServiceId,
+								    @RequestParam("requestPath") String requestPath) {
+		SysOauthClientDetails client = clientDetailsService.getOne(Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, callerServiceId));
+		if(client == null || (StringUtils.isEmpty(client.getAuthorities()))){
+			return Boolean.FALSE;
+		}
+		String authorities = client.getAuthorities();
+		
+		return StringUtils.matches(providerServiceId, authorities);
+	}
 }

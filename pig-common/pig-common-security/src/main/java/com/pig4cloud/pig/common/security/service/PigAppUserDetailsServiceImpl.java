@@ -16,18 +16,21 @@
 
 package com.pig4cloud.pig.common.security.service;
 
-import com.pig4cloud.pig.admin.api.dto.UserDTO;
-import com.pig4cloud.pig.admin.api.dto.UserInfo;
-import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
+// import com.pig4cloud.pig.admin.api.dto.UserDTO;
+// import com.pig4cloud.pig.admin.api.dto.UserInfo;
+// import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.security.dto.PigUserDTO;
+
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 /**
  * 用户详细信息
@@ -38,7 +41,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 @RequiredArgsConstructor
 public class PigAppUserDetailsServiceImpl implements PigUserDetailsService {
 
-	private final RemoteUserService remoteUserService;
+	// private final RemoteUserService remoteUserService;
+	private final UserInfoService userInfoService;
 
 	private final CacheManager cacheManager;
 
@@ -55,12 +59,12 @@ public class PigAppUserDetailsServiceImpl implements PigUserDetailsService {
 		if (cache != null && cache.get(cacheKey) != null) {
 			return (PigUser) cache.get(cacheKey).get();
 		}
+		R<PigUserDTO> r = userInfoService.loadUserByUsername(phone);
+        if (r == null || r.getCode() != 0 || r.getData() == null) {
+            throw new UsernameNotFoundException("用户不存在");
+        }
 
-		UserDTO userDTO = new UserDTO();
-		userDTO.setPhone(phone);
-		R<UserInfo> result = remoteUserService.info(userDTO);
-
-		UserDetails userDetails = getUserDetails(result);
+        UserDetails userDetails = getUserDetails(r.getData());
 		if (cache != null) {
 			cache.put(cacheKey, userDetails);
 		}

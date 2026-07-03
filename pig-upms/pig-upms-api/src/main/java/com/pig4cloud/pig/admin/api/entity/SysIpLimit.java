@@ -1,6 +1,7 @@
 package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.pig4cloud.pig.common.core.constant.enums.IpActionEnum;
 import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -14,7 +15,7 @@ public class SysIpLimit extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	@TableId(type = IdType.ASSIGN_ID)
+	@TableId(type = IdType.AUTO)
 	@Schema(description = "ID")
 	private Long id;
 
@@ -24,4 +25,6 @@ public class SysIpLimit extends BaseEntity {
 	@Schema(description = "IP 地址")
 	private String ip;
 
+	@Schema(description = "IP 限制规则")
+	private IpActionEnum action;
 }

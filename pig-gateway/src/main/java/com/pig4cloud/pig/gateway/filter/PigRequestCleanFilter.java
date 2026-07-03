@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 @Slf4j
-public class RequestCleanGlobalFilter implements GlobalFilter, Ordered {
+public class PigRequestCleanFilter implements GlobalFilter, Ordered {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -27,26 +27,30 @@ public class RequestCleanGlobalFilter implements GlobalFilter, Ordered {
 		String client = request.getHeaders().getFirst(CommonConstants.CLIENT);
 		if (StrUtil.isBlank(client)) {
 			log.warn("请求缺少 client 头, path: {}", request.getURI().getPath());
-			return writeErrorResponse(exchange, HttpStatus.UNAUTHORIZED.value(), "Missing client header",
+			return writeErrorResponse(exchange, HttpStatus.UNAUTHORIZED.value(), 
+				"Missing client header",
 					HttpStatus.UNAUTHORIZED);
 		}
 
 		ServerHttpRequest newRequest = request.mutate().headers(httpHeaders -> {
 			httpHeaders.remove(SecurityConstants.FROM);
-			httpHeaders.put(SecurityConstants.FROM, Collections.singletonList(SecurityConstants.FROM_IN));
+			httpHeaders.remove(CommonConstants.CLIENT);
+
+			//TODO 增加请求ID
 
 			httpHeaders.put(CommonConstants.REQUEST_START_TIME,
 					Collections.singletonList(String.valueOf(System.currentTimeMillis())));
-		}).build();
 
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_CLIENT_ATTR, client);
+			httpHeaders.put(CommonConstants.GATEWAY_CLIENT_ATTR, 
+				Collections.singletonList(client));
+		}).build();
 
 		return chain.filter(exchange.mutate().request(newRequest).build());
 	}
 
 	@Override
 	public int getOrder() {
-		return -3;
+		return GatewayAttrConstants.GATEWAY_ORDER_FILTER_CLEAN;
 	}
 
 	private Mono<Void> writeErrorResponse(ServerWebExchange exchange, int code, String msg, HttpStatus status) {

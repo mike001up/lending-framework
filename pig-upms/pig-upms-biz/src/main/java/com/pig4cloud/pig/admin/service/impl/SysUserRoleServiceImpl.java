@@ -20,10 +20,19 @@
 package com.pig4cloud.pig.admin.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pig4cloud.pig.admin.api.entity.SysRole;
+import com.pig4cloud.pig.admin.api.entity.SysUserClient;
 import com.pig4cloud.pig.admin.api.entity.SysUserRole;
 import com.pig4cloud.pig.admin.mapper.SysUserRoleMapper;
 import com.pig4cloud.pig.admin.service.SysUserRoleService;
+
+import cn.hutool.core.collection.CollUtil;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -35,5 +44,26 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUserRole> implements SysUserRoleService {
+
+    @Override
+    @Transactional
+    public void grantUserRole(Long userId, List<Long> roleIds) {
+        if (CollUtil.isNotEmpty(roleIds)) {
+            List<SysUserRole> relations = roleIds.stream()
+            .map(roleId -> {
+                SysUserRole relation = new SysUserRole();
+                relation.setUserId(userId);
+                relation.setRoleId(roleId);
+                return relation;
+            })
+            .collect(Collectors.toList());
+            baseMapper.insert(relations);        
+		}
+    }
+
+    @Override
+    public List<SysRole> selectGrantRoles(Long userId) {
+        return baseMapper.selectGrantRoles(userId);
+    }
 
 }

@@ -2,6 +2,7 @@ package com.pig4cloud.pig.admin.api.feign;
 
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.admin.api.entity.SysPermission;
+import com.pig4cloud.pig.common.core.annotation.InternalFeign;
 import com.pig4cloud.pig.common.core.constant.ServiceNameConstants;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.feign.annotation.NoToken;
@@ -14,7 +15,7 @@ import java.util.List;
 @FeignClient(contextId = "remotePermService", value = ServiceNameConstants.UPMS_SERVICE)
 public interface RemotePermService {
 
-	@NoToken
+	@InternalFeign
 	@GetMapping("/permission/authorize-rules")
 	R<List<SysPermission>> getAuthorizeRules();
 

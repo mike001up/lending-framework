@@ -9,14 +9,20 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+/**
+ * 请求uri 如果是白名单列表中，那么次请求链路不需要进行安全请求验证
+ * 1，忽略token 验证
+ * 2，忽略授权验证
+ * 
+ */
 @Slf4j
-public class WhitelistGlobalFilter implements GlobalFilter, Ordered {
+public class PigWhitelistFilter implements GlobalFilter, Ordered {
 
 	private final GatewaySecurityProperties securityProperties;
 
 	private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-	public WhitelistGlobalFilter(GatewaySecurityProperties securityProperties) {
+	public PigWhitelistFilter(GatewaySecurityProperties securityProperties) {
 		this.securityProperties = securityProperties;
 	}
 
@@ -37,7 +43,7 @@ public class WhitelistGlobalFilter implements GlobalFilter, Ordered {
 
 	@Override
 	public int getOrder() {
-		return -2;
+		return GatewayAttrConstants.GATEWAY_ORDER_FILTER_WHITE_LIST;
 	}
 
 }

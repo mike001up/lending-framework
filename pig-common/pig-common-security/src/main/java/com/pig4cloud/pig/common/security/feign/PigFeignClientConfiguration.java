@@ -27,7 +27,8 @@ public class PigFeignClientConfiguration {
 	 * @param tokenResolver token获取处理器
 	 * @return 拦截器
 	 */
-	@Bean
+	//TODO 在统一网关 授权/鉴权的的架构下，此处已经没有必要
+	// @Bean
 	public RequestInterceptor oauthRequestInterceptor(BearerTokenResolver tokenResolver) {
 		return new PigOAuthRequestInterceptor(tokenResolver);
 	}

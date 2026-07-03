@@ -24,6 +24,10 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
+
+import com.pig4cloud.pig.common.feign.PigFeignAutoConfiguration;
+// import com.pig4cloud.pig.common.security.feign.InternalFeignClientConfiguration;
+
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 
 /**
@@ -34,15 +38,11 @@ import org.springframework.cloud.openfeign.FeignAutoConfiguration;
  */
 @EnableDiscoveryClient
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.pig4cloud.pig.common.core","com.pig4cloud.pig"},
-		excludeFilters = {
-			@ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.pig4cloud\\.pig\\.common\\.mybatis\\..*"),
-			@ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.pig4cloud\\.pig\\.common\\.feign\\.sentinel\\.handle\\..*"),
-			@ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.pig4cloud\\.pig\\.common\\.core\\.config\\.ExcelConfig"),
-			@ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.pig4cloud\\.pig\\.common\\.core\\.util\\.TimestampStringConverter")
-		})
-@EnableFeignClients(basePackages = {"com.pig4cloud.pig.gateway.fegin", "com.pig4cloud.pig.admin.api.feign"})
-@Import(FeignAutoConfiguration.class)
+@EnableFeignClients(basePackages = {"com.pig4cloud.pig.common.security.feign",
+										"com.pig4cloud.pig.common.core.feign",
+										"com.pig4cloud.pig.admin.api.feign"
+})
+// @Import(InternalFeignClientConfiguration.class)
 public class PigGatewayApplication {
 
 	public static void main(String[] args) {

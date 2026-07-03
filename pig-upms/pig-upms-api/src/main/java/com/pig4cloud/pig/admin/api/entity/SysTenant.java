@@ -3,6 +3,7 @@ package com.pig4cloud.pig.admin.api.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 import com.pig4cloud.pig.common.core.constant.enums.TenantStatusEnum;
+import com.pig4cloud.pig.common.core.constant.enums.GrantTypeEnum;
 import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

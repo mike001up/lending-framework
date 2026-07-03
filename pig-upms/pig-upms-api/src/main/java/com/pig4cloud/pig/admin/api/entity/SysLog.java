@@ -2,22 +2,25 @@ package com.pig4cloud.pig.admin.api.entity;
 
 import cn.idev.excel.annotation.ExcelIgnore;
 import cn.idev.excel.annotation.ExcelProperty;
+
+import java.time.Instant;
+
 import com.baomidou.mybatisplus.annotation.*;
 import com.pig4cloud.pig.common.core.constant.enums.HttpMethodEnum;
 import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 import com.pig4cloud.pig.common.core.constant.enums.LogTypeEnum;
-import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
+// import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+// import lombok.EqualsAndHashCode;
 
 
 @Data
 @Schema(description = "审计日志")
-@EqualsAndHashCode(callSuper = true)
-public class SysLog extends BaseEntity {
+// @EqualsAndHashCode(callSuper = true)
+public class SysLog {
 
 	private static final long serialVersionUID = 1L;
 
@@ -89,5 +92,33 @@ public class SysLog extends BaseEntity {
 	@TableField(fill = FieldFill.INSERT)
 	@Schema(description = "删除标记,YES:已删除,NO:正常")
 	private IsDelEnum isDel;
+
+	/**
+	 * 创建者
+	 */
+	@Schema(description = "创建人")
+	@TableField(fill = FieldFill.INSERT)
+	private String createBy;
+
+	/**
+	 * 创建时间
+	 */
+	@Schema(description = "创建时间")
+	@TableField(fill = FieldFill.INSERT)
+	private Instant createTime;
+
+	/**
+	 * 更新者
+	 */
+	@Schema(description = "更新人")
+	@TableField(fill = FieldFill.INSERT_UPDATE)
+	private String updateBy;
+
+	/**
+	 * 更新时间
+	 */
+	@Schema(description = "更新时间")
+	@TableField(fill = FieldFill.INSERT_UPDATE)
+	private Instant updateTime;
 
 }

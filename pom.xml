@@ -58,6 +58,10 @@
         <spring.checkstyle.plugin>0.0.43</spring.checkstyle.plugin>
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
         <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+         <!-- 指定 MapStruct 版本 -->
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <!-- 指定 Lombok 与 MapStruct 的绑定处理器版本 -->
+        <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     </properties>
 
     <!-- 以下依赖 全局所有的模块都会引入  -->
@@ -151,6 +155,11 @@
                 <version>${spring-cloud-alibaba.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -248,6 +257,27 @@
                     <source>${maven.compiler.source}</source>
                     <encoding>UTF-8</encoding>
                     <parameters>true</parameters>
+                    <!-- 添加注解处理器路径，解决 Lombok + MapStruct 编译问题 -->
+                    <annotationProcessorPaths>
+                        <!-- Lombok 处理器 -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <!-- Lombok 与 MapStruct 的绑定处理器（必须） -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>${lombok-mapstruct-binding.version}</version>
+                        </path>
+                        <!-- MapStruct 处理器 -->
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <!--打包jar 与git commit 关联插件-->

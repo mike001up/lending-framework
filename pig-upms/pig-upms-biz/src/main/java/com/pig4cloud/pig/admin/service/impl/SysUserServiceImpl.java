@@ -28,6 +28,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.dto.RegisterUserDTO;
 import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
+import com.pig4cloud.pig.common.core.constant.enums.LockFlagEnum;
 import com.pig4cloud.pig.common.core.constant.enums.UserStatusEnum;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
@@ -35,7 +36,8 @@ import com.pig4cloud.pig.admin.api.entity.*;
 import com.pig4cloud.pig.admin.api.util.ParamResolver;
 import com.pig4cloud.pig.admin.api.vo.UserExcelVO;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
-import com.pig4cloud.pig.admin.api.feign.RemoteTokenService;
+import com.pig4cloud.pig.admin.convertor.UserConverter;
+// import com.pig4cloud.pig.admin.api.feign.RemoteTokenService;
 import com.pig4cloud.pig.admin.mapper.SysUserMapper;
 
 import com.pig4cloud.pig.admin.mapper.SysUserRoleMapper;
@@ -45,6 +47,7 @@ import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.security.feign.RemoteTokenService;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.vo.ErrorMessage;
 import lombok.AllArgsConstructor;
@@ -53,6 +56,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -83,11 +87,18 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	private final SysUserHierarchyService sysUserHierarchyService;
 
 	private final SysUserRoleMapper sysUserRoleMapper;
-
+	
+	private final SysUserRoleService sysUserRoleService;
 
 	private final CacheManager cacheManager;
 
 	private final RemoteTokenService remoteTokenService;
+
+	private final SysUserHierarchyService userHierarchyService;
+
+	private final SysUserClientService sysUserClientService;
+
+	private final UserConverter userConverter;
 
 	/**
 	 * 保存用户信息
@@ -96,66 +107,27 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public Boolean saveUser(UserDTO userDto) {
+	public SysUser saveUser(UserDTO userDto) {
 		SysUser existing = this.getOne(Wrappers.<SysUser>lambdaQuery()
 			.eq(SysUser::getUsername, userDto.getUsername()));
 		if (existing != null) {
 			throw new RuntimeException(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERNAME_EXISTING, userDto.getUsername()));
 		}
 
-		SysUser sysUser = new SysUser();
-		BeanUtils.copyProperties(userDto, sysUser);
-		sysUser.setIsDel(IsDelEnum.NO);
-		sysUser.setCreateBy(userDto.getUsername());
+		SysUser sysUser = userConverter.toEntity(userDto);
+		sysUser.setCreateBy(SecurityUtils.getUser().getUsername());
 		sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
 		baseMapper.insert(sysUser);
+		
+		//构建新用户的层级结构
+		userHierarchyService.buildHierarchy(userDto.getAgencyId(), userDto.getTenantId(), sysUser.getUserId());
 
-		if (userDto.getTenantId() != null) {
-			SysUserHierarchy tenantRel = new SysUserHierarchy();
-			tenantRel.setAncestor(userDto.getTenantId());
-			tenantRel.setDescendant(sysUser.getUserId());
-			tenantRel.setDepth(1);
-			tenantRel.setHierarchyType("tenant");
-			sysUserHierarchyService.save(tenantRel);
-		}
-
-		if (userDto.getAgencyId() != null) {
-			SysUserHierarchy agencyRel = new SysUserHierarchy();
-			agencyRel.setAncestor(userDto.getAgencyId());
-			agencyRel.setDescendant(sysUser.getUserId());
-			agencyRel.setDepth(1);
-			agencyRel.setHierarchyType("agency");
-			sysUserHierarchyService.save(agencyRel);
-		}
-
-		SysUserHierarchy selfRel = new SysUserHierarchy();
-		selfRel.setAncestor(sysUser.getUserId());
-		selfRel.setDescendant(sysUser.getUserId());
-		selfRel.setDepth(0);
-		selfRel.setHierarchyType("self");
-		sysUserHierarchyService.save(selfRel);
-
-
-		if (CollUtil.isEmpty(userDto.getRoles())) {
-			String defaultRole = ParamResolver.getStr("USER_DEFAULT_ROLE");
-			if (StrUtil.isNotBlank(defaultRole)) {
-				SysRole sysRole = sysRoleService
-					.getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, defaultRole));
-				if (sysRole != null) {
-					userDto.setRoles(Collections.singletonList(sysRole.getRoleId()));
-				}
-			}
-		}
-
-		if (CollUtil.isNotEmpty(userDto.getRoles())) {
-			userDto.getRoles().stream().map(roleId -> {
-				SysUserRole userRole = new SysUserRole();
-				userRole.setUserId(sysUser.getUserId());
-				userRole.setRoleId(roleId);
-				return userRole;
-			}).forEach(sysUserRoleMapper::insert);
-		}
-		return Boolean.TRUE;
+		//分配用户到client,新用户注册，自动分配给app 入口所在client
+		sysUserClientService.grantClient(sysUser.getUserId(), userDto.getClientIds());
+		//用户角色分配
+		sysUserRoleService.grantUserRole(sysUser.getUserId(), userDto.getRoles());
+		
+		return sysUser;
 	}
 
 	/**
@@ -246,31 +218,24 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "T(com.pig4cloud.pig.common.core.constant.CacheConstants).USER_DETAILS_KEY_PREFIX + #userDto.username")
-	public Boolean updateUser(UserDTO userDto) {
-		SysUser sysUser = new SysUser();
-		BeanUtils.copyProperties(userDto, sysUser);
-		sysUser.setUsername(null);
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "T(com.pig4cloud.pig.common.core.constant.CacheConstants).USER_DETAILS_KEY_PREFIX + #userDto.userId")
+	public SysUser updateUser(UserDTO userDto) {
+		SysUser sysUser = userConverter.toEntity(userDto);
 		sysUser.setUpdateTime(Instant.now());
-		if (StrUtil.isNotBlank(userDto.getPassword())) {
-			sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
-		}
+		sysUser.setUsername(null);
+		sysUser.setPhone(null);
+		sysUser.setEmail(null);
+		// if (StrUtil.isNotBlank(userDto.getPassword())) {
+		// 	sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
+		// }
 		this.updateById(sysUser);
 
-		// 更新用户角色表
-		if (Objects.nonNull(userDto.getRoles())) {
-			sysUserRoleMapper
-				.delete(Wrappers.<SysUserRole>lambdaQuery().eq(SysUserRole::getUserId, userDto.getUserId()));
-			userDto.getRoles().stream().map(roleId -> {
-				SysUserRole userRole = new SysUserRole();
-				userRole.setUserId(sysUser.getUserId());
-				userRole.setRoleId(roleId);
-				return userRole;
-			}).forEach(sysUserRoleMapper::insert);
-		}
+		//分配用户到client,新用户注册，自动分配给app 入口所在client
+		// sysUserClientService.grantClient(sysUser.getUserId(), userDto.getClientIds());
+		//用户角色分配
+		// sysUserRoleService.grantUserRole(sysUser.getUserId(), userDto.getRoles());
 
-
-		return Boolean.TRUE;
+		return sysUser;
 	}
 
 	/**
@@ -284,11 +249,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		return voList.stream().map(userVO -> {
 			UserExcelVO excelVO = new UserExcelVO();
 			BeanUtils.copyProperties(userVO, excelVO);
-			String roleNameList = userVO.getRoleList()
-				.stream()
-				.map(SysRole::getRoleName)
-				.collect(Collectors.joining(StrUtil.COMMA));
-			excelVO.setRoleNameList(roleNameList);
+			// String roleNameList = userVO.getRoleList()
+			// 	.stream()
+			// 	.map(SysRole::getRoleName)
+			// 	.collect(Collectors.joining(StrUtil.COMMA));
+			// excelVO.setRoleNameList(roleNameList);
 			return excelVO;
 		}).collect(Collectors.toList());
 	}
@@ -362,7 +327,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 		UserDTO user = new UserDTO();
 		BeanUtils.copyProperties(userDto, user);
-		return R.ok(saveUser(user));
+		saveUser(user);
+		return R.ok();
 	}
 
 	/**
@@ -376,7 +342,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		SysUser sysUser = baseMapper.selectOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, username));
 
 		if (Objects.nonNull(sysUser)) {
-			sysUser.setLockFlag(CommonConstants.STATUS_LOCK);
+			sysUser.setLockFlag(LockFlagEnum.LOCKED);
 			sysUser.setLockUntil(Instant.now().plusSeconds(900));
 			baseMapper.updateById(sysUser);
 		}
@@ -389,7 +355,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		SysUser sysUser = baseMapper.selectOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, username));
 
 		if (Objects.nonNull(sysUser)) {
-			sysUser.setLockFlag(CommonConstants.STATUS_NORMAL);
+			sysUser.setLockFlag(LockFlagEnum.NORMAL);
 			sysUser.setLockUntil(null);
 			baseMapper.updateById(sysUser);
 		}
@@ -404,19 +370,19 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 			return R.failed("用户不存在");
 		}
 
-		if (StrUtil.isEmpty(userDto.getPassword())) {
+		if (StrUtil.isEmpty(userDto.getOldpassword())) {
 			return R.failed("原密码不能为空");
 		}
 
-		if (!ENCODER.matches(userDto.getPassword(), sysUser.getPassword())) {
+		if (!ENCODER.matches(userDto.getOldpassword(), sysUser.getPassword())) {
 			log.info("原密码错误，修改个人信息失败:{}", userDto.getUsername());
 			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_UPDATE_PASSWORDERROR));
 		}
 
-		if (StrUtil.isEmpty(userDto.getNewpassword1())) {
+		if (StrUtil.isEmpty(userDto.getNewpassword())) {
 			return R.failed("新密码不能为空");
 		}
-		String password = ENCODER.encode(userDto.getNewpassword1());
+		String password = ENCODER.encode(userDto.getNewpassword());
 
 		this.update(Wrappers.<SysUser>lambdaUpdate()
 			.set(SysUser::getPassword, password)
@@ -531,6 +497,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		if (cache != null) {
 			cache.evictIfPresent(CacheConstants.USER_DETAILS_KEY_PREFIX + username);
 		}
+	}
+
+	@Override
+	public UserVO selectUserVoByName(String userName) {
+		return baseMapper.getUserVoByUsername(userName);
 	}
 
 }

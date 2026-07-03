@@ -153,12 +153,44 @@ public interface SecurityConstants {
 	 */
 	String CURRENCY = "CURRENCY";
 
-	String SERVICE_AUTHORIZATION = "Service-Authorization";
+	String AUTHORIZATION = "Authorization";
+
+	String BEARER = "Bearer ";
+
+	String BASIC = "Basic";
+
+	String SERVICE_AUTHORIZATION = "X-Service-Authorization";
 
 	String CALLER_SERVICE_ID = "X-Caller-Service-Id";
 
-	String CALLER_SERVICE_ID_VALIDATED = "X-Caller-Service-Id-Validated";
+	// String CALLER_SERVICE_ID_VALIDATED = "X-Caller-Service-Id-Validated";
 
 	String TENANT_ID = "X-Tenant-Id";
+//---------------------------------------TOKEN 解析
+	String TOKEN_PAY_LOAD_SUB      = "sub";
+    String TOKEN_PAY_LOAD_AUD      = "aud";
+    String TOKEN_PAY_LOAD_ISS      = "iss";
+    String TOKEN_PAY_LOAD_EXP      = "exp";
+    String TOKEN_PAY_LOAD_NBF      = "nbf";
+    String TOKEN_PAY_LOAD_IAT      = "iat";
+    String TOKEN_PAY_LOAD_JTI      = "jti";
+    String TOKEN_PAY_LOAD_CLIENTID = "clientId";
+    String TOKEN_PAY_LOAD_SCOPE    = "scope";
+    String TOKEN_PAY_LOAD_LICENSE  = "license";
+    // String TOKEN_PAY_LOAD_USERINFO = "userInfo";
+    String TOKEN_PAY_LOAD_USERID   = "user_id";
+    String TOKEN_PAY_LOAD_USERNAME = "username";
+	String TOKEN_PAY_LOAD_USER_INFO = "user_info";
+	// 自定义请求头常量（用于向下游传递用户信息）
+    String HEADER_USER_ID = "X-User-Id";
+	String HEADER_USERNAME = "X-Username";
+	String HEADER_PRINCIPAL = "X-Principal";
+	String HEADER_TENANT_ID = "X-Tenant-Id";
+	String HEADER_GRANT_TYPE = "X-Grant-Type";
+	String HEADER_CLIENT_ID = "X-Client-Id";
+
+	//----------------------------gateway
+	String REDIS_KEY_IP_LIMIT_RESULT = "gateway:ip_limit:result:%s_%s";
+
 
 }

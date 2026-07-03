@@ -16,12 +16,16 @@
 
 package com.pig4cloud.pig.common.log;
 
-import com.pig4cloud.pig.admin.api.feign.RemoteLogService;
+import com.pig4cloud.pig.common.core.feign.RemoteLogService;
 import com.pig4cloud.pig.common.log.aspect.SysLogAspect;
 import com.pig4cloud.pig.common.log.config.PigLogProperties;
 import com.pig4cloud.pig.common.log.event.SysLogListener;
+import com.pig4cloud.pig.common.log.feign.RemoteLogServiceFeignClient;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -33,11 +37,11 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(PigLogProperties.class)
+@EnableFeignClients(basePackages = "com.pig4cloud.pig.common.log.feign")
 @ConditionalOnProperty(value = "security.log.enabled", matchIfMissing = true)
 public class LogAutoConfiguration {
-
 	@Bean
-	public SysLogListener sysLogListener(PigLogProperties logProperties, RemoteLogService remoteLogService) {
+	public SysLogListener sysLogListener(PigLogProperties logProperties, RemoteLogServiceFeignClient remoteLogService) {
 		return new SysLogListener(remoteLogService, logProperties);
 	}
 

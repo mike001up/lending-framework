@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.mapper.SysUserMapper;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
+import com.pig4cloud.pig.common.core.constant.enums.CertificationStatusEnum;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
@@ -55,7 +56,7 @@ public class SysUserKycController {
 			return R.failed("认证已在审核中，请勿重复提交");
 		}
 
-		sysUser.setCertificationStatus("in_progress");
+		sysUser.setCertificationStatus(CertificationStatusEnum.PENDING);
 		sysUser.setCertificationInfo(certificationInfo);
 		sysUserMapper.updateById(sysUser);
 		evictUserCache(sysUser);
@@ -71,10 +72,10 @@ public class SysUserKycController {
 			return R.failed("用户不存在");
 		}
 		if ("approved".equals(result)) {
-			sysUser.setCertificationStatus("certified");
+			sysUser.setCertificationStatus(CertificationStatusEnum.APPROVED);
 		}
 		else {
-			sysUser.setCertificationStatus("failed");
+			sysUser.setCertificationStatus(CertificationStatusEnum.REJECTED);
 		}
 		sysUserMapper.updateById(sysUser);
 		evictUserCache(sysUser);

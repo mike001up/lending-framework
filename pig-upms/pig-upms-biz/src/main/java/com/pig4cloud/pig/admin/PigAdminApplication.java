@@ -34,7 +34,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  */
 @EnablePigDoc(value = "admin")
 @EnablePigFeignClients
-@EnablePigResourceServer
 @EnableDiscoveryClient
 @SpringBootApplication
 public class PigAdminApplication {

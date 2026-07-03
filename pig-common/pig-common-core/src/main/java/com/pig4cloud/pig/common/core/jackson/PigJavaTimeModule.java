@@ -41,7 +41,8 @@ public class PigJavaTimeModule extends SimpleModule {
 		this.addSerializer(Instant.class, new JsonSerializer<Instant>() {
 			@Override
 			public void serialize(Instant value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-				gen.writeNumber(value.toEpochMilli());
+				// gen.writeNumber(value.toEpochMilli());
+				gen.writeString(String.valueOf(value.toEpochMilli()));
 			}
 		});
 		// LocalDate -> 字符串 yyyy-MM-dd

@@ -16,13 +16,14 @@
 
 package com.pig4cloud.pig.common.security.service;
 
-import com.pig4cloud.pig.admin.api.dto.UserDTO;
-import com.pig4cloud.pig.admin.api.dto.UserInfo;
-import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
+// import com.pig4cloud.pig.admin.api.dto.UserDTO;
+// import com.pig4cloud.pig.admin.api.dto.UserInfo;
+// import com.pig4cloud.pig.admin.api.feign.RemoteUserService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
-
+import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.security.dto.PigUserDTO;
 import com.pig4cloud.pig.common.security.exception.UserBlockedException;
 import com.pig4cloud.pig.common.security.exception.UserNotExistException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +34,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -46,7 +48,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @RequiredArgsConstructor
 public class PigUserDetailsServiceImpl implements PigUserDetailsService {
 
-    private final RemoteUserService remoteUserService;
+    // private final RemoteUserService remoteUserService;
+    private final UserInfoService userInfoService;
 
     private final CacheManager cacheManager;
 
@@ -65,21 +68,29 @@ public class PigUserDetailsServiceImpl implements PigUserDetailsService {
             PigUser pigUser = (PigUser) cache.get(cacheKey).get();
             return pigUser;
         }
-        UserDTO userDTO = new UserDTO();
-        userDTO.setUsername(username);
-        R<UserInfo> result = remoteUserService.info(userDTO);
-		int code = result.getCode();
-        if (code == 1) {
-            throw new UserBlockedException(result.getMsg());
+        
+        R<PigUserDTO> r = userInfoService.loadUserByUsername(username);
+        if (r == null || r.getCode() != 0 || r.getData() == null) {
+            throw new UsernameNotFoundException("用户不存在");
         }
-        if (code == 101) {
-            throw new UserNotExistException(result.getMsg());
-        }
-        UserDetails userDetails = getUserDetails(result);
+
+        UserDetails userDetails = getUserDetails(r.getData());
         if (cache != null) {
             cache.put(cacheKey, userDetails);
         }
         return userDetails;
+    }
+
+    @Override
+    public UserDetails loadUserByUser(PigUser pigUser) {
+        return this.loadUserByUsername(pigUser.getUsername());
+    }
+
+    @Override
+    public boolean support(String clientId, String grantType) {
+        // 支持 password、refresh_token 等
+        return SecurityConstants.PASSWORD.equals(grantType)
+                || SecurityConstants.REFRESH_TOKEN.equals(grantType);
     }
 
     @Override

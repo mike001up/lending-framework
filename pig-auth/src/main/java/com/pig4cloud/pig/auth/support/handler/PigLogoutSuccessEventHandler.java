@@ -19,6 +19,7 @@ package com.pig4cloud.pig.auth.support.handler;
 import cn.hutool.core.util.StrUtil;
 import com.pig4cloud.pig.admin.api.entity.SysLog;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.core.entity.RemoteSysLogDTO;
 import com.pig4cloud.pig.common.core.util.SpringContextHolder;
 import com.pig4cloud.pig.common.core.util.WebUtils;
 import com.pig4cloud.pig.common.log.event.SysLogEvent;
@@ -57,7 +58,7 @@ public class PigLogoutSuccessEventHandler implements ApplicationListener<LogoutS
 	 */
 	public void handle(Authentication authentication) {
 		log.info("用户：{} 退出成功", authentication.getPrincipal());
-		SysLog logVo = SysLogUtils.getSysLog();
+		RemoteSysLogDTO logVo = SysLogUtils.getSysLog();
 		logVo.setTitle("退出成功");
 		logVo.setOperationType("LOGOUT");
 		logVo.setResult(1);

@@ -18,9 +18,10 @@ package com.pig4cloud.pig.auth.support.handler;
 
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
-import com.pig4cloud.pig.admin.api.entity.SysLog;
+// import com.pig4cloud.pig.admin.api.entity.SysLog;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
+import com.pig4cloud.pig.common.core.entity.RemoteSysLogDTO;
 import com.pig4cloud.pig.common.core.util.SpringContextHolder;
 import com.pig4cloud.pig.common.log.event.SysLogEvent;
 import com.pig4cloud.pig.common.log.util.SysLogUtils;
@@ -72,7 +73,7 @@ public class PigAuthenticationSuccessEventHandler implements AuthenticationSucce
 			PigUser userInfo = (PigUser) map.get(SecurityConstants.DETAILS_USER);
 			log.info("用户：{} 登录成功", userInfo.getName());
 			SecurityContextHolder.getContext().setAuthentication(accessTokenAuthentication);
-			SysLog logVo = SysLogUtils.getSysLog();
+			RemoteSysLogDTO logVo = SysLogUtils.getSysLog();
 			logVo.setTitle("登录成功");
 			logVo.setOperationType("LOGIN");
 			logVo.setResult(1);

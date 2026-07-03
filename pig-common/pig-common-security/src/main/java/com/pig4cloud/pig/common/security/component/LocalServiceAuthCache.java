@@ -35,10 +35,9 @@ public class LocalServiceAuthCache {
 			RemoteServiceAuthClient client = remoteAuthClientProvider.getIfAvailable();
 			if (client == null) {
 				log.warn("RemoteServiceAuthClient未可用, 跳过远程授权校验");
-				return true;
+				return false;
 			}
-			Boolean allowed = client.checkServiceAuth(SecurityConstants.FROM_IN,
-					callerServiceId, providerServiceId, requestPath);
+			Boolean allowed = client.checkServiceAuth(callerServiceId, providerServiceId, requestPath);
 			boolean result = Boolean.TRUE.equals(allowed);
 			cache.put(cacheKey, new CacheEntry(result, System.currentTimeMillis() + cacheTtlMs));
 			return result;

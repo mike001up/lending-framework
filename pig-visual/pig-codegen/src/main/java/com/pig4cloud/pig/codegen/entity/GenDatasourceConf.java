@@ -107,7 +107,7 @@ public class GenDatasourceConf extends Model<GenDatasourceConf> {
 
 	@TableLogic(value = "'NO'", delval = "'YES'")
 	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "删除标记,YES:已删除,NO:正常")
+	// @Schema(description = "删除标记,YES:已删除,NO:正常")
 	private IsDelEnum isDel;
 
 }

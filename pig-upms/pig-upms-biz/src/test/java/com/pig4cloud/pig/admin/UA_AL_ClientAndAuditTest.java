@@ -2,6 +2,8 @@ package com.pig4cloud.pig.admin;
 
 import com.pig4cloud.pig.admin.api.entity.SysLog;
 import com.pig4cloud.pig.admin.api.entity.SysUserClient;
+import com.pig4cloud.pig.common.core.entity.RemoteSysLogDTO;
+
 import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,7 +55,7 @@ public class UA_AL_ClientAndAuditTest {
 	void testOperationTypeEnum() {
 		String[] types = {"LOGIN", "LOGOUT", "OPERATION", "GATEWAY_ACCESS"};
 		for (String type : types) {
-			SysLog log = new SysLog();
+			RemoteSysLogDTO log = new RemoteSysLogDTO();
 			log.setOperationType(type);
 			assertEquals(type, log.getOperationType());
 		}
@@ -62,11 +64,11 @@ public class UA_AL_ClientAndAuditTest {
 	@Test
 	@DisplayName("AL-03: 操作成功result=1，失败result=0")
 	void testResultValues() {
-		SysLog successLog = new SysLog();
+		RemoteSysLogDTO successLog = new RemoteSysLogDTO();
 		successLog.setResult(1);
 		assertEquals(1, successLog.getResult(), "成功result应为1");
 
-		SysLog failLog = new SysLog();
+		RemoteSysLogDTO failLog = new RemoteSysLogDTO();
 		failLog.setResult(0);
 		assertEquals(0, failLog.getResult(), "失败result应为0");
 	}

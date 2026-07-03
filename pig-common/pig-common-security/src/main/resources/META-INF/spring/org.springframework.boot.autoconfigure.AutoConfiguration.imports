@@ -5,6 +5,6 @@ com.pig4cloud.pig.common.security.service.PigRedisOAuth2AuthorizationConsentServ
 com.pig4cloud.pig.common.security.component.PigSecurityInnerAspect
 com.pig4cloud.pig.common.security.component.PigSecurityMessageSourceConfiguration
 com.pig4cloud.pig.common.security.service.PigRemoteRegisteredClientRepository
-com.pig4cloud.pig.common.security.component.ServiceTokenValidationInterceptor
-com.pig4cloud.pig.common.security.component.ServiceTokenAutoConfig
 com.pig4cloud.pig.common.security.component.ServiceAuthAspect
+com.pig4cloud.pig.common.security.component.DefaultServiceConfiguration
+com.pig4cloud.pig.common.security.component.ServiceTokenAutoConfiguration

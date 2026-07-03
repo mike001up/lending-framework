@@ -91,6 +91,10 @@ public interface CommonConstants {
 	 * 请求开始时间
 	 */
 	String REQUEST_START_TIME = "REQUEST-START-TIME";
+	/**
+	 * 网关转发的用户请求client
+	 */
+	String GATEWAY_CLIENT_ATTR = "gateway_client_id";
 
 	/**
 	 * 请求头 语言传参
@@ -112,7 +116,7 @@ public interface CommonConstants {
 	/**
 	 * 请求头传参对象
 	 */
-	String CLIENT = "client";
+	String CLIENT = "client_id";
 	/**
 	 * 后台
 	 */
@@ -129,5 +133,10 @@ public interface CommonConstants {
 	 * 用户不存在
 	 */
 	String USER_NOT_EXIST = "user_not_exist";
+	/**
+	 * 调试信息的识别前缀 
+	 * {}  一般是请求 ID
+	 */
+	String DEBUG_PREFIX = "request_{}_";
 
 }

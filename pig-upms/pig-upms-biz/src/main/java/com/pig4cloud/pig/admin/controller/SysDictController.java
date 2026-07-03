@@ -94,7 +94,7 @@ public class SysDictController {
 	public R<IPage> getDictPage(@ParameterObject Page page, @ParameterObject SysDict sysDict) {
 		return R.ok(sysDictService.page(page,
 				Wrappers.<SysDict>lambdaQuery()
-					.eq(StrUtil.isNotBlank(sysDict.getSystemFlag()), SysDict::getSystemFlag, sysDict.getSystemFlag())
+					.eq(sysDict.getSystemFlag() != null, SysDict::getSystemFlag, sysDict.getSystemFlag().getCode())
 					.like(StrUtil.isNotBlank(sysDict.getDictType()), SysDict::getDictType, sysDict.getDictType())));
 	}
 

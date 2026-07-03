@@ -1,6 +1,8 @@
 package com.pig4cloud.pig.common.log.event;
 
-import com.pig4cloud.pig.admin.api.entity.SysLog;
+import com.pig4cloud.pig.common.core.entity.RemoteSysLogDTO;
+
+// import com.pig4cloud.pig.admin.api.entity.SysLog;
 import lombok.Data;
 
 /**
@@ -10,7 +12,7 @@ import lombok.Data;
  * @date 2023/8/11
  */
 @Data
-public class SysLogEventSource extends SysLog {
+public class SysLogEventSource extends RemoteSysLogDTO {
 
 	/**
 	 * 参数重写成object

@@ -30,6 +30,7 @@ import com.pig4cloud.pig.auth.support.sms.OAuth2ResourceOwnerSmsAuthenticationCo
 import com.pig4cloud.pig.auth.support.sms.OAuth2ResourceOwnerSmsAuthenticationProvider;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -55,6 +56,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.util.Arrays;
 
+
 /**
  * @author lengleng
  * @date 2022/5/27
@@ -76,7 +78,7 @@ public class AuthorizationServerConfiguration {
 	 * @param http http
 	 * @return {@link SecurityFilterChain }
 	 * @throws Exception 异常
-	 */
+	 */	
 	@Bean
 	@Order(Ordered.HIGHEST_PRECEDENCE)
 	public SecurityFilterChain authorizationServer(HttpSecurity http) throws Exception {

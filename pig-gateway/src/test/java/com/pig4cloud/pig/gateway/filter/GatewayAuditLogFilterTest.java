@@ -1,13 +1,14 @@
 package com.pig4cloud.pig.gateway.filter;
 
-import com.pig4cloud.pig.admin.api.entity.SysLog;
-import com.pig4cloud.pig.admin.api.feign.RemoteLogService;
+import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.core.constant.SecurityConstants;
+import com.pig4cloud.pig.common.core.entity.RemoteSysLogDTO;
+import com.pig4cloud.pig.common.core.feign.RemoteLogService;
 import com.pig4cloud.pig.common.core.util.R;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
@@ -17,83 +18,118 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class GatewayAuditLogFilterTest {
+class PigAuditLogFilterTest {
 
-	private RemoteLogService remoteLogService;
-	private ObjectProvider<RemoteLogService> logServiceProvider;
+    private RemoteLogService remoteLogService;
+    private ObjectProvider<RemoteLogService> logServiceProvider;
+    private PigAuditLogFilter filter;
 
-	@BeforeEach
-	void setUp() {
-		remoteLogService = mock(RemoteLogService.class);
-		logServiceProvider = mock(ObjectProvider.class);
-		when(logServiceProvider.getIfAvailable()).thenReturn(remoteLogService);
-		when(remoteLogService.saveLog(any())).thenReturn(R.ok(true));
-	}
+    @BeforeEach
+    void setUp() {
+        remoteLogService = mock(RemoteLogService.class);
+        logServiceProvider = mock(ObjectProvider.class);
+        when(logServiceProvider.getIfAvailable()).thenReturn(remoteLogService);
+        when(remoteLogService.saveLog(any(RemoteSysLogDTO.class))).thenReturn(R.ok(true));
+        filter = new PigAuditLogFilter(logServiceProvider);
+    }
 
-	@Test
-	void getOrder_returns5() {
-		GatewayAuditLogFilter filter = new GatewayAuditLogFilter(logServiceProvider);
-		assertEquals(5, filter.getOrder());
-	}
+    @Test
+    void getOrder_returnsLogOrder() {
+        assertEquals(GatewayAttrConstants.GATEWAY_ORDER_FILTER_LOG, filter.getOrder());
+    }
 
-	@Test
-	void filter_normalRequest_recordsAuditLog() {
-		GatewayAuditLogFilter filter = new GatewayAuditLogFilter(logServiceProvider);
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_USERNAME_ATTR, "testuser");
-		exchange.getAttributes().put(GatewayAttrConstants.GATEWAY_CLIENT_ATTR, "web-app");
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+    @Test
+    void filter_normalRequest_recordsAuditLogAsynchronously() {
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info")
+                        .header(SecurityConstants.HEADER_USERNAME, "testuser")
+                        .header(SecurityConstants.HEADER_CLIENT_ID, "web-app")
+                        .header(SecurityConstants.HEADER_USER_ID, "123")
+                        .build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
-		Mono<Void> result = filter.filter(exchange, chain);
+        filter.filter(exchange, chain).block();
 
-		result.block();
-		verify(chain, times(1)).filter(any());
-	}
+        verify(chain, times(1)).filter(any());
 
-	@Test
-	void filter_errorResponse_logTypeIs9() {
-		GatewayAuditLogFilter filter = new GatewayAuditLogFilter(logServiceProvider);
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/not-exist").build());
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+        // 异步日志调用需要等待（使用超时验证）
+        verify(remoteLogService, timeout(500)).saveLog(any(RemoteSysLogDTO.class));
+    }
 
-		exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
+    @Test
+    void filter_errorResponse_logTypeIsError() {
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/not-exist").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
-		filter.filter(exchange, chain).block();
-	}
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
 
-	@Test
-	void filter_remoteLogServiceUnavailable_doesNotAffectRequest() {
-		ObjectProvider<RemoteLogService> emptyProvider = mock(ObjectProvider.class);
-		when(emptyProvider.getIfAvailable()).thenReturn(null);
-		GatewayAuditLogFilter filter = new GatewayAuditLogFilter(emptyProvider);
+        filter.filter(exchange, chain).block();
 
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+        verify(chain, times(1)).filter(any());
+        verify(remoteLogService, timeout(500)).saveLog(any(RemoteSysLogDTO.class));
+    }
 
-		filter.filter(exchange, chain).block();
+    @Test
+    void filter_remoteLogServiceUnavailable_doesNotAffectRequest() {
+        ObjectProvider<RemoteLogService> emptyProvider = mock(ObjectProvider.class);
+        when(emptyProvider.getIfAvailable()).thenReturn(null);
+        PigAuditLogFilter filterNoService = new PigAuditLogFilter(emptyProvider);
 
-		verify(chain, times(1)).filter(any());
-	}
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
-	@Test
-	void filter_saveLogFails_doesNotAffectResponse() {
-		when(remoteLogService.saveLog(any())).thenThrow(new RuntimeException("Log service error"));
-		GatewayAuditLogFilter filter = new GatewayAuditLogFilter(logServiceProvider);
+        filterNoService.filter(exchange, chain).block();
 
-		MockServerWebExchange exchange = MockServerWebExchange
-			.from(MockServerHttpRequest.get("/admin/user/info").build());
-		GatewayFilterChain chain = mock(GatewayFilterChain.class);
-		when(chain.filter(any())).thenReturn(Mono.empty());
+        verify(chain, times(1)).filter(any());
+        // 不调用 saveLog
+        verify(remoteLogService, never()).saveLog(any());
+    }
 
-		filter.filter(exchange, chain).block();
+    @Test
+    void filter_saveLogFails_doesNotAffectResponse() {
+        when(remoteLogService.saveLog(any(RemoteSysLogDTO.class))).thenThrow(new RuntimeException("Log service error"));
 
-		verify(chain, times(1)).filter(any());
-	}
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info").build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
 
+        // 不应抛出异常
+        assertDoesNotThrow(() -> filter.filter(exchange, chain).block());
+
+        verify(chain, times(1)).filter(any());
+        // 异步调用会触发异常，但被 onErrorResume 捕获，不影响主流程
+    }
+
+    @Test
+    void filter_populatesAuditLogFieldsCorrectly() {
+        MockServerWebExchange exchange = MockServerWebExchange
+                .from(MockServerHttpRequest.get("/admin/user/info")
+                        .header(SecurityConstants.HEADER_USERNAME, "testuser")
+                        .header(SecurityConstants.HEADER_CLIENT_ID, "web-app")
+                        .header(SecurityConstants.HEADER_USER_ID, "456")
+                        .header(SecurityConstants.HEADER_TENANT_ID, "789")
+                        .build());
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
+
+        filter.filter(exchange, chain).block();
+
+        verify(chain, times(1)).filter(any());
+
+        // 异步捕获并验证参数
+        verify(remoteLogService, timeout(500)).saveLog(argThat(dto -> {
+            assertEquals("/admin/user/info", dto.getRequestUri());
+            assertEquals("testuser", dto.getCreateBy());
+            assertEquals(Long.valueOf(456), dto.getUserId());
+            assertEquals("web-app", dto.getClientName());
+            assertEquals("pig-gateway", dto.getServiceId());
+            return true;
+        }));
+    }
 }

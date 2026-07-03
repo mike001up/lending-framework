@@ -73,7 +73,7 @@ public interface SysUserService extends IService<SysUser> {
 	 * @param userDto 用户信息
 	 * @return
 	 */
-	Boolean updateUser(UserDTO userDto);
+	SysUser updateUser(UserDTO userDto);
 
 	/**
 	 * 通过ID查询用户信息
@@ -83,11 +83,17 @@ public interface SysUserService extends IService<SysUser> {
 	UserVO selectUserVoById(Long id);
 
 	/**
+	 * 通过ID查询用户信息
+	 * @param id 用户ID
+	 * @return 用户信息
+	 */
+	UserVO selectUserVoByName(String userName);
+	/**
 	 * 保存用户信息
 	 * @param userDto DTO 对象
 	 * @return success/fail
 	 */
-	Boolean saveUser(UserDTO userDto);
+	SysUser saveUser(UserDTO userDto);
 
 	/**
 	 * 查询全部的用户

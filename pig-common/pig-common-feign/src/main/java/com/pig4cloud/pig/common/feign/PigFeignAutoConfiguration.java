@@ -17,11 +17,14 @@
 package com.pig4cloud.pig.common.feign;
 
 import com.alibaba.cloud.sentinel.feign.SentinelFeignAutoConfiguration;
+import com.pig4cloud.pig.common.core.service.ServiceTokenCacheService;
 import com.pig4cloud.pig.common.feign.core.PigFeignInnerRequestInterceptor;
 import com.pig4cloud.pig.common.feign.core.PigFeignRequestCloseInterceptor;
 import com.pig4cloud.pig.common.feign.sentinel.ext.PigSentinelFeign;
-import com.pig4cloud.pig.common.security.service.ServiceTokenCacheService;
+// import com.pig4cloud.pig.common.security.service.ServiceTokenCacheService;
 import feign.Feign;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
 
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -39,6 +42,7 @@ import org.springframework.context.annotation.Scope;
  * @author lengleng
  * @date 2020-02-12
  */
+@Slf4j
 @Configuration(proxyBeanMethods = false)
 @Import(PigFeignClientsRegistrar.class)
 @AutoConfigureBefore(SentinelFeignAutoConfiguration.class)
@@ -68,6 +72,7 @@ public class PigFeignAutoConfiguration {
 	@Bean
 	public PigFeignInnerRequestInterceptor pigFeignInnerRequestInterceptor(
 			ObjectProvider<ServiceTokenCacheService> tokenCacheServiceProvider) {
+				log.info("Init-PigFeignInnerRequestInterceptor");
 		return new PigFeignInnerRequestInterceptor(tokenCacheServiceProvider);
 	}
 

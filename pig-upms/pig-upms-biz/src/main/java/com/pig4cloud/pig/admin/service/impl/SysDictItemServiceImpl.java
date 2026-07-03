@@ -70,7 +70,7 @@ public class SysDictItemServiceImpl extends ServiceImpl<SysDictItemMapper, SysDi
 	@CacheEvict(value = CacheConstants.DICT_DETAILS, key = "#item.dictType")
 	public R updateDictItem(SysDictItem item) {
 		// 查询字典
-		SysDict dict = dictService.getById(item.getDictId());
+		SysDict dict = dictService.getById(item.getId());
 		// 系统内置
 		if (DictTypeEnum.SYSTEM.getType().equals(dict.getSystemFlag())) {
 			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_DICT_UPDATE_SYSTEM));

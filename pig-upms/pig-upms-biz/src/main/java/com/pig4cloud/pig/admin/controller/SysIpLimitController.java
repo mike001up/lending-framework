@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/ipLimit")
@@ -102,15 +105,17 @@ public class SysIpLimitController {
 
 	@Inner
 	@RequireServiceAuth
-	@GetMapping("/isValidIP")
-	public Boolean isValidIP(@RequestParam("remoteIP") String remoteIP) {
-		if (StringUtils.isBlank(remoteIP)) {
-			return false;
+	@GetMapping("/check")
+	public R<Boolean> check(@RequestParam("clientId") String clientId, @RequestParam("remoteIP") String remoteIP) {
+		if (StringUtils.isBlank(remoteIP) || StringUtils.isBlank(clientId)) {
+			return R.failed(Boolean.FALSE);
 		}
-		List<SysIpLimit> list = sysIpLimitService.list();
-		if (CollUtil.isEmpty(list)) {
-			return true;
-		}
-		return sysIpLimitService.isMatch(remoteIP, list);
+		try {
+            boolean allowed = sysIpLimitService.checkIp(clientId, remoteIP);
+            return R.ok(allowed);
+        } catch (Exception e) {
+            log.error("IP 校验异常, clientId={}, ip={}", clientId, remoteIP, e);
+            return R.failed(Boolean.FALSE);
+        }
 	}
 }

@@ -3,6 +3,7 @@ package com.pig4cloud.pig.admin.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pig4cloud.pig.admin.api.entity.SysPermission;
 import com.pig4cloud.pig.admin.api.entity.SysRolePermission;
 import com.pig4cloud.pig.admin.mapper.SysRolePermissionMapper;
 import com.pig4cloud.pig.admin.service.SysRolePermissionService;
@@ -23,6 +24,7 @@ public class SysRolePermissionServiceImpl extends ServiceImpl<SysRolePermissionM
 
 	private final CacheManager cacheManager;
 
+
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	@CacheEvict(value = CacheConstants.PERMISSION_DETAILS, key = "#roleId")
@@ -42,6 +44,11 @@ public class SysRolePermissionServiceImpl extends ServiceImpl<SysRolePermissionM
 		cacheManager.getCache(CacheConstants.USER_DETAILS).clear();
 		this.saveBatch(rolePermissionList);
 		return Boolean.TRUE;
+	}
+
+	@Override
+	public List<SysPermission> selectGrantPermission(Long userId) {
+		return this.baseMapper.selectGrantPermission(userId);
 	}
 
 }

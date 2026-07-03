@@ -17,6 +17,7 @@
 package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.pig4cloud.pig.admin.api.enums.SystemFlag;
 import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -60,8 +61,7 @@ public class SysDict extends BaseEntity {
 	 * 是否是系统内置
 	 */
 	@Schema(description = "是否系统内置")
-	private String systemFlag;
-
+	private SystemFlag systemFlag;
 	/**
 	 * 备注信息
 	 */

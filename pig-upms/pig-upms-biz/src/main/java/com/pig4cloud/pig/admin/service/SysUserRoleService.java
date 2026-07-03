@@ -19,7 +19,10 @@
 
 package com.pig4cloud.pig.admin.service;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysUserRole;
 
 /**
@@ -31,5 +34,7 @@ import com.pig4cloud.pig.admin.api.entity.SysUserRole;
  * @since 2017-10-29
  */
 public interface SysUserRoleService extends IService<SysUserRole> {
+    void grantUserRole(Long userId, List<Long> roleIds);
 
+    List<SysRole> selectGrantRoles(Long userId);
 }

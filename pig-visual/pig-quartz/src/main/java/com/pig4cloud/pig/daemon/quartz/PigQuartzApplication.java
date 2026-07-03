@@ -15,9 +15,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnablePigFeignClients
 @EnablePigResourceServer
 @EnableDiscoveryClient
-@SpringBootApplication(exclude = {
-		com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration.class
-})
+@SpringBootApplication
 public class PigQuartzApplication {
 
 	public static void main(String[] args) {

@@ -11,6 +11,8 @@ public interface SysUserClientService extends IService<SysUserClient> {
 
 	void grantClient(Long userId, Long clientId);
 
+	void grantClient(Long userId, List<Long> clientId);
+
 	void revokeClient(Long userId, Long clientId);
 
 }

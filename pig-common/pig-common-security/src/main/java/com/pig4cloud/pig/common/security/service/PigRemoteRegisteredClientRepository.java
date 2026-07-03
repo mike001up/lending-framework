@@ -2,13 +2,19 @@ package com.pig4cloud.pig.common.security.service;
 
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.pig4cloud.pig.admin.api.entity.SysOauthClientDetails;
-import com.pig4cloud.pig.admin.api.feign.RemoteClientDetailsService;
+// import com.pig4cloud.pig.admin.api.entity.SysOauthClientDetails;
+// import com.pig4cloud.pig.admin.api.feign.RemoteClientDetailsService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
+import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.core.util.RetOps;
+import com.pig4cloud.pig.common.security.dto.ClientRegisteredDTO;
+import com.pig4cloud.pig.common.security.util.RegisteredClientBuilder;
+
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -30,6 +36,7 @@ import java.util.Optional;
  * @author lengleng
  * @date 2022/5/29
  */
+@Slf4j
 @RequiredArgsConstructor
 public class PigRemoteRegisteredClientRepository implements RegisteredClientRepository {
 
@@ -43,7 +50,8 @@ public class PigRemoteRegisteredClientRepository implements RegisteredClientRepo
 	 */
 	private final static int accessTokenValiditySeconds = 60 * 60 * 12;
 
-	private final RemoteClientDetailsService clientDetailsService;
+	// private final RemoteClientDetailsService clientDetailsService;
+	private final ClientDetailsService clientDetailsService;
 
 	/**
 	 * Saves the registered client.
@@ -83,47 +91,65 @@ public class PigRemoteRegisteredClientRepository implements RegisteredClientRepo
 	@Override
 	@SneakyThrows
 	@Cacheable(value = CacheConstants.CLIENT_DETAILS_KEY, key = "#clientId", unless = "#result == null")
-	public RegisteredClient findByClientId(String clientId) {
+	public RegisteredClient findByClientId(String clientId) {		
+		// SysOauthClientDetails clientDetails = RetOps.of(clientDetailsService.getClientDetailsById(clientId))
+		// 	.getData()
+		// 	.orElseThrow(() -> new OAuth2AuthorizationCodeRequestAuthenticationException(
+		// 			new OAuth2Error("客户端查询异常，请检查数据库链接"), null));
 
-		SysOauthClientDetails clientDetails = RetOps.of(clientDetailsService.getClientDetailsById(clientId))
-			.getData()
-			.orElseThrow(() -> new OAuth2AuthorizationCodeRequestAuthenticationException(
-					new OAuth2Error("客户端查询异常，请检查数据库链接"), null));
+		// RegisteredClient.Builder builder = RegisteredClient.withId(clientDetails.getClientId())
+		// 	.clientId(clientDetails.getClientId())
+		// 	.clientSecret(SecurityConstants.NOOP + clientDetails.getClientSecret())
+		// 	.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
 
-		RegisteredClient.Builder builder = RegisteredClient.withId(clientDetails.getClientId())
-			.clientId(clientDetails.getClientId())
-			.clientSecret(SecurityConstants.NOOP + clientDetails.getClientSecret())
-			.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
+		// for (String authorizedGrantType : clientDetails.getAuthorizedGrantTypes()) {
+		// 	builder.authorizationGrantType(new AuthorizationGrantType(authorizedGrantType));
 
-		for (String authorizedGrantType : clientDetails.getAuthorizedGrantTypes()) {
-			builder.authorizationGrantType(new AuthorizationGrantType(authorizedGrantType));
+		// }
+		// // 回调地址
+		// Optional.ofNullable(clientDetails.getWebServerRedirectUri())
+		// 	.ifPresent(redirectUri -> Arrays.stream(redirectUri.split(StrUtil.COMMA))
+		// 		.filter(StrUtil::isNotBlank)
+		// 		.forEach(builder::redirectUri));
 
+		// // scope
+		// Optional.ofNullable(clientDetails.getScope())
+		// 	.ifPresent(scope -> Arrays.stream(scope.split(StrUtil.COMMA))
+		// 		.filter(StrUtil::isNotBlank)
+		// 		.forEach(builder::scope));
+
+		// return builder
+		// 	.tokenSettings(TokenSettings.builder()
+		// 		.accessTokenFormat(OAuth2TokenFormat.REFERENCE)
+		// 		.accessTokenTimeToLive(Duration.ofSeconds(
+		// 				Optional.ofNullable(clientDetails.getAccessTokenValidity()).orElse(accessTokenValiditySeconds)))
+		// 		.refreshTokenTimeToLive(Duration.ofSeconds(Optional.ofNullable(clientDetails.getRefreshTokenValidity())
+		// 			.orElse(refreshTokenValiditySeconds)))
+		// 		.build())
+		// 	.clientSettings(ClientSettings.builder()
+		// 		.requireAuthorizationConsent(!BooleanUtil.toBoolean(clientDetails.getAutoapprove()))
+		// 		.build())
+		// 	.build();
+		R<ClientRegisteredDTO> result = clientDetailsService.loadClientByClientId(clientId);
+		if (result == null || result.getCode() != 0 || result.getData() == null) {
+			// 从 result 中提取错误信息，或使用默认消息
+			log.error("无效的client: {}", clientId);
+			String errorMsg = (result != null && result.getMsg() != null) ? result.getMsg() : "客户端不存在";
+			throw new OAuth2AuthorizationCodeRequestAuthenticationException(
+				new OAuth2Error("invalid_client", "访问被禁止", null), null);
 		}
-		// 回调地址
-		Optional.ofNullable(clientDetails.getWebServerRedirectUri())
-			.ifPresent(redirectUri -> Arrays.stream(redirectUri.split(StrUtil.COMMA))
-				.filter(StrUtil::isNotBlank)
-				.forEach(builder::redirectUri));
-
-		// scope
-		Optional.ofNullable(clientDetails.getScope())
-			.ifPresent(scope -> Arrays.stream(scope.split(StrUtil.COMMA))
-				.filter(StrUtil::isNotBlank)
-				.forEach(builder::scope));
-
-		return builder
-			.tokenSettings(TokenSettings.builder()
-				.accessTokenFormat(OAuth2TokenFormat.REFERENCE)
-				.accessTokenTimeToLive(Duration.ofSeconds(
-						Optional.ofNullable(clientDetails.getAccessTokenValidity()).orElse(accessTokenValiditySeconds)))
-				.refreshTokenTimeToLive(Duration.ofSeconds(Optional.ofNullable(clientDetails.getRefreshTokenValidity())
-					.orElse(refreshTokenValiditySeconds)))
-				.build())
-			.clientSettings(ClientSettings.builder()
-				.requireAuthorizationConsent(!BooleanUtil.toBoolean(clientDetails.getAutoapprove()))
-				.build())
-			.build();
-
+		ClientRegisteredDTO client = result.getData();
+		RegisteredClient registeredClient = new RegisteredClientBuilder()
+            .clientId(client.getClientId())
+            .clientSecret(client.getClientSecret())
+            .authorizedGrantTypes(client.getAuthorizedGrantTypes()) 
+            .redirectUris(client.getRedirectUris())      
+            .scopes(client.getScopes())                           
+            .accessTokenValidity(client.getAccessTokenValidity())
+            .refreshTokenValidity(client.getRefreshTokenValidity())
+            .autoapprove(client.getAutoapprove() != null && client.getAutoapprove().equals("1"))
+            .build();
+		return registeredClient;
 	}
 
 }

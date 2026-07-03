@@ -26,8 +26,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.List;
+
+import com.pig4cloud.pig.common.core.constant.enums.CertificationStatusEnum;
 import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
+import com.pig4cloud.pig.common.core.constant.enums.LockFlagEnum;
+import com.pig4cloud.pig.common.core.constant.enums.UserStatusEnum;
 
 /**
  * @author lengleng
@@ -37,113 +42,95 @@ import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 @Schema(description = "前端用户展示对象")
 public class UserVO implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * 主键ID
-	 */
-	@Schema(description = "主键")
-	private Long userId;
+    /**
+     * 主键ID
+     */
+    @Schema(description = "主键")
+    private Long userId;
 
-	/**
-	 * 用户名
-	 */
-	@Schema(description = "用户名")
-	private String username;
+    /**
+     * 用户名
+     */
+    @Schema(description = "用户名")
+    private String username;
 
-	/**
-	 * 密码
-	 */
-	@JsonIgnore
-	private String password;
+    /**
+     * 姓名
+     */
+    @Schema(description = "姓名")
+    private String name;
 
-	/**
-	 * 随机盐
-	 */
-	@JsonIgnore
-	private String salt;
+    /**
+     * 昵称
+     */
+    @Schema(description = "昵称")
+    private String nickname;
 
-	/**
-	 * 微信openid
-	 */
-	@Schema(description = "微信open id")
-	private String wxOpenid;
+    /**
+     * 邮箱
+     */
+    @Schema(description = "邮箱")
+    private String email;
 
-	/**
-	 * QQ openid
-	 */
-	@Schema(description = "qq open id")
-	private String qqOpenid;
+    /**
+     * 手机号
+     */
+    @Schema(description = "手机号")
+    private String phone;
 
-	/**
-	 * gitee openid
-	 */
-	@Schema(description = "gitee open id")
-	private String giteeOpenId;
+    /**
+     * 头像
+     */
+    @Schema(description = "头像")
+    private String avatar;
 
-	/**
-	 * 开源中国 openid
-	 */
-	@Schema(description = "开源中国 open id")
-	private String oscOpenId;
+    /**
+     * 锁定标记 (0:正常, 9:已锁定)
+     */
+    @Schema(description = "锁定标记")
+    private LockFlagEnum lockFlag;
 
-	/**
-	 * 创建时间
-	 */
-	@Schema(description = "创建时间")
-	private String createTime;
+    /**
+     * 锁定截止时间
+     */
+    @Schema(description = "锁定截止时间")
+    private Instant lockUntil;
 
-	/**
-	 * 修改时间
-	 */
-	@Schema(description = "修改时间")
-	private String updateTime;
+    /**
+     * 状态 (0:启用, 1:禁用)
+     */
+    @Schema(description = "状态")
+    private UserStatusEnum status;
 
-	@Schema(description = "删除标记,YES:已删除,NO:正常")
-	private IsDelEnum isDel;
+    /**
+     * 认证状态 (0:未认证, 1:待审核, 2:已认证, 3:审核拒绝)
+     */
+    @Schema(description = "认证状态")
+    private CertificationStatusEnum certificationStatus;
 
-	/**
-	 * 锁定标记
-	 */
-	@Schema(description = "锁定标记,0:正常,9:已锁定")
-	private String lockFlag;
+    /**
+     * 认证信息 (JSON格式)
+     */
+    @Schema(description = "认证信息")
+    private String certificationInfo;
 
-	/**
-	 * 手机号
-	 */
-	@Schema(description = "手机号")
-	private String phone;
+    /**
+     * 创建人
+     */
+    @Schema(description = "创建人")
+    private String createBy;
 
-	/**
-	 * 头像
-	 */
-	@Schema(description = "头像")
-	private String avatar;
-
-	/**
-
-	 * 角色列表
-	 */
-	@Schema(description = "拥有的角色列表")
-	private List<SysRole> roleList;
-
-	/**
-
-	 * 昵称
-	 */
-	@Schema(description = "昵称")
-	private String nickname;
-
-	/**
-	 * 姓名
-	 */
-	@Schema(description = "姓名")
-	private String name;
-
-	/**
-	 * 邮箱
-	 */
-	@Schema(description = "邮箱")
-	private String email;
-
+    /**
+     * 创建时间
+     */
+    @Schema(description = "创建时间")
+    private Instant createTime;
+    
+    /**
+     * 修改时间
+     */
+    @Schema(description = "修改时间")
+    private Instant updateTime;
 }

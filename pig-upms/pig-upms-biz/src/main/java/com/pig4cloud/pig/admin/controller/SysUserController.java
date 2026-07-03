@@ -19,13 +19,31 @@
 
 package com.pig4cloud.pig.admin.controller;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
+
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.admin.api.dto.ResetPasswordDTO;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
+import com.pig4cloud.pig.admin.api.entity.SysOauthClientDetails;
+import com.pig4cloud.pig.admin.api.entity.SysPermission;
+import com.pig4cloud.pig.admin.api.entity.SysRole;
+import com.pig4cloud.pig.admin.api.entity.SysTenant;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.admin.api.entity.SysUserHierarchy;
+import com.pig4cloud.pig.admin.api.entity.SysUserRole;
 import com.pig4cloud.pig.admin.api.vo.UserExcelVO;
+import com.pig4cloud.pig.admin.api.vo.UserVO;
+import com.pig4cloud.pig.admin.convertor.UserConverter;
+import com.pig4cloud.pig.admin.service.SysOauthClientDetailsService;
+import com.pig4cloud.pig.admin.service.SysPermissionService;
+import com.pig4cloud.pig.admin.service.SysRolePermissionService;
+import com.pig4cloud.pig.admin.service.SysRoleService;
+import com.pig4cloud.pig.admin.service.SysTenantService;
+import com.pig4cloud.pig.admin.service.SysUserHierarchyService;
+import com.pig4cloud.pig.admin.service.SysUserRoleService;
 import com.pig4cloud.pig.admin.service.SysUserService;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
@@ -35,6 +53,7 @@ import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
 import com.pig4cloud.pig.common.security.annotation.Inner;
 import com.pig4cloud.pig.common.security.annotation.RequireServiceAuth;
+import com.pig4cloud.pig.common.security.dto.PigUserDTO;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -43,12 +62,19 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.poi.util.StringUtil;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author lengleng
@@ -62,23 +88,54 @@ import java.util.List;
 public class SysUserController {
 
 	private final SysUserService userService;
+	private final SysRoleService roleService;
+	private final SysUserRoleService userRoleService;
+	private final SysOauthClientDetailsService clientService;
+	private final UserConverter userConverter;
+	private final SysUserHierarchyService userHierarchyService;
+	private final SysRolePermissionService rolePermissionService;
+	private final SysTenantService tenantService;
 
 	/**
 	 * 获取指定用户全部信息
+	 * 用于 auth 进行用户验证
 	 * @return 用户信息
 	 */
 	@Inner
 	@RequireServiceAuth
 	@GetMapping(value = { "/info/query" })
-	public R info(@RequestParam(required = false) String username, @RequestParam(required = false) String phone) {
+	public R<PigUserDTO> info(@RequestParam String username) {
+		if(StringUtil.isBlank(username)){
+			return R.failed("必须指定 用户名/电话号码/电子邮箱");
+		}
 		SysUser user = userService.getOne(Wrappers.<SysUser>query()
 			.lambda()
-			.eq(StrUtil.isNotBlank(username), SysUser::getUsername, username)
-			.eq(StrUtil.isNotBlank(phone), SysUser::getPhone, phone));
+			.or(true, w -> w.eq(SysUser::getUsername, username))
+			.or(true, w -> w.eq(SysUser::getPhone, username))
+			.or(true, w -> w.eq(SysUser::getEmail, username)));
 		if (user == null) {
-			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
+			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, new StringBuilder().append("用户名:").append(user.getUsername()).append("/").append("电话号码:").append(user.getPhone()).append("/").append("电子邮箱:").append(user.getEmail())));
 		}
-		return R.ok(userService.findUserInfo(user));
+		List<SysUserHierarchy> userHierarchies = userHierarchyService.list(Wrappers.<SysUserHierarchy>lambdaQuery().eq(SysUserHierarchy::getDescendant, user.getUserId()).orderByDesc(SysUserHierarchy::getDepth));
+		SysUserHierarchy maxDepthHierarchy = Stream.ofNullable(userHierarchies)
+        .flatMap(Collection::stream)
+        .reduce((first, second) -> second) // 取最后一个元素
+        .orElse(null);
+		List<SysRole> roles = userRoleService.selectGrantRoles(user.getUserId());
+		List<Long> roleIds = Stream.ofNullable(roles)
+        .flatMap(List::stream)
+        .map(SysRole::getRoleId)
+        .collect(Collectors.toList());
+		List<SysPermission> permissions = rolePermissionService.selectGrantPermission(user.getUserId());
+		List<String> persmissionCodes = Stream.ofNullable(permissions)
+        .flatMap(List::stream)
+        .map(SysPermission::getPermCode)
+        .collect(Collectors.toList());
+		PigUserDTO pigUser = userConverter.toPigUserVO(user);
+		pigUser.setTenantId(maxDepthHierarchy == null?null:maxDepthHierarchy.getAncestor());
+		pigUser.setRoles(roleIds);
+		pigUser.setPermissions(persmissionCodes);
+		return R.ok(pigUser);
 	}
 
 
@@ -103,7 +160,9 @@ public class SysUserController {
 	 */
 	@GetMapping("/details/{id}")
 	public R user(@PathVariable Long id) {
-		return R.ok(userService.selectUserVoById(id));
+		SysUser sysUser = userService.getById(id);		
+		UserVO userVO = userConverter.toVo(sysUser);
+		return R.ok(userVO);
 	}
 
 	/**
@@ -112,8 +171,9 @@ public class SysUserController {
 	 * @return 不为空返回用户名
 	 */
 	@Inner(value = false)
+	@RequireServiceAuth
 	@GetMapping("/details")
-	public R getDetails(@ParameterObject SysUser query) {
+	public R getDetails(@ParameterObject UserDTO query) {
 		SysUser sysUser = userService.getOne(Wrappers.query(query), false);
 		return R.ok(sysUser == null ? null : CommonConstants.SUCCESS);
 	}
@@ -133,14 +193,52 @@ public class SysUserController {
 
 	/**
 	 * 添加用户
+	 * 一般适合后台管理新增新用户
+	 * 1，新增加用户记录
+	 * 2，授权角色
+	 * 3，授权客户端
 	 * @param userDto 用户信息
 	 * @return success/false
 	 */
 	@SysLog("添加用户")
 	@PostMapping
 	@HasPermission("sys_user_add")
-	public R user(@RequestBody UserDTO userDto) {
-		return R.ok(userService.saveUser(userDto));
+	public R user(@Valid @RequestBody UserDTO userDto) {
+		long count = userService.count(Wrappers.<SysUser>lambdaQuery()
+			.eq(SysUser::getUsername, userDto.getUsername())
+			.or(StringUtil.isNotBlank(userDto.getPhone()), w -> w.eq(SysUser::getPhone, userDto.getPhone()))
+			.or(StringUtil.isNotBlank(userDto.getEmail()), w -> w.eq(SysUser::getEmail, userDto.getEmail())));
+		if(count > 0){
+			return R.failed("用户名/电话号码/邮箱 已存在");
+		}
+		if(CollectionUtils.isNotEmpty(userDto.getRoles())){
+			long roleCount = roleService.count(Wrappers.<SysRole>lambdaQuery()
+			.in(CollectionUtil.isNotEmpty(userDto.getRoles()), SysRole::getRoleId, userDto.getRoles()));
+			if (roleCount != userDto.getRoles().size()) {
+				return R.failed("请确保输入的角色正确");
+			}
+		}
+		if(CollectionUtils.isNotEmpty(userDto.getClientIds())){
+			long clientCount = clientService.count(Wrappers.<SysOauthClientDetails>lambdaQuery()
+			.in(CollectionUtil.isNotEmpty(userDto.getClientIds()), SysOauthClientDetails::getId, userDto.getClientIds()));
+			if (clientCount != userDto.getClientIds().size()) {
+				return R.failed("请确保输入的终端应用正确");
+			}
+		}
+		
+		if(userDto.getTenantId() != null){
+			boolean tenantExisting = tenantService.exists(Wrappers.<SysTenant>lambdaQuery()
+			.eq(SysTenant::getId, userDto.getTenantId()));
+			if (!tenantExisting) {
+				return R.failed("请确保输入的租户正确");
+			}
+		}
+		
+		SysUser sysUser = userService.saveUser(userDto);
+		if(sysUser == null){
+			return R.failed();
+		}
+		return R.ok(userConverter.toVo(sysUser));
 	}
 
 	/**
@@ -151,8 +249,11 @@ public class SysUserController {
 	@SysLog("更新用户信息")
 	@PutMapping
 	@HasPermission("sys_user_edit")
-	public R updateUser(@Valid @RequestBody UserDTO userDto) {
-		return R.ok(userService.updateUser(userDto));
+	public R<UserVO> updateUser(@Valid @RequestBody UserDTO userDto) {
+		if(userDto == null || userDto.getUserId() == null){
+			return R.failed("请输入正确的用户ID");
+		}
+		return R.ok(userConverter.toVo(userService.updateUser(userDto)));
 	}
 
 	/**
@@ -171,11 +272,11 @@ public class SysUserController {
 	 * @param userDto userDto
 	 * @return success/false
 	 */
-	@SysLog("修改个人信息")
-	@PutMapping("/edit")
-	public R updateUserInfo(@Valid @RequestBody UserDTO userDto) {
-		return userService.updateUserInfo(userDto);
-	}
+	// @SysLog("修改个人信息")
+	// @PutMapping("/edit")
+	// public R updateUserInfo(@Valid @RequestBody UserDTO userDto) {
+	// 	return userService.updateUserInfo(userDto);
+	// }
 
 	/**
 	 * 导出excel 表格

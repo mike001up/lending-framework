@@ -23,11 +23,11 @@ import static org.mockito.Mockito.*;
 
 class RequestCleanGlobalFilterTest {
 
-	private RequestCleanGlobalFilter filter;
+	private PigRequestCleanFilter filter;
 
 	@BeforeEach
 	void setUp() {
-		filter = new RequestCleanGlobalFilter();
+		filter = new PigRequestCleanFilter();
 	}
 
 	@Test
@@ -90,7 +90,7 @@ class RequestCleanGlobalFilterTest {
 
 		filter.filter(exchange, chain).block();
 
-		assertEquals("my-client", exchange.getAttribute(GatewayAttrConstants.GATEWAY_CLIENT_ATTR));
+		assertEquals("my-client", exchange.getAttribute(CommonConstants.GATEWAY_CLIENT_ATTR));
 	}
 
 	@Test

@@ -2,6 +2,8 @@ package com.pig4cloud.pig.admin;
 
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.core.constant.enums.LockFlagEnum;
+
 import org.junit.jupiter.api.*;
 
 import java.time.Instant;
@@ -15,9 +17,9 @@ public class UM06_LockUnlockUserTest {
 	@DisplayName("UM-06-01: 锁定用户应设置lockFlag+lockUntil")
 	void testLockUser() {
 		SysUser user = new SysUser();
-		user.setLockFlag(CommonConstants.STATUS_NORMAL);
+		user.setLockFlag(LockFlagEnum.NORMAL);
 
-		user.setLockFlag(CommonConstants.STATUS_LOCK);
+		user.setLockFlag(LockFlagEnum.LOCKED);
 		user.setLockUntil(Instant.now().plusSeconds(900));
 
 		assertEquals(CommonConstants.STATUS_LOCK, user.getLockFlag(), "lockFlag应为1");
@@ -29,10 +31,10 @@ public class UM06_LockUnlockUserTest {
 	@DisplayName("UM-06-03: 解锁用户应清除lockFlag+lockUntil")
 	void testUnlockUser() {
 		SysUser user = new SysUser();
-		user.setLockFlag(CommonConstants.STATUS_LOCK);
+		user.setLockFlag(LockFlagEnum.LOCKED);
 		user.setLockUntil(Instant.now().plusSeconds(600));
 
-		user.setLockFlag(CommonConstants.STATUS_NORMAL);
+		user.setLockFlag(LockFlagEnum.NORMAL);
 		user.setLockUntil(null);
 
 		assertEquals(CommonConstants.STATUS_NORMAL, user.getLockFlag(), "lockFlag应为0");
@@ -43,7 +45,7 @@ public class UM06_LockUnlockUserTest {
 	@DisplayName("UM-06-04: lockUntil超时应视为未锁定")
 	void testLockUntilExpiredAutoUnlock() {
 		SysUser user = new SysUser();
-		user.setLockFlag(CommonConstants.STATUS_LOCK);
+		user.setLockFlag(LockFlagEnum.LOCKED);
 		user.setLockUntil(Instant.now().minusSeconds(1));
 
 		boolean accountNonLocked = CommonConstants.STATUS_NORMAL.equals(user.getLockFlag());
@@ -58,7 +60,7 @@ public class UM06_LockUnlockUserTest {
 	@DisplayName("UM-06-05: lockUntil未超时应仍为锁定")
 	void testLockUntilNotExpiredStillLocked() {
 		SysUser user = new SysUser();
-		user.setLockFlag(CommonConstants.STATUS_LOCK);
+		user.setLockFlag(LockFlagEnum.LOCKED);
 		user.setLockUntil(Instant.now().plusSeconds(600));
 
 		boolean accountNonLocked = CommonConstants.STATUS_NORMAL.equals(user.getLockFlag());

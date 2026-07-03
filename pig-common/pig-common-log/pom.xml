@@ -46,10 +46,10 @@
             <artifactId>hutool-http</artifactId>
         </dependency>
         <!--UPMS接口模块-->
-        <dependency>
+        <!-- <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-upms-api</artifactId>
-        </dependency>
+        </dependency> -->
         <!--安全依赖获取上下文信息-->
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -59,7 +59,10 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-oauth2-core</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.pig4cloud</groupId>
+            <artifactId>pig-common-feign</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

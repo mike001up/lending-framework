@@ -21,9 +21,11 @@ package com.pig4cloud.pig.admin.api.dto;
 
 import com.pig4cloud.pig.admin.api.entity.SysUser;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -42,21 +44,34 @@ public class UserDTO extends SysUser {
 	private List<Long> roles;
 
 	/**
-
-	 * 岗位ID
+	 * 新密码
 	 */
-	private List<Long> post;
+	@Schema(description = "旧密码")
+	private String oldpassword;
 
 	/**
 	 * 新密码
 	 */
 	@Schema(description = "新密码")
-	private String newpassword1;
+	private String newpassword;
 
 	@Schema(description = "租户ID（写入层级关系，不存入用户表）")
 	private Long tenantId;
 
 	@Schema(description = "代理ID（写入层级关系，不存入用户表）")
 	private Long agencyId;
+
+	@Schema(description = "终端ID")
+	private List<Long> clientIds;
+	/**
+     * 创建时间段开始时间
+     */
+    @Schema(description = "创建时间段开始时间")
+    private Instant createTimeStart;
+    /**
+     * 创建时间段结束时间
+     */
+    @Schema(description = "创建时间段结束时间")
+    private Instant createTimeEnd;
 
 }

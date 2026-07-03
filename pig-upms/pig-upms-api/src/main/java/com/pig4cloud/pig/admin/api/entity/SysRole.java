@@ -24,6 +24,7 @@ import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -46,6 +47,7 @@ public class SysRole extends BaseEntity {
 	@Schema(description = "角色编号")
 	private Long roleId;
 
+	@Size(min = 2, max = 50, message = "角色名称长度必须在2到50个字符之间")
 	@NotBlank(message = "角色名称不能为空")
 	@Schema(description = "角色名称")
 	private String roleName;

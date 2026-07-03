@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.addOriginalRequestUrl;
 
-public class PigRequestGlobalFilter implements GlobalFilter, Ordered {
+public class PigPathStripFilter implements GlobalFilter, Ordered {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -34,7 +34,7 @@ public class PigRequestGlobalFilter implements GlobalFilter, Ordered {
 
 	@Override
 	public int getOrder() {
-		return 10;
+		return GatewayAttrConstants.GATEWAY_ORDER_FILTER_PATH_STRIP;
 	}
 
 }

@@ -41,10 +41,10 @@
             <artifactId>hutool-extra</artifactId>
         </dependency>
         <!--UPMS API-->
-        <dependency>
+        <!-- <dependency>
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-upms-api</artifactId>
-        </dependency>
+        </dependency> -->
         <!--common utils-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -67,6 +67,10 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
     </dependencies>
 </project>

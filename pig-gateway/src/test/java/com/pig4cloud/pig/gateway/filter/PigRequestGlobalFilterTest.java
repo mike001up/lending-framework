@@ -16,11 +16,11 @@ import static org.mockito.Mockito.*;
 
 class PigRequestGlobalFilterTest {
 
-	private PigRequestGlobalFilter filter;
+	private PigPathStripFilter filter;
 
 	@BeforeEach
 	void setUp() {
-		filter = new PigRequestGlobalFilter();
+		filter = new PigPathStripFilter();
 	}
 
 	@Test
