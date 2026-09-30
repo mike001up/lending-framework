@@ -20,7 +20,9 @@
 package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.pig4cloud.pig.admin.api.dto.UserCertificationInfoDTO;
 import com.pig4cloud.pig.common.core.constant.enums.CertificationStatusEnum;
 import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 import com.pig4cloud.pig.common.core.constant.enums.LockFlagEnum;
@@ -47,6 +49,7 @@ import java.time.Instant;
 @Data
 @Schema(description = "用户")
 @EqualsAndHashCode(callSuper = true)
+@TableName(value = "sys_user", autoResultMap = true)
 public class SysUser extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
@@ -76,15 +79,9 @@ public class SysUser extends BaseEntity {
 	/**
 	 * 随机盐
 	 */
-	@JsonIgnore
-	@Schema(description = "随机盐")
-	private String salt;
-
-
-	// @TableLogic(value = "'NO'", delval = "'YES'")
-	// @TableField(fill = FieldFill.INSERT)
-	// @Schema(description = "删除标记,YES:已删除,NO:正常")
-	// private IsDelEnum isDel;
+	// @JsonIgnore
+	// @Schema(description = "随机盐")
+	// private String salt;
 
 	/**
 	 * 锁定标记
@@ -167,6 +164,7 @@ public class SysUser extends BaseEntity {
 	private CertificationStatusEnum certificationStatus;
 
 	@Schema(description = "提交的身份信息JSON")
-	private String certificationInfo;
+	@TableField(value = "certification_info", typeHandler = JacksonTypeHandler.class)
+	private UserCertificationInfo certificationInfo;
 
 }

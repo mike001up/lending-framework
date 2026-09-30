@@ -42,5 +42,6 @@
         <module>pig-common-swagger</module>
         <module>pig-common-xss</module>
         <module>pig-common-excel</module>
+        <module>pig-common-mq</module>
     </modules>
 </project>

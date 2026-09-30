@@ -95,6 +95,11 @@
             </dependency>
             <dependency>
                 <groupId>com.pig4cloud</groupId>
+                <artifactId>pig-common-mq</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pig4cloud</groupId>
                 <artifactId>pig-upms-api</artifactId>
                 <version>${revision}</version>
             </dependency>

@@ -44,9 +44,11 @@ import com.pig4cloud.pig.admin.mapper.SysUserRoleMapper;
 import com.pig4cloud.pig.admin.service.*;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.security.dto.PigUserDTO;
 import com.pig4cloud.pig.common.security.feign.RemoteTokenService;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.vo.ErrorMessage;
@@ -56,6 +58,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -337,29 +340,25 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	 * @return
 	 */
 	@Override
+	@Transactional
 	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "T(com.pig4cloud.pig.common.core.constant.CacheConstants).USER_DETAILS_KEY_PREFIX + #username")
-	public R<Boolean> lockUser(String username) {
-		SysUser sysUser = baseMapper.selectOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, username));
-
-		if (Objects.nonNull(sysUser)) {
-			sysUser.setLockFlag(LockFlagEnum.LOCKED);
-			sysUser.setLockUntil(Instant.now().plusSeconds(900));
-			baseMapper.updateById(sysUser);
-		}
-		return R.ok();
+	public R<Boolean> lockUser(String username) {		
+		int count = baseMapper.update(Wrappers.<SysUser>lambdaUpdate()
+			.set(SysUser::getLockFlag, LockFlagEnum.LOCKED)
+			.set(SysUser::getLockUntil, Instant.now().plusSeconds(SecurityConstants.AUTH_LOGIN_LOCK_MINUTES * 60))
+			.eq(SysUser::getUsername, username));
+		return count > 0?R.ok():R.failed();
 	}
 
 	@Override
+	@Transactional
 	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "T(com.pig4cloud.pig.common.core.constant.CacheConstants).USER_DETAILS_KEY_PREFIX + #username")
 	public R<Boolean> unlockUser(String username) {
-		SysUser sysUser = baseMapper.selectOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, username));
-
-		if (Objects.nonNull(sysUser)) {
-			sysUser.setLockFlag(LockFlagEnum.NORMAL);
-			sysUser.setLockUntil(null);
-			baseMapper.updateById(sysUser);
-		}
-		return R.ok();
+		int count = baseMapper.update(Wrappers.<SysUser>lambdaUpdate()
+			.set(SysUser::getLockFlag, LockFlagEnum.NORMAL)
+			.set(SysUser::getLockUntil, null)
+			.eq(SysUser::getUsername, username));
+		return count > 0?R.ok():R.failed();
 	}
 
 	@Override
@@ -427,27 +426,20 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	}
 
 	@Override
-	public R closeAccount(Long id) {
-		SysUser sysUser = baseMapper.selectById(id);
-		if (Objects.isNull(sysUser)) {
-			return R.failed("用户不存在");
-		}
-		sysUser.setStatus(UserStatusEnum.CLOSED);
-		baseMapper.updateById(sysUser);
-		evictUserCache(sysUser.getUsername());
-		return R.ok(sysUser);
+	@Transactional
+	public R<Boolean> closeAccount(Long id) {
+		int count = baseMapper.update(Wrappers.<SysUser>lambdaUpdate().set(SysUser::getStatus, UserStatusEnum.CLOSED).eq(SysUser::getUserId, id));
+		return R.ok(count > 0? true:false);
 	}
 
 	@Override
+	@Transactional
 	public R restoreAccount(Long id) {
-		SysUser sysUser = baseMapper.selectById(id);
-		if (Objects.isNull(sysUser)) {
-			return R.failed("用户不存在");
-		}
-		sysUser.setStatus(UserStatusEnum.ENABLED);
-		baseMapper.updateById(sysUser);
-		evictUserCache(sysUser.getUsername());
-		return R.ok(sysUser);
+		int count = baseMapper.update(Wrappers.<SysUser>lambdaUpdate()
+		.set(SysUser::getStatus, UserStatusEnum.ENABLED)
+		.eq(SysUser::getUserId, id)
+		.eq(SysUser::getStatus, UserStatusEnum.CLOSED));
+		return R.ok(count > 0? true:false);
 	}
 
 	@Override
@@ -503,5 +495,4 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	public UserVO selectUserVoByName(String userName) {
 		return baseMapper.getUserVoByUsername(userName);
 	}
-
 }

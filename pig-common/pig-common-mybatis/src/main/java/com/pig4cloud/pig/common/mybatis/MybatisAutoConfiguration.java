@@ -17,9 +17,16 @@
 package com.pig4cloud.pig.common.mybatis;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pig4cloud.pig.common.mybatis.config.MybatisPlusMetaObjectHandler;
 import com.pig4cloud.pig.common.mybatis.plugins.PigPaginationInnerInterceptor;
+
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,8 +36,18 @@ import org.springframework.context.annotation.Configuration;
  * <p>
  * mybatis plus 统一配置
  */
+@Slf4j
 @Configuration(proxyBeanMethods = false)
 public class MybatisAutoConfiguration {
+	@Autowired
+    private ObjectMapper objectMapper;
+
+    @PostConstruct
+    public void init() {
+        // 使用官方 API 将自定义的 ObjectMapper 设置给 JacksonTypeHandler
+        JacksonTypeHandler.setObjectMapper(objectMapper);
+        log.info("成功将自定义 ObjectMapper 注入到 JacksonTypeHandler");
+    }
 
 	/**
 	 * 分页插件, 对于单一数据库类型来说,都建议配置该值,避免每次分页都去抓取数据库类型

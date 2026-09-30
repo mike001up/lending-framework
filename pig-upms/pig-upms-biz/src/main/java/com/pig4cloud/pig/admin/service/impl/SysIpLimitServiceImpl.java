@@ -59,7 +59,7 @@ public class SysIpLimitServiceImpl extends ServiceImpl<SysIpLimitMapper, SysIpLi
         List<SysIpLimit> rules = this.getBaseMapper().selectList(wrapper);
 
 		SysOauthClientDetails client = clientDetailsService.getOne(Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, clientId));
-		if(client == null || StringUtils.isEmpty(client.getAdditionalInformation()) || !client.getAdditionalInformation().contains("ip_action")){
+		if(client == null || client.getAdditionalInformation() == null || StrUtil.isEmpty(client.getAdditionalInformation().getIpAction())){
 			return Boolean.FALSE;
 		}
 		String ipLimitAction = JSONUtil.parseObj(client.getAdditionalInformation()).getStr("ip_action");

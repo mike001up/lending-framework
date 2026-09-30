@@ -268,17 +268,6 @@ public class SysUserController {
 	}
 
 	/**
-	 * 修改个人信息
-	 * @param userDto userDto
-	 * @return success/false
-	 */
-	// @SysLog("修改个人信息")
-	// @PutMapping("/edit")
-	// public R updateUserInfo(@Valid @RequestBody UserDTO userDto) {
-	// 	return userService.updateUserInfo(userDto);
-	// }
-
-	/**
 	 * 导出excel 表格
 	 * @param userDTO 查询条件
 	 * @return
@@ -341,14 +330,14 @@ public class SysUserController {
 
 	@SysLog("关停用户账户")
 	@PostMapping("/{id}/close")
-	@HasPermission("sys_user_close")
+	@HasPermission("upms:user:close")
 	public R closeAccount(@PathVariable Long id) {
 		return userService.closeAccount(id);
 	}
 
 	@SysLog("恢复用户账户")
 	@PostMapping("/{id}/restore")
-	@HasPermission("sys_user_restore")
+	@HasPermission("upms:user:restore")
 	public R restoreAccount(@PathVariable Long id) {
 		return userService.restoreAccount(id);
 	}
@@ -368,9 +357,10 @@ public class SysUserController {
 	}
 
 	@SysLog("更新用户头像")
-	@PutMapping("/{id}/avatar")
-	public R updateAvatar(@PathVariable Long id, @RequestParam String avatarUrl) {
-		return userService.updateAvatar(id, avatarUrl);
+	@PutMapping("/avatar")
+	public R updateAvatar(@RequestParam String avatarUrl) {
+		Long userId = SecurityUtils.getUser().getId();
+		return userService.updateAvatar(userId, avatarUrl);
 	}
 
 }

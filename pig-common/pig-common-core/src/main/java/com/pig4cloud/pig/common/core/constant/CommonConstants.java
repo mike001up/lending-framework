@@ -139,4 +139,6 @@ public interface CommonConstants {
 	 */
 	String DEBUG_PREFIX = "request_{}_";
 
+    // Long ACCOUNT_LOCKOUT_DURATION_MINUTES = 1L;
+
 }

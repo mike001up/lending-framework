@@ -2,12 +2,16 @@ package com.pig4cloud.pig.common.security.service;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import lombok.extern.slf4j.Slf4j;
+
+import com.alibaba.fastjson.JSONObject;
 // import com.pig4cloud.pig.admin.api.dto.UserInfo;
 // import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
 import com.pig4cloud.pig.common.core.constant.enums.LockFlagEnum;
 import com.pig4cloud.pig.common.core.constant.enums.UserStatusEnum;
+import com.pig4cloud.pig.common.core.util.JsonUtils;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.core.util.RetOps;
 import com.pig4cloud.pig.common.security.dto.PigUserDTO;
@@ -80,7 +84,7 @@ public interface PigUserDetailsService extends UserDetailsService, Ordered {
 		}
 
 		boolean enabled = UserStatusEnum.ENABLED.equals(info.getStatus());
-
+		System.out.println(String.format("info = %s", JSONObject.toJSONString(info)));
 		return new PigUser(info.getId(), info.getUsername(),
 				SecurityConstants.BCRYPT + info.getPassword(), info.getPhone(), info.getTenantId(), enabled, true, true,
 				accountNonLocked, authorities);

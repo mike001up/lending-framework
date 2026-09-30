@@ -46,4 +46,6 @@ public interface SysUserRoleMapper extends BaseMapper<SysUserRole> {
      * @return
      */    
     List<SysRole> selectGrantRoles(@Param("userId") Long userId);
+
+    Long countUserPermission(@Param("userId") Long userId, @Param("permCode") String permCode);
 }

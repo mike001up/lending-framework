@@ -107,6 +107,10 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-json</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.pig4cloud</groupId>
+            <artifactId>pig-common-mq</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

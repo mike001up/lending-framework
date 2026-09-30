@@ -32,4 +32,14 @@
             r.is_del = 'NO'
             AND ur.user_id = #{userId}
     </select>
+    <select id="countUserPermission" resultType="java.lang.Long">
+        SELECT
+	        COUNT( DISTINCT rp.permission_id ) 
+        FROM
+            sys_user_role ur
+            LEFT JOIN sys_role_permission rp ON ur.role_id = rp.role_id 
+            LEFT JOIN sys_permission perm ON rp.permission_id = perm.permission_id
+        WHERE
+            ur.user_id = #{userId} AND perm.perm_code = #{permCode};
+    </select>
 </mapper>

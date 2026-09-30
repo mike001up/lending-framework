@@ -1,7 +1,10 @@
 package com.pig4cloud.pig.admin.convertor;
 
+import com.pig4cloud.pig.admin.api.dto.UserCertificationInfoDTO;
 import com.pig4cloud.pig.admin.api.dto.UserDTO;
 import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.admin.api.entity.UserCertificationInfo;
+import com.pig4cloud.pig.admin.api.vo.UserCertificationInfoVO;
 import com.pig4cloud.pig.admin.api.vo.UserVO;
 import com.pig4cloud.pig.common.security.dto.PigUserDTO;
 
@@ -15,4 +18,6 @@ public interface UserConverter {
     SysUser toEntity(UserDTO userDTO);
     @Mapping(source = "userId", target = "id")
     PigUserDTO toPigUserVO(SysUser user);
+    UserCertificationInfoVO toUserCertificationInfoVO(UserCertificationInfo certificationInfo);
+    UserCertificationInfo toUserCertificationInfo(UserCertificationInfoDTO certificationInfo);
 }

@@ -21,12 +21,16 @@ package com.pig4cloud.pig.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
+
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pig4cloud.pig.admin.api.dto.SysRoleDTO;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysRolePermission;
 import com.pig4cloud.pig.admin.api.vo.RoleExcelVO;
 import com.pig4cloud.pig.admin.api.vo.RoleVO;
+import com.pig4cloud.pig.admin.convertor.RoleConverter;
 import com.pig4cloud.pig.admin.mapper.SysRoleMapper;
 import com.pig4cloud.pig.admin.service.SysRolePermissionService;
 import com.pig4cloud.pig.admin.service.SysRoleService;
@@ -58,17 +62,27 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
 
-	private SysRolePermissionService rolePermissionService;
+	private final SysRolePermissionService rolePermissionService;
+
+	private final RoleConverter roleConverter;
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public R<Boolean> saveRole(SysRole sysRole) {
-		long count = baseMapper.countByCodeOrName(sysRole.getRoleCode(), sysRole.getRoleName());
+	public R<Boolean> saveRole(SysRoleDTO sysRole) {
+		long count = this.count(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, sysRole.getRoleCode()));
 		if (count > 0) {
 			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_ROLE_NAMEORCODE_EXISTING,
 				sysRole.getRoleName(), sysRole.getRoleCode()));
 		}
-		return R.ok(this.save(sysRole));
+		SysRole sysRoleEntity = roleConverter.toEntity(sysRole);
+		boolean isSus = this.save(sysRoleEntity);
+		if(isSus && CollectionUtil.isNotEmpty(sysRole.getPermissionIds())){
+			List<SysRolePermission> rolePermissionList = sysRole.getPermissionIds().stream()
+			.map(permissionId -> SysRolePermission.builder().roleId(sysRoleEntity.getRoleId()).permissionId(Long.valueOf(permissionId)).build())
+			.collect(Collectors.toList());
+    		rolePermissionService.saveBatch(rolePermissionList);
+		}
+		return R.ok(isSus);
 	}
 
 	/**
@@ -107,13 +121,13 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 	}
 
 	/**
-	 * 根据角色菜单列表
-	 * @param roleVo 角色&菜单列表
+	 * 根据角色权限列表
+	 * @param role 角色&菜单列表
 	 * @return
 	 */
 	@Override
-	public Boolean updateRoleMenus(RoleVO roleVo) {
-		return rolePermissionService.saveRolePermissions(roleVo.getRoleId(), roleVo.getPermissionIds());
+	public Boolean updateRolePerm(SysRoleDTO role) {
+		return rolePermissionService.saveRolePermissions(role.getRoleId(), role.getPermissionIds());
 	}
 
 	/**

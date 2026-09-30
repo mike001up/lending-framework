@@ -69,6 +69,13 @@
 		<appender-ref ref="error"/>
 	</logger>
 
+	<logger name="com.alibaba.cloud.stream.binder.rocketmq" level="WARN"/>
+	<logger name="org.apache.rocketmq" level="WARN"/>
+	<logger name="org.springframework.integration" level="WARN"/>
+	<logger name="org.springframework.cloud.stream" level="WARN"/>
+
+	<logger name="org.springframework.cloud.function" level="WARN"/>
+
 	<!-- Level: FATAL 0  ERROR 3  WARN 4  INFO 6  DEBUG 7 -->
 	<root level="DEBUG">
 		<appender-ref ref="console"/>

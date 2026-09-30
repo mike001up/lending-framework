@@ -20,16 +20,24 @@
 package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.EnumUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.admin.api.dto.SysOauthClientDTO;
 import com.pig4cloud.pig.admin.api.entity.SysOauthClientDetails;
+import com.pig4cloud.pig.admin.api.vo.PermissionVO;
+import com.pig4cloud.pig.admin.api.vo.SysOauthClientVO;
 import com.pig4cloud.pig.admin.convertor.ClientConverter;
 import com.pig4cloud.pig.admin.service.SysOauthClientDetailsService;
 import com.pig4cloud.pig.common.core.constant.enums.ClientStatusEnum;
 import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.core.validation.group.CreateGroup;
+import com.pig4cloud.pig.common.core.validation.group.UpdateGroup;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
 import com.pig4cloud.pig.common.security.annotation.Inner;
@@ -43,6 +51,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -71,10 +80,10 @@ public class SysClientController {
 	 * @param clientId clientId
 	 * @return SysOauthClientDetails
 	 */
-	@GetMapping("/{clientId}")
-	public R getByClientId(@PathVariable String clientId) {
+	@GetMapping("/{id}")
+	public R getByClientId(@PathVariable("id") String id) {
 		SysOauthClientDetails details = clientDetailsService
-			.getOne(Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, clientId));
+			.getOne(Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getId, id));
 		return R.ok(details);
 	}
 
@@ -85,14 +94,20 @@ public class SysClientController {
 	 * @return
 	 */
 	@GetMapping("/page")
-	public R getOauthClientDetailsPage(@ParameterObject Page page,
-			@ParameterObject SysOauthClientDetails sysOauthClientDetails) {
+	public R<IPage<SysOauthClientVO>> getOauthClientDetailsPage(@ParameterObject Page page,
+			@ParameterObject SysOauthClientDTO sysOauthClientDetails) {
 		LambdaQueryWrapper<SysOauthClientDetails> wrapper = Wrappers.<SysOauthClientDetails>lambdaQuery()
-			.like(StrUtil.isNotBlank(sysOauthClientDetails.getClientId()), SysOauthClientDetails::getClientId,
+			.eq(StrUtil.isNotBlank(sysOauthClientDetails.getClientId()), SysOauthClientDetails::getClientId,
 					sysOauthClientDetails.getClientId())
-			.like(StrUtil.isNotBlank(sysOauthClientDetails.getClientSecret()), SysOauthClientDetails::getClientSecret,
-					sysOauthClientDetails.getClientSecret());
-		return R.ok(clientDetailsService.page(page, wrapper));
+			.like(StrUtil.isNotBlank(sysOauthClientDetails.getClientName()), SysOauthClientDetails::getClientName,
+					sysOauthClientDetails.getClientName())
+			.eq(sysOauthClientDetails.getStatus() != null, SysOauthClientDetails::getStatus ,sysOauthClientDetails.getStatus());
+			Page<SysOauthClientDetails> clientPage = clientDetailsService.page(page, wrapper);
+			
+			IPage<SysOauthClientVO> pageVO = clientPage.convert(client->{
+				return clientConverter.toVo(client);
+		});
+		return R.ok(pageVO);
 	}
 
 	/**
@@ -102,9 +117,9 @@ public class SysClientController {
 	 */
 	@SysLog("添加终端")
 	@PostMapping
-	@HasPermission("sys_client_add")
-	public R add(@Valid @RequestBody SysOauthClientDetails clientDetails) {
-		return R.ok(clientDetailsService.saveClient(clientDetails));
+	@HasPermission("sys:client:add")
+	public R add(@Validated(CreateGroup.class) @RequestBody SysOauthClientDTO clientDetails) {
+		return R.ok(clientDetailsService.saveClient(clientConverter.toEntity(clientDetails)));
 	}
 
 	/**
@@ -113,11 +128,10 @@ public class SysClientController {
 	 * @return success/false
 	 */
 	@SysLog("删除终端")
-	@DeleteMapping
-	@HasPermission("sys_client_del")
-	public R removeById(@RequestBody Long[] ids) {
-		clientDetailsService.removeBatchByIds(CollUtil.toList(ids));
-		return R.ok();
+	@DeleteMapping("/{id}")
+	@HasPermission("sys:client:del")
+	public R removeById(@PathVariable("id") Long id) {
+		return R.ok(clientDetailsService.removeById(id));
 	}
 
 	/**
@@ -127,9 +141,9 @@ public class SysClientController {
 	 */
 	@SysLog("编辑终端")
 	@PutMapping
-	@HasPermission("sys_client_edit")
-	public R update(@Valid @RequestBody SysOauthClientDetails clientDetails) {
-		return R.ok(clientDetailsService.updateClientById(clientDetails));
+	@HasPermission("sys:client:edit")
+	public R update(@Validated(UpdateGroup.class) @RequestBody SysOauthClientDTO clientDetails) {
+		return R.ok(clientDetailsService.updateClientById(clientConverter.toEntity(clientDetails)));
 	}
 
 	@Inner
@@ -154,29 +168,29 @@ public class SysClientController {
 		return clientDetailsService.syncClientCache();
 	}
 
-	/**
-	 * 导出所有客户端
-	 * @return excel
-	 */
-	@ResponseExcel
-	@SysLog("导出excel")
-	@GetMapping("/export")
-	public List<SysOauthClientDetails> export(SysOauthClientDetails sysOauthClientDetails) {
-		return clientDetailsService.list(Wrappers.query(sysOauthClientDetails));
-	}
+	// /**
+	//  * 导出所有客户端
+	//  * @return excel
+	//  */
+	// @ResponseExcel
+	// @SysLog("导出excel")
+	// @GetMapping("/export")
+	// public List<SysOauthClientDetails> export(SysOauthClientDetails sysOauthClientDetails) {
+	// 	return clientDetailsService.list(Wrappers.query(sysOauthClientDetails));
+	// }
 
-	@GetMapping("/list")
-	public R listEnabled() {
-		return R.ok(clientDetailsService.list(Wrappers.<SysOauthClientDetails>lambdaQuery()
-			.eq(SysOauthClientDetails::getStatus, ClientStatusEnum.ENABLED)));
-	}
+	// @GetMapping("/list")
+	// public R listEnabled() {
+	// 	return R.ok(clientDetailsService.list(Wrappers.<SysOauthClientDetails>lambdaQuery()
+	// 		.eq(SysOauthClientDetails::getStatus, ClientStatusEnum.ENABLED)));
+	// }
 
 	@SysLog("启用/禁用客户端")
-	@PutMapping("/toggle-status/{clientId}")
-	@HasPermission("sys_client_edit")
-	public R toggleStatus(@PathVariable String clientId) {
+	@PutMapping("/toggle-status/{id}")
+	@HasPermission("sys:client:edit")
+	public R toggleStatus(@PathVariable("id") Long id) {
 		SysOauthClientDetails details = clientDetailsService
-			.getOne(Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, clientId));
+			.getOne(Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getId, id));
 		if (details == null) {
 			return R.failed("客户端不存在");
 		}

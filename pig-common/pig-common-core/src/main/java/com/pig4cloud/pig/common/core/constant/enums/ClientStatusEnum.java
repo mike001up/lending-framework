@@ -11,7 +11,6 @@ public enum ClientStatusEnum {
 	ENABLED("enabled", "启用"),
 	DISABLED("disabled", "禁用");
 
-	@EnumValue
 	private final String value;
 
 	private final String description;

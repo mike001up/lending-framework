@@ -31,6 +31,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.core.Authentication;
@@ -85,8 +87,16 @@ public class PigAuthenticationSuccessEventHandler implements AuthenticationSucce
 			}
 			logVo.setCreateBy(userInfo.getName());
 			SpringContextHolder.publishEvent(new SysLogEvent(logVo));
+			
+			StringRedisTemplate redisTemplate = SpringContextHolder.getBean(StringRedisTemplate.class);
+			// 清除登录失败计数
+			if (redisTemplate != null) {
+				String key = String.format(SecurityConstants.REDIS_KEY_AUTH_LOGIN_FAILURE_KEY, userInfo.getName());
+				redisTemplate.delete(key);
+				log.debug("用户 {} 登录成功，已清除失败计数", userInfo.getName());
+			}
 		}
-
+		
 		// 输出token
 		sendAccessTokenResponse(request, response, authentication);
 	}

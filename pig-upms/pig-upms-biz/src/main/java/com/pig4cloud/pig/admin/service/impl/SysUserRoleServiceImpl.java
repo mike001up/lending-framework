@@ -19,6 +19,7 @@
 
 package com.pig4cloud.pig.admin.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.entity.SysUserClient;
@@ -48,6 +49,7 @@ public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUs
     @Override
     @Transactional
     public void grantUserRole(Long userId, List<Long> roleIds) {
+        baseMapper.delete(Wrappers.<SysUserRole>lambdaQuery().eq(SysUserRole::getUserId, userId));
         if (CollUtil.isNotEmpty(roleIds)) {
             List<SysUserRole> relations = roleIds.stream()
             .map(roleId -> {
@@ -57,6 +59,7 @@ public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUs
                 return relation;
             })
             .collect(Collectors.toList());
+            
             baseMapper.insert(relations);        
 		}
     }

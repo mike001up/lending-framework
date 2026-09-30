@@ -1,12 +1,16 @@
 package com.pig4cloud.pig.admin;
 
 import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.pig4cloud.pig.admin.api.entity.UserCertificationInfo;
+import com.pig4cloud.pig.admin.api.enums.IdTypeEnum;
 import com.pig4cloud.pig.common.core.constant.enums.CertificationStatusEnum;
 // import com.pig4cloud.pig.common.core.constant.enums.LockFlagEnum;
 import com.pig4cloud.pig.common.core.constant.enums.UserStatusEnum;
 import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.Instant;
 
 @DisplayName("UM-08: 实名认证 + UM-09: 关停/恢复")
 public class UM08_09_KycAndCloseTest {
@@ -18,7 +22,16 @@ public class UM08_09_KycAndCloseTest {
 		user.setCertificationStatus(CertificationStatusEnum.NOT_CERTIFIED);
 
 		user.setCertificationStatus(CertificationStatusEnum.PENDING);
-		user.setCertificationInfo("{\"realName\":\"张三\",\"idNumber\":\"110101199001011234\"}");
+		UserCertificationInfo userCertificationInfo = UserCertificationInfo.builder()
+		.backImageUrl("")
+		.expireDate(Instant.now())
+		.frontImageUrl("")
+		.handheldPhotoUrl("")
+		.idNumber("")
+		.idType(IdTypeEnum.ID_CARD)
+		.realName("")
+		.build();
+		user.setCertificationInfo(userCertificationInfo);
 
 		assertEquals("in_progress", user.getCertificationStatus());
 		assertNotNull(user.getCertificationInfo());

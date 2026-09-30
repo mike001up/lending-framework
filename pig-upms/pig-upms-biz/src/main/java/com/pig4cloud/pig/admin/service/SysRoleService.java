@@ -20,6 +20,7 @@
 package com.pig4cloud.pig.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.pig4cloud.pig.admin.api.dto.SysRoleDTO;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.vo.RoleExcelVO;
 import com.pig4cloud.pig.admin.api.vo.RoleVO;
@@ -38,7 +39,7 @@ import java.util.List;
  */
 public interface SysRoleService extends IService<SysRole> {
 
-	R<Boolean> saveRole(SysRole sysRole);
+	R<Boolean> saveRole(SysRoleDTO sysRole);
 
 	/**
 	 * 通过用户ID，查询角色信息
@@ -67,7 +68,7 @@ public interface SysRoleService extends IService<SysRole> {
 	 * @param roleVo 角色&菜单列表
 	 * @return
 	 */
-	Boolean updateRoleMenus(RoleVO roleVo);
+	Boolean updateRolePerm(SysRoleDTO roleVo);
 
 	/**
 	 * 导入角色

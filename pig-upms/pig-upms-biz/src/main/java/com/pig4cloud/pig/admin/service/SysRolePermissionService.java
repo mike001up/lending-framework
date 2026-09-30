@@ -8,7 +8,7 @@ import com.pig4cloud.pig.admin.api.entity.SysRolePermission;
 
 public interface SysRolePermissionService extends IService<SysRolePermission> {
 
-	Boolean saveRolePermissions(Long roleId, String permissionIds);
+	Boolean saveRolePermissions(Long roleId, List<String> permissionIds);
 
 	List<SysPermission> selectGrantPermission(Long userId);
 

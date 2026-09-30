@@ -192,5 +192,11 @@ public interface SecurityConstants {
 	//----------------------------gateway
 	String REDIS_KEY_IP_LIMIT_RESULT = "gateway:ip_limit:result:%s_%s";
 
+	//----------------------------auth
+	String 	REDIS_KEY_AUTH_LOGIN_FAILURE_KEY = "auth:login:failure:%s";
+	Integer AUTH_LOGIN_MAX_FAILURES = 5;
+    Integer AUTH_LOGIN_LOCK_MINUTES = 1;      // 锁定 1 小时
+    Integer AUTH_LOGIN_WINDOW_MINUTES = 10;    // 10 分钟窗口
+
 
 }

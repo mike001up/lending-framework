@@ -1,6 +1,7 @@
 package com.pig4cloud.pig.admin.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.pig4cloud.pig.common.core.constant.enums.ClientStatusEnum;
 import com.pig4cloud.pig.common.core.constant.enums.IsDelEnum;
 import com.pig4cloud.pig.common.mybatis.base.BaseEntity;
@@ -12,6 +13,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Schema(description = "客户端信息")
 @EqualsAndHashCode(callSuper = true)
+@TableName(value = "sys_oauth_client_details", autoResultMap = true)
 public class SysOauthClientDetails extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
@@ -32,6 +34,7 @@ public class SysOauthClientDetails extends BaseEntity {
 	@Schema(description = "客户端密钥")
 	private String clientSecret;
 
+	//此client 被哪些其他 client访问
 	@Schema(description = "资源id列表")
 	private String resourceIds;
 
@@ -45,6 +48,7 @@ public class SysOauthClientDetails extends BaseEntity {
 	@Schema(description = "回调地址")
 	private String webServerRedirectUri;
 
+	//此client 具有哪些 内部权限点
 	@Schema(description = "权限列表")
 	private String authorities;
 
@@ -55,7 +59,8 @@ public class SysOauthClientDetails extends BaseEntity {
 	private Integer refreshTokenValidity;
 
 	@Schema(description = "扩展信息")
-	private String additionalInformation;
+	@TableField(value = "additional_information", typeHandler = JacksonTypeHandler.class)
+	private SysOauthClientAdditionalInformation additionalInformation;
 
 	@Schema(description = "是否自动放行")
 	private String autoapprove;

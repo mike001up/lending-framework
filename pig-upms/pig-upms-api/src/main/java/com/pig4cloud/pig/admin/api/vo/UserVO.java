@@ -114,7 +114,7 @@ public class UserVO implements Serializable {
      * 认证信息 (JSON格式)
      */
     @Schema(description = "认证信息")
-    private String certificationInfo;
+    private UserCertificationInfoVO certificationInfo;
 
     /**
      * 创建人

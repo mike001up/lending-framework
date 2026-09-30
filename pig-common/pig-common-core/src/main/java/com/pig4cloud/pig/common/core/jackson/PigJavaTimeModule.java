@@ -15,8 +15,10 @@
  */
 package com.pig4cloud.pig.common.core.jackson;
 
+import com.alibaba.fastjson.parser.JSONToken;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -63,8 +65,15 @@ public class PigJavaTimeModule extends SimpleModule {
 		// 毫秒时间戳 -> Instant
 		this.addDeserializer(Instant.class, new JsonDeserializer<Instant>() {
 			@Override
-			public Instant deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-				long timestamp = p.getLongValue();
+			public Instant deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {	
+				Long timestamp = null;
+				if(p.getCurrentToken() == JsonToken.VALUE_STRING)	{
+					timestamp = Long.valueOf(p.getValueAsString());
+				}else if(p.getCurrentToken() == JsonToken.VALUE_NUMBER_INT){
+					timestamp = p.getLongValue();
+				}else {
+					return null;
+				}
 				return Instant.ofEpochMilli(timestamp);
 			}
 		});
@@ -78,7 +87,14 @@ public class PigJavaTimeModule extends SimpleModule {
 		this.addDeserializer(Timestamp.class, new JsonDeserializer<Timestamp>() {
 			@Override
 			public Timestamp deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-				long timestamp = p.getLongValue();
+				Long timestamp = null;
+				if(p.getCurrentToken() == JsonToken.VALUE_STRING)	{
+					timestamp = Long.valueOf(p.getValueAsString());
+				}else if(p.getCurrentToken() == JsonToken.VALUE_NUMBER_INT){
+					timestamp = p.getLongValue();
+				}else {
+					return null;
+				}
 				return new Timestamp(timestamp);
 			}
 		});

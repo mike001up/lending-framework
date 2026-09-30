@@ -1,6 +1,7 @@
 package com.pig4cloud.pig.admin.service;
 
-import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.lang.tree.TreeNode;
+
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.pig4cloud.pig.admin.api.entity.SysPermission;
 import com.pig4cloud.pig.common.core.util.R;
@@ -17,7 +18,7 @@ public interface SysPermissionService extends IService<SysPermission> {
 
 	Boolean updatePermissionById(SysPermission sysPermission);
 
-	List<Tree<Long>> treePermission(Long parentId, String name);
+	List<TreeNode<Long>> treePermission(Long parentId, String name);
 
 	List<SysPermission> listAuthorizeRules();
 

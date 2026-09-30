@@ -1,5 +1,6 @@
 package com.pig4cloud.pig.admin.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -28,17 +29,14 @@ public class SysRolePermissionServiceImpl extends ServiceImpl<SysRolePermissionM
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	@CacheEvict(value = CacheConstants.PERMISSION_DETAILS, key = "#roleId")
-	public Boolean saveRolePermissions(Long roleId, String permissionIds) {
+	public Boolean saveRolePermissions(Long roleId, List<String> permissionIds) {
 		this.remove(Wrappers.<SysRolePermission>query().lambda().eq(SysRolePermission::getRoleId, roleId));
 
-		if (StrUtil.isBlank(permissionIds)) {
+		if (CollectionUtil.isEmpty(permissionIds)) {
 			return Boolean.TRUE;
 		}
-		List<SysRolePermission> rolePermissionList = Arrays.stream(permissionIds.split(StrUtil.COMMA)).map(permId -> {
-			SysRolePermission rp = new SysRolePermission();
-			rp.setRoleId(roleId);
-			rp.setPermissionId(Long.valueOf(permId));
-			return rp;
+		List<SysRolePermission> rolePermissionList = permissionIds.stream().map(permId -> {
+			return SysRolePermission.builder().roleId(roleId).permissionId(Long.valueOf(permId)).build();
 		}).collect(Collectors.toList());
 
 		cacheManager.getCache(CacheConstants.USER_DETAILS).clear();

@@ -61,6 +61,18 @@
     </logger>
     <logger name="logging.level.com.pig4cloud.pig.admin.mapper" level="OFF">
         <appender-ref ref="debug"/>
+    </logger> 
+    <logger name="logging.level.com.zaxxer.hikari" level="WARN">
+        <appender-ref ref="debug"/>
+    </logger>
+    <logger name="logging.level.org.springframework.cloud.stream" level="DEBUG">
+        <appender-ref ref="debug"/>
+    </logger>
+    <logger name="logging.level.org.springframework.integration" level="DEBUG">
+        <appender-ref ref="debug"/>
+    </logger>
+    <logger name="logging.level.com.alibaba.cloud.stream.binder.rocketmq" level="DEBUG">
+        <appender-ref ref="debug"/>
     </logger>
     <!-- Level: FATAL 0  ERROR 3  WARN 4  INFO 6  DEBUG 7 -->
     <root level="debug">

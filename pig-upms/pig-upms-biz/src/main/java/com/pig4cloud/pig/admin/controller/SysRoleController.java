@@ -21,29 +21,37 @@ package com.pig4cloud.pig.admin.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.admin.api.dto.SysRoleDTO;
 import com.pig4cloud.pig.admin.api.entity.SysRole;
-import com.pig4cloud.pig.admin.api.vo.RoleExcelVO;
+import com.pig4cloud.pig.admin.api.entity.SysUser;
 import com.pig4cloud.pig.admin.api.vo.RoleVO;
+import com.pig4cloud.pig.admin.convertor.RoleConverter;
 import com.pig4cloud.pig.admin.service.SysRoleService;
+import com.pig4cloud.pig.admin.service.SysUserRoleService;
+import com.pig4cloud.pig.admin.service.SysUserService;
 import com.pig4cloud.pig.common.core.constant.CacheConstants;
 import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.core.validation.group.CreateGroup;
+import com.pig4cloud.pig.common.core.validation.group.UpdateGroup;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
-import com.pig4cloud.plugin.excel.annotation.RequestExcel;
-import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
+
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpHeaders;
-import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author lengleng
@@ -58,24 +66,21 @@ public class SysRoleController {
 
 	private final SysRoleService sysRoleService;
 
+	private final SysUserRoleService sysUserRoleService;
+
+	private final RoleConverter roleConverter;
+
+	private final SysUserService sysUserService;
+
 	/**
 	 * 通过ID查询角色信息
 	 * @param id ID
 	 * @return 角色信息
 	 */
-	@GetMapping("/details/{id}")
-	public R getById(@PathVariable Long id) {
-		return R.ok(sysRoleService.getById(id));
-	}
-
-	/**
-	 * 查询角色信息
-	 * @param query 查询条件
-	 * @return 角色信息
-	 */
-	@GetMapping("/details")
-	public R getDetails(@ParameterObject SysRole query) {
-		return R.ok(sysRoleService.getOne(Wrappers.query(query), false));
+	@GetMapping("/{id}")
+	@HasPermission("sys:role:details")
+	public R<RoleVO> details(@PathVariable Long id) {
+		return R.ok(roleConverter.toVo(sysRoleService.getById(id)));
 	}
 
 	/**
@@ -85,9 +90,9 @@ public class SysRoleController {
 	 */
 	@SysLog("添加角色")
 	@PostMapping
-	@HasPermission("sys_role_add")
+	@HasPermission("sys:role:add")
 	@CacheEvict(value = CacheConstants.ROLE_DETAILS, allEntries = true)
-	public R save(@Valid @RequestBody SysRole sysRole) {
+	public R save(@Validated(CreateGroup.class) @RequestBody SysRoleDTO sysRole) {
 		return sysRoleService.saveRole(sysRole);
 	}
 
@@ -98,10 +103,10 @@ public class SysRoleController {
 	 */
 	@SysLog("修改角色")
 	@PutMapping
-	@HasPermission("sys_role_edit")
+	@HasPermission("sys:role:edit")
 	@CacheEvict(value = CacheConstants.ROLE_DETAILS, allEntries = true)
-	public R update(@Valid @RequestBody SysRole sysRole) {
-		return R.ok(sysRoleService.updateById(sysRole));
+	public R update(@Validated(UpdateGroup.class) @RequestBody SysRoleDTO sysRole) {
+		return R.ok(sysRoleService.updateById(roleConverter.toEntity(sysRole)));
 	}
 
 	/**
@@ -111,19 +116,10 @@ public class SysRoleController {
 	 */
 	@SysLog("删除角色")
 	@DeleteMapping
-	@HasPermission("sys_role_del")
+	@HasPermission("sys:role:del")
 	@CacheEvict(value = CacheConstants.ROLE_DETAILS, allEntries = true)
 	public R removeById(@RequestBody Long[] ids) {
 		return R.ok(sysRoleService.removeRoleByIds(ids));
-	}
-
-	/**
-	 * 获取角色列表
-	 * @return 角色列表
-	 */
-	@GetMapping("/list")
-	public R listRoles() {
-		return R.ok(sysRoleService.list(Wrappers.emptyWrapper()));
 	}
 
 	/**
@@ -133,21 +129,28 @@ public class SysRoleController {
 	 * @return 分页对象
 	 */
 	@GetMapping("/page")
-	public R getRolePage(Page page, SysRole role) {
-		return R.ok(sysRoleService.page(page, Wrappers.<SysRole>lambdaQuery()
-			.like(StrUtil.isNotBlank(role.getRoleName()), SysRole::getRoleName, role.getRoleName())));
+	@HasPermission("sys:role:page")
+	public R<IPage<RoleVO>> getRolePage(Page page, SysRoleDTO roleDTO) {
+		Page<SysRole> pages = sysRoleService.page(page, Wrappers.<SysRole>lambdaQuery()
+			.like(StrUtil.isNotBlank(roleDTO.getRoleName()), SysRole::getRoleName, roleDTO.getRoleName())
+			.eq(StrUtil.isNotBlank(roleDTO.getRoleCode()), SysRole::getRoleCode, roleDTO.getRoleCode())
+		);
+		IPage<RoleVO> pageVO = pages.convert(role->{
+			return roleConverter.toVo(role);
+		});
+		return R.ok(pageVO);
 	}
 
 	/**
-	 * 更新角色菜单
-	 * @param roleVo 角色对象
+	 * 更新角色权限
+	 * @param role 角色对象
 	 * @return success、false
 	 */
 	@SysLog("更新角色权限")
 	@PutMapping("/permission")
-	@HasPermission("sys_role_perm")
-	public R saveRolePermissions(@RequestBody RoleVO roleVo) {
-		return R.ok(sysRoleService.updateRoleMenus(roleVo));
+	@HasPermission("sys:role:perm")
+	public R saveRolePermissions(@Validated(UpdateGroup.class) @RequestBody SysRoleDTO role) {
+		return R.ok(sysRoleService.updateRolePerm(role));
 	}
 
 	/**
@@ -155,32 +158,58 @@ public class SysRoleController {
 	 * @param roleIdList 角色ID
 	 * @return
 	 */
-	@PostMapping("/getRoleList")
-	public R getRoleList(@RequestBody List<Long> roleIdList) {
-		return R.ok(sysRoleService.findRolesByRoleIds(roleIdList, CollUtil.join(roleIdList, StrUtil.UNDERLINE)));
+	@GetMapping("/getRoleList")
+	@HasPermission("sys:role:list")
+	public R<List<RoleVO>> getRoleList(@RequestBody List<Long> roleIdList) {
+		if (CollUtil.isEmpty(roleIdList)) {
+        	return R.ok(Collections.emptyList());
+    	}
+		List<SysRole> sysRoles = sysRoleService.findRolesByRoleIds(roleIdList, CollUtil.join(roleIdList, StrUtil.UNDERLINE));
+		List<RoleVO> roles = Optional.ofNullable(sysRoles).orElse(Collections.emptyList()).stream()
+			.map(role->{
+				return roleConverter.toVo(role);
+			}).collect(Collectors.toList());
+		return R.ok(roles);
 	}
 
 	/**
-	 * 导出excel 表格
+	 * 将角色赋予制定用户
+	 * @param userId 用户ID
+	 * @param roleIdList 角色ID
 	 * @return
 	 */
-	@ResponseExcel
-	@GetMapping("/export")
-	@HasPermission("sys_role_export")
-	public List<RoleExcelVO> export() {
-		return sysRoleService.listRole();
+	@PutMapping("/grant/{userId}")
+	@HasPermission("sys:role:user:grant")
+	public R grantUserRole(@PathVariable("userId") Long userId, @RequestBody List<Long> roleIdList) {
+		long userCount = sysUserService.count(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUserId, userId));
+		if(userCount == 0){
+			return R.failed("请指定用户");
+		}
+		sysUserRoleService.grantUserRole(userId, roleIdList);
+		return R.ok();
 	}
 
-	/**
-	 * 导入角色
-	 * @param excelVOList 角色列表
-	 * @param bindingResult 错误信息列表
-	 * @return ok fail
-	 */
-	@PostMapping("/import")
-	@HasPermission("sys_role_export")
-	public R importRole(@RequestExcel List<RoleExcelVO> excelVOList, BindingResult bindingResult) {
-		return sysRoleService.importRole(excelVOList, bindingResult);
-	}
+	// /**
+	//  * 导出excel 表格
+	//  * @return
+	//  */
+	// @ResponseExcel
+	// @GetMapping("/export")
+	// @HasPermission("sys:role:export")
+	// public List<RoleExcelVO> export() {
+	// 	return sysRoleService.listRole();
+	// }
+
+	// /**
+	//  * 导入角色
+	//  * @param excelVOList 角色列表
+	//  * @param bindingResult 错误信息列表
+	//  * @return ok fail
+	//  */
+	// @PostMapping("/import")
+	// @HasPermission("sys_role_export")
+	// public R importRole(@RequestExcel List<RoleExcelVO> excelVOList, BindingResult bindingResult) {
+	// 	return sysRoleService.importRole(excelVOList, bindingResult);
+	// }
 
 }

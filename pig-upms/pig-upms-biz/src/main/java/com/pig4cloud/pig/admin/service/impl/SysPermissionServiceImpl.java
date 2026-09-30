@@ -41,12 +41,10 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 
 	@Override
 	public R<Boolean> savePermission(SysPermission sysPermission) {
-		if (StrUtil.isNotBlank(sysPermission.getPermCode())) {
-			long count = baseMapper.countByPermCode(sysPermission.getPermCode());
-			if (count > 0) {
-				return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_PERMISSION_PERMCODE_EXISTING,
+		boolean isExisting = this.exists(Wrappers.<SysPermission>lambdaQuery().eq(SysPermission::getPermCode, sysPermission.getPermCode()));
+		if (isExisting) {
+			return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_PERMISSION_PERMCODE_EXISTING,
 					sysPermission.getPermCode()));
-			}
 		}
 		return R.ok(this.save(sysPermission));
 	}
@@ -76,26 +74,17 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 	}
 
 	@Override
-	public List<Tree<Long>> treePermission(Long parentId, String name) {
-		Long parent = parentId == null ? -1L : parentId;
-
-		List<TreeNode<Long>> collect = baseMapper
-			.selectList(Wrappers.<SysPermission>lambdaQuery()
-				.like(StrUtil.isNotBlank(name), SysPermission::getPermName, name)
-				.orderByAsc(SysPermission::getSortOrder))
-			.stream()
-			.map(this::toTreeNode)
-			.collect(Collectors.toList());
-
-		if (StrUtil.isNotBlank(name)) {
-			return collect.stream().map(node -> {
-				Tree<Long> tree = new Tree<>();
-				tree.putAll(node.getExtra());
-				return tree;
-			}).collect(Collectors.toList());
-		}
-
-		return TreeUtil.build(collect, parent);
+	public List<TreeNode<Long>> treePermission(Long parentId, String name) {
+		return baseMapper.selectList(Wrappers.<SysPermission>lambdaQuery()
+            // 传入父ID，就查该父节点下的所有子节点
+            .eq(parentId != null, SysPermission::getParentId, parentId)
+            // 没传父ID，就查所有根节点（parent_id 为 NULL）
+            .isNull(parentId == null, SysPermission::getParentId)
+            .like(StrUtil.isNotBlank(name), SysPermission::getPermName, name)
+            .orderByAsc(SysPermission::getSortOrder))
+        .stream()
+        .map(this::toTreeNode)
+        .collect(Collectors.toList());
 	}
 
 	private TreeNode<Long> toTreeNode(SysPermission perm) {
@@ -106,6 +95,7 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 		node.setWeight(perm.getSortOrder());
 		Map<String, Object> extra = new HashMap<>();
 		extra.put("permission", perm.getPermission());
+		extra.put("permissionCode", perm.getPermCode());
 		extra.put("description", perm.getDescription());
 		extra.put("path", perm.getPath());
 		extra.put("method", perm.getMethod());
@@ -125,21 +115,9 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 
 	@Override
 	public Boolean checkPermission(Long userId, String permCode) {
-		List<SysUserRole> userRoles = sysUserRoleMapper
-			.selectList(Wrappers.<SysUserRole>lambdaQuery().eq(SysUserRole::getUserId, userId));
-		if (CollUtil.isEmpty(userRoles)) {
-			return false;
-		}
-		List<Long> roleIds = userRoles.stream().map(SysUserRole::getRoleId).collect(Collectors.toList());
-		for (Long roleId : roleIds) {
-			List<SysPermission> perms = findPermissionByRoleId(roleId);
-			boolean has = perms.stream()
-				.anyMatch(p -> permCode.equals(p.getPermCode()) || permCode.equals(p.getPermission()));
-			if (has) {
-				return true;
-			}
-		}
-		return false;
+		Long count = sysUserRoleMapper.countUserPermission(userId, permCode);
+		
+		return count > 0;
 	}
 
 	@Override

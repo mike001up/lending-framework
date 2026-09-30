@@ -61,7 +61,7 @@ public class PigUserDTO {
     /**
      * 锁定截止时间（账户锁定到该时间点）
      */
-    private Instant LockUntil;
+    private Instant lockUntil;
 
     /**
      * 角色列表（角色名称或ID）

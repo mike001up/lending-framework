@@ -17,6 +17,7 @@
 package com.pig4cloud.pig.auth.support.handler;
 
 import cn.hutool.core.util.StrUtil;
+
 import com.pig4cloud.pig.admin.api.entity.SysLog;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.util.R;
@@ -25,6 +26,10 @@ import com.pig4cloud.pig.common.core.constant.enums.LogTypeEnum;
 import com.pig4cloud.pig.common.core.entity.RemoteSysLogDTO;
 import com.pig4cloud.pig.common.log.event.SysLogEvent;
 import com.pig4cloud.pig.common.log.util.SysLogUtils;
+import com.pig4cloud.pig.common.mq.constant.MqConstants;
+import com.pig4cloud.pig.common.mq.event.LoginFailureMessage;
+import com.pig4cloud.pig.common.mq.producer.MessageProducer;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
@@ -75,6 +80,20 @@ public class PigAuthenticationFailureEventHandler implements AuthenticationFailu
 		}
 		logVo.setCreateBy(username);
 		SpringContextHolder.publishEvent(new SysLogEvent(logVo));
+		MessageProducer messageProducer = SpringContextHolder.getBean(MessageProducer.class);
+		// === 新增：发送 MQ 消息 ===
+        if (messageProducer != null) {
+            try {
+                String clientIp = request.getRemoteAddr();
+                LoginFailureMessage msg = new LoginFailureMessage(username, clientIp);
+				msg.setKey(username);
+				msg.setTag(MqConstants.TAG_LOGIN_FAILURE);
+                messageProducer.send(MqConstants.TOPIC_LOGIN_FAILURE, msg);
+                log.debug("登录失败事件已发送到 MQ, username: {}", username);
+            } catch (Exception e) {
+                log.error("发送登录失败 MQ 消息异常", e);
+            }
+        }
 		// 写出错误信息
 		sendErrorResponse(request, response, exception);
 	}

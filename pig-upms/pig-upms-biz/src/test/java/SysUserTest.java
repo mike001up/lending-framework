@@ -20,7 +20,7 @@ public class SysUserTest {
     static String createdPermId;
     static String createdClientId;
     static String createdScopeId;
-    static String P = "t" + (System.currentTimeMillis() % 10000000);
+    static String P = String.valueOf((System.currentTimeMillis() % 10000000)).substring(0, 4);
     static String password = "lengLeng001";
     // static String phone = "+8613800000001";
     static String KEY_ALGORITHM = "AES";
@@ -37,238 +37,238 @@ public class SysUserTest {
         System.out.println("Token OK");
 
         // ===== 4.1 UM 用户管理 =====
-        // test("UM-01-01", "创建用户-正常-无层级关系", () -> {
-        //     String phone = "+8613800000101";
-        //     String username = "TU"+ P + "u0101";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试01\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"roles\":[1],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\"" +email+ "\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     String userId = extractNestedField(r, "records", "userId");
+        test("UM-01-01", "创建用户-正常-无层级关系", () -> {
+            String phone = "+8613800000101";
+            String username = "TU"+ P + "u0101";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试01\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"roles\":[1],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\"" +email+ "\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractNestedField(r, "records", "userId");
             
-        //     checkTrue(userId != null && !userId.trim().isEmpty(), "创建新用户失败，不能获取用户ID");
-        // });
-        // test("UM-01-02", "创建用户-用户名/手机/邮箱重复", () -> {
-        //     String phone = "+8613800000102";
-        //     String username = "TU"+ P + "u0102";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试01\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"roles\":[1],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\"11111111112d33d@gmail.com\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试01\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"roles\":[1],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\"11111111112d33d@gmail.com\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 1);
-        // });
-        // test("UM-01-02-01", "创建用户-错误角色", () -> {
-        //     String phone = "+8613800010201";
-        //     String username = "TU"+ P + "u010201";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试01\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"roles\":[9999],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\"" +email+ "\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 1);
-        // });
-        // test("UM-01-02-02", "创建用户-错误终端", () -> {
-        //     String phone = "+8613800010202";
-        //     String username = "TU"+ P + "u010202";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试01\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"roles\":[9999],\"clientIds\":[999], \"email\":\"" +email+ "\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 1);
-        // });
-        // test("UM-01-03", "创建用户-正常-只含租户", () -> {
-        //     String phone = "+8613800000103";
-        //     String username = "TU"+ P + "u0103";
-        //     String email = username+"@gmail.com";
-        //     String reqBody = "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}";
-        //     System.out.println("UM-01-03----" + reqBody);
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        // });
-        // test("UM-01-03-01", "创建用户-正常-租户错误", () -> {
-        //     String phone = "+8613800010301";
-        //     String username = "TU"+ P + "u010301";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":999,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 1);
-        // });
-        // test("UM-01-04", "创建用户-正常-含代理", () -> {
-        //     String phone = "+8613800000104";
-        //     String username = "TU"+ P + "u0104";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     String agencyId = extractField(r, "userId");
-        //     phone = "+8613800010401";
-        //     username = "TU"+ P + "u010401";
-        //     email = username+"@gmail.com";
-        //     r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\",\"agencyId\":\""+agencyId+ "\"}");
-        //     checkCode(r, 0);
-        // });
+            checkTrue(userId != null && !userId.trim().isEmpty(), "创建新用户失败，不能获取用户ID");
+        });
+        test("UM-01-02", "创建用户-用户名/手机/邮箱重复", () -> {
+            String phone = "+8613800000102";
+            String username = "TU"+ P + "u0102";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试01\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"roles\":[1],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\"11111111112d33d@gmail.com\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试01\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"roles\":[1],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\"11111111112d33d@gmail.com\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 1);
+        });
+        test("UM-01-02-01", "创建用户-错误角色", () -> {
+            String phone = "+8613800010201";
+            String username = "TU"+ P + "u010201";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试01\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"roles\":[9999],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\"" +email+ "\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 1);
+        });
+        test("UM-01-02-02", "创建用户-错误终端", () -> {
+            String phone = "+8613800010202";
+            String username = "TU"+ P + "u010202";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试01\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"roles\":[9999],\"clientIds\":[999], \"email\":\"" +email+ "\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 1);
+        });
+        test("UM-01-03", "创建用户-正常-只含租户", () -> {
+            String phone = "+8613800000103";
+            String username = "TU"+ P + "u0103";
+            String email = username+"@gmail.com";
+            String reqBody = "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}";
+            System.out.println("UM-01-03----" + reqBody);
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+        });
+        test("UM-01-03-01", "创建用户-正常-租户错误", () -> {
+            String phone = "+8613800010301";
+            String username = "TU"+ P + "u010301";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":999,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 1);
+        });
+        test("UM-01-04", "创建用户-正常-含代理", () -> {
+            String phone = "+8613800000104";
+            String username = "TU"+ P + "u0104";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String agencyId = extractField(r, "userId");
+            phone = "+8613800010401";
+            username = "TU"+ P + "u010401";
+            email = username+"@gmail.com";
+            r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\",\"agencyId\":\""+agencyId+ "\"}");
+            checkCode(r, 0);
+        });
         
-        // test("UM-01-06", "创建用户-密码bcrypt", () -> {
-        //     String phone = "+8613800000106";
-        //     String username = "TU"+ P + "u0106";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
+        test("UM-01-06", "创建用户-密码bcrypt", () -> {
+            String phone = "+8613800000106";
+            String username = "TU"+ P + "u0106";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
 
-        //     String clientToken = login(username, password);
-        //     checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "新建用户应该可以登录,但是没有获取登陆后的token");
-        // });
-        // test("UM-02-01", "修改用户基本信息", () -> {
-        //     String phone = "+8613800000201";
-        //     String username = "TU"+ P + "u0201";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     String userId = extractField(r, "userId");
-        //     String username1 = "TU"+ P + "u020101";
-        //     String phone1 = "+8613800020101";
-        //     String email1 = username+"@gmail.com";
-        //     r = putCall(BASE+"/admin/user", "{\"userId\":\""+userId+"\",\"username\":\""+username1+"\",\"name\":\"测试0201\",\"phone\":\"" +phone1+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[1],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email1+"\",\"avatar\":\"https://duie.com/1122.png\",\"nickname\":\"测试020101\"}");
-        //     checkCode(r, 0);
-        //     r = getCall(BASE+"/admin/user/details/"+userId);
-        //     checkCode(r, 0);
-        //     String newUsername = extractField(r, "username");
-        //     String newPhone = extractField(r, "phone");
-        //     String newEmail = extractField(r, "email");
-        //     checkTrue(newUsername.equals(username) && newEmail.equals(email) && newPhone.equals(phone), "用户的用户名/电话号码/邮箱地址 不能被修改");
-        // });
-        // test("UM-02-02", "用户修改自己密码", () -> {
-        //     String phone = "+8613800000202";
-        //     String username = "TU"+ P + "u0202";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     String userId = extractField(r, "userId");
+            String clientToken = login(username, password);
+            checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "新建用户应该可以登录,但是没有获取登陆后的token");
+        });
+        test("UM-02-01", "修改用户基本信息", () -> {
+            String phone = "+8613800000201";
+            String username = "TU"+ P + "u0201";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
+            String username1 = "TU"+ P + "u020101";
+            String phone1 = "+8613800020101";
+            String email1 = username+"@gmail.com";
+            r = putCall(BASE+"/admin/user", "{\"userId\":\""+userId+"\",\"username\":\""+username1+"\",\"name\":\"测试0201\",\"phone\":\"" +phone1+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[1],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email1+"\",\"avatar\":\"https://duie.com/1122.png\",\"nickname\":\"测试020101\"}");
+            checkCode(r, 0);
+            r = getCall(BASE+"/admin/user/details/"+userId);
+            checkCode(r, 0);
+            String newUsername = extractField(r, "username");
+            String newPhone = extractField(r, "phone");
+            String newEmail = extractField(r, "email");
+            checkTrue(newUsername.equals(username) && newEmail.equals(email) && newPhone.equals(phone), "用户的用户名/电话号码/邮箱地址 不能被修改");
+        });
+        test("UM-02-02", "用户修改自己密码", () -> {
+            String phone = "+8613800000202";
+            String username = "TU"+ P + "u0202";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
             
-        //     String clientToken = login(username, password);
-        //     checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "新建用户登录失败");
+            String clientToken = login(username, password);
+            checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "新建用户登录失败");
 
-        //     String oldPassword = password;
-        //     String newPassword = "lengleng2";
-        //     r = putCall(BASE+"/admin/user/password", "{\"oldpassword\":\"" +oldPassword+ "\",\"newpassword\":\"" +newPassword+ "\"}", clientToken);
-        //     checkCode(r, 0);
+            String oldPassword = password;
+            String newPassword = "lengleng2";
+            r = putCall(BASE+"/admin/user/password", "{\"oldpassword\":\"" +oldPassword+ "\",\"newpassword\":\"" +newPassword+ "\"}", clientToken);
+            checkCode(r, 0);
             
-        // });
-        // test("UM-02-03", "修改密码后原Token失效", () -> {
-        //     String phone = "+8613800000203";
-        //     String username = "TU"+ P + "u0203";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     String userId = extractField(r, "userId");
+        });
+        test("UM-02-03", "修改密码后原Token失效", () -> {
+            String phone = "+8613800000203";
+            String username = "TU"+ P + "u0203";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
             
-        //     String clientToken = login(username, password);
-        //     // String clientToken = extractField(clientTokenResp, "access_token");
-        //     checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "新建用户不能登录");
+            String clientToken = login(username, password);
+            // String clientToken = extractField(clientTokenResp, "access_token");
+            checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "新建用户不能登录");
 
-        //     String oldPassword = password;
-        //     String newPassword = "lengleng2";
-        //     r = putCall(BASE+"/admin/user/password", "{\"oldpassword\":\"" +oldPassword+ "\",\"newpassword\":\"" +newPassword+ "\"}", clientToken);
-        //     checkCode(r, 0);
+            String oldPassword = password;
+            String newPassword = "lengleng2";
+            r = putCall(BASE+"/admin/user/password", "{\"oldpassword\":\"" +oldPassword+ "\",\"newpassword\":\"" +newPassword+ "\"}", clientToken);
+            checkCode(r, 0);
             
-        //     r = getCall(BASE+"/admin/user/info", clientToken);
-        //     checkCode(r, 401);
-        // });
-        // test("UM-02-04", "管理员重置他人密码", () -> {
-        //     String phone = "+8613800000204";
-        //     String username = "TU"+ P + "u0204";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     //用户登录
-        //     String clientToken = login(username, password);
-        //     checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "新建用户不能登录");
-        //     //管理员重置密码
-        //     String userId = extractField(r, "userId");
-        //     String newPassword = "lengleng2";
-        //     r = putCall(BASE+"/admin/user/password/reset", "{\"userId\":"+userId+",\"newPassword\":\"" +newPassword+ "\"}");
-        //     checkCode(r, 0);
+            r = getCall(BASE+"/admin/user/info", clientToken);
+            checkCode(r, 401);
+        });
+        test("UM-02-04", "管理员重置他人密码", () -> {
+            String phone = "+8613800000204";
+            String username = "TU"+ P + "u0204";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            //用户登录
+            String clientToken = login(username, password);
+            checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "新建用户不能登录");
+            //管理员重置密码
+            String userId = extractField(r, "userId");
+            String newPassword = "lengleng2";
+            r = putCall(BASE+"/admin/user/password/reset", "{\"userId\":"+userId+",\"newPassword\":\"" +newPassword+ "\"}");
+            checkCode(r, 0);
 
-        //     //修改密码后，token 失效
-        //     r = getCall(BASE+"/admin/user/info", clientToken);
-        //     checkCode(r, 401);
-        // });
-        // test("UM-02-05", "修改密码-原密码错误", () -> {
-        //     String phone = "+8613800000205";
-        //     String username = "TU"+ P + "u0205";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
+            //修改密码后，token 失效
+            r = getCall(BASE+"/admin/user/info", clientToken);
+            checkCode(r, 401);
+        });
+        test("UM-02-05", "修改密码-原密码错误", () -> {
+            String phone = "+8613800000205";
+            String username = "TU"+ P + "u0205";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
 
-        //     String clientToken = login(username, password);
-        //     checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "新建用户不能登录");
+            String clientToken = login(username, password);
+            checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "新建用户不能登录");
 
-        //     String oldPassword = "wrong";
-        //     String newPassword = "lengleng3";
-        //     r = putCall(BASE+"/admin/user/password", "{\"oldpassword\":\"" +oldPassword+ "\",\"newpassword\":\"" +newPassword+ "\"}", clientToken);
-        //     checkCode(r, 1);
-        // });
-        // test("UM-03-01", "禁用用户", () -> {
-        //     String phone = "+8613800000301";
-        //     String username = "TU"+ P + "u0301";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     String userId = extractField(r, "userId");
+            String oldPassword = "wrong";
+            String newPassword = "lengleng3";
+            r = putCall(BASE+"/admin/user/password", "{\"oldpassword\":\"" +oldPassword+ "\",\"newpassword\":\"" +newPassword+ "\"}", clientToken);
+            checkCode(r, 1);
+        });
+        test("UM-03-01", "禁用用户", () -> {
+            String phone = "+8613800000301";
+            String username = "TU"+ P + "u0301";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
 
-        //     r = putCall(BASE+"/admin/user/"+userId+"/disable", "");
-        //     checkCode(r, 0);
+            r = putCall(BASE+"/admin/user/"+userId+"/disable", "");
+            checkCode(r, 0);
 
-        // });
-        // test("UM-03-02", "禁用后无法登录", () -> {
-        //     String phone = "+8613800000302";
-        //     String username = "TU"+ P + "u0302";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     String userId = extractField(r, "userId");
+        });
+        test("UM-03-02", "禁用后无法登录", () -> {
+            String phone = "+8613800000302";
+            String username = "TU"+ P + "u0302";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
 
-        //     r = putCall(BASE+"/admin/user/"+userId+"/disable", "");
-        //     checkCode(r, 0);
+            r = putCall(BASE+"/admin/user/"+userId+"/disable", "");
+            checkCode(r, 0);
 
-        //     String clientToken = login(username, password);
-        //     checkTrue(clientToken == null || clientToken.trim().isEmpty(), "用户已经被禁用，应该禁止登录");
-        // });
-        // test("UM-03-03", "启用用户", () -> {
-        //     String phone = "+8613800000303";
-        //     String username = "TU"+ P + "u0303";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     String userId = extractField(r, "userId");
+            String clientToken = login(username, password);
+            checkTrue(clientToken == null || clientToken.trim().isEmpty(), "用户已经被禁用，应该禁止登录");
+        });
+        test("UM-03-03", "启用用户", () -> {
+            String phone = "+8613800000303";
+            String username = "TU"+ P + "u0303";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
 
-        //     r = putCall(BASE+"/admin/user/"+userId+"/disable", "");
-        //     checkCode(r, 0);            
+            r = putCall(BASE+"/admin/user/"+userId+"/disable", "");
+            checkCode(r, 0);            
 
-        //     r = putCall(BASE+"/admin/user/"+userId+"/enable", "");
-        //     checkCode(r, 0);
-        // });
-        // test("UM-03-04", "启用后可登录", () -> {
-        //     String phone = "+8613800000304";
-        //     String username = "TU"+ P + "u0304";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     String userId = extractField(r, "userId");
+            r = putCall(BASE+"/admin/user/"+userId+"/enable", "");
+            checkCode(r, 0);
+        });
+        test("UM-03-04", "启用后可登录", () -> {
+            String phone = "+8613800000304";
+            String username = "TU"+ P + "u0304";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
 
-        //     r = putCall(BASE+"/admin/user/"+userId+"/disable", "");
-        //     checkCode(r, 0);            
+            r = putCall(BASE+"/admin/user/"+userId+"/disable", "");
+            checkCode(r, 0);            
 
-        //     r = putCall(BASE+"/admin/user/"+userId+"/enable", "");
-        //     checkCode(r, 0);
+            r = putCall(BASE+"/admin/user/"+userId+"/enable", "");
+            checkCode(r, 0);
 
-        //     // String clientPassword = encrypt(password);
-        //     String clientToken = login(username, password);
-        //     checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "用户已经启用，用户应该可以登录");
-        // });
-        // test("UM-04-01", "分页查询-默认", () -> {
-        //     String phone = "+8613800000401";
-        //     String username = "TU"+ P + "u0401";
-        //     String email = username+"@gmail.com";
-        //     String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
-        //     checkCode(r, 0);
-        //     String userId = extractField(r, "userId");
+            // String clientPassword = encrypt(password);
+            String clientToken = login(username, password);
+            checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "用户已经启用，用户应该可以登录");
+        });
+        test("UM-04-01", "分页查询-默认", () -> {
+            String phone = "+8613800000401";
+            String username = "TU"+ P + "u0401";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
 
-        //     r = getCall(BASE+"/admin/user/page");
-        //     checkCode(r, 0);
-        // });
+            r = getCall(BASE+"/admin/user/page");
+            checkCode(r, 0);
+        });
         test("UM-04-02", "分页查询-按条件", () -> {
             String phone = "+8613800000402";
             String username = "TU"+ P + "u0402";
@@ -280,7 +280,225 @@ public class SysUserTest {
             checkCode(r, 0);
             checkContains(r, username);
         });
+        test("UM-05-01", "创建时分配角色", () -> {
+            String phone = "+8613800000501";
+            String username = "TU"+ P + "u0501";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[1],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+        });
+        test("UM-06-01", "管理员锁定用户", () -> {
+            String phone = "+8613800000601";
+            String username = "TU"+ P + "u0601";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+
+            r = putCall(BASE+"/admin/user/lock/"+username, "");
+            checkCode(r, 0);
+        });
+        test("UM-06-02", "锁定后无法登录", () -> {
+            String phone = "+8613800000602";
+            String username = "TU"+ P + "u0602";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+
+            r = putCall(BASE+"/admin/user/lock/"+username, "");
+            checkCode(r, 0);
+
+            String clientToken = login(username, password);
+            checkTrue(clientToken == null || clientToken.trim().isEmpty(), "用户已经被锁定，应该禁止登录");
+        });
+        test("UM-06-03", "管理员手动解锁", () -> {
+            String phone = "+8613800000603";
+            String username = "TU"+ P + "u0603";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+
+            r = putCall(BASE+"/admin/user/lock/"+username, "");
+            checkCode(r, 0);
+
+            r = putCall(BASE+"/admin/user/unlock/"+username, "");
+            checkCode(r, 0);
+        });
+        test("UM-06-04", "锁定超时自动解锁", () -> {
+            String phone = "+86138"+P+"0604";
+            String username = "TU"+ P + "u0604";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+
+            r = putCall(BASE+"/admin/user/lock/"+username, "");
+            checkCode(r, 0);
+
+            //等待账户解锁
+            Thread.sleep((2 * 60)*1000);
+
+            String clientToken = login(username, password);
+            checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "用户已经解锁,应该允许登录");
+
+        });
         
+        test("UM-06-05", "用户多次登录失败后，自动锁定", () -> {
+            //10分钟内，5次连续登录失败，自动锁定账号
+            String phone = "+8613800000605";
+            String username = "TU"+ P + "u0605";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+
+            String clientToken = login(username, password);
+            checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "用户登录失败");
+
+            r = putCall(BASE+"/admin/user/lock/"+username, "");
+            checkCode(r, 0);
+            //后面连续5次登录失败
+            for(int i = 0;i < 5; i++){
+                login(username, password+1);
+            }
+            //用户锁定后，登录响应还是登录失败，但是用户状态改变成锁定状态
+            clientToken = login(username, password);
+            checkTrue(clientToken == null || clientToken.trim().isEmpty(), "用户已经被锁定，应该禁止登录");
+        });
+        test("UM-07-01", "修改头像", () -> {
+            String phone = "+8613800000701";
+            String username = "TU"+ P + "u0701";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+
+            String clientToken = login(username, password);
+            checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "用户状态异常，导致登录失败");
+            // String userId = extractField(r, "userId");
+            r = putCall(BASE+"/admin/user/avatar?avatarUrl=http://img.test.com/a.png", "", clientToken);
+            checkCode(r, 0);
+        });        
+        test("UM-08-01", "提交实名认证", () -> {
+            String phone = "+8613800000801";
+            String username = "TU"+ P + "u0801";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
+
+            String clientToken = login(username, password);
+            r = postJson(BASE+"/admin/user-kyc", "{\"idType\":\"ID_CARD\",\"idNumber\":\"110101199001011234\",\"realName\":\"张三\",\"frontImageUrl\":\"frontImageUrl\",\"backImageUrl\":\"backImageUrl\",\"handheldPhotoUrl\":\"handheldPhotoUrl\",\"issueDate\":\"1784049848\",\"expireDate\":\"1784049848\"}", clientToken);
+            checkCode(r, 0);
+
+            
+            r = getCall(BASE+"/admin/user/details/"+userId);
+            checkCode(r, 0);
+            
+            String certificationStatus = extractField(r, "certificationStatus");
+            checkTrue(certificationStatus.equals("PENDING"), "用户实名认证状态错误");
+        });
+        test("UM-08-02", "重复提交实名认证拒绝", () -> {
+            String phone = "+8613800000802";
+            String username = "TU"+ P + "u0802";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
+
+            String clientToken = login(username, password);
+            r = postJson(BASE+"/admin/user-kyc", "{\"idType\":\"ID_CARD\",\"idNumber\":\"110101199001011234\",\"realName\":\"张三\",\"frontImageUrl\":\"frontImageUrl\",\"backImageUrl\":\"backImageUrl\",\"handheldPhotoUrl\":\"handheldPhotoUrl\",\"issueDate\":\"1784049848\",\"expireDate\":\"1784049848\"}", clientToken);
+            checkCode(r, 0);
+
+            
+            r = postJson(BASE+"/admin/user-kyc", "{\"idType\":\"ID_CARD\",\"idNumber\":\"110101199001011234\",\"realName\":\"张三\",\"frontImageUrl\":\"frontImageUrl\",\"backImageUrl\":\"backImageUrl\",\"handheldPhotoUrl\":\"handheldPhotoUrl\",\"issueDate\":\"1784049848\",\"expireDate\":\"1784049848\"}", clientToken);
+            checkCode(r, 1);
+
+        });
+        test("UM-08-03", "审核通过", () -> {
+            String phone = "+8613800000803";
+            String username = "TU"+ P + "u0803";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
+
+            String clientToken = login(username, password);
+            r = postJson(BASE+"/admin/user-kyc", "{\"idType\":\"ID_CARD\",\"idNumber\":\"110101199001011234\",\"realName\":\"张三\",\"frontImageUrl\":\"frontImageUrl\",\"backImageUrl\":\"backImageUrl\",\"handheldPhotoUrl\":\"handheldPhotoUrl\",\"issueDate\":\"1784049848\",\"expireDate\":\"1784049848\"}", clientToken);
+            checkCode(r, 0);
+
+            r = putCall(BASE+"/admin/user-kyc/review/"+userId+"?result=APPROVED", "");
+            checkCode(r, 0);
+        });
+        test("UM-08-04", "审核不通过", () -> {
+            String phone = "+8613800000804";
+            String username = "TU"+ P + "u0804";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
+
+            String clientToken = login(username, password);
+            r = postJson(BASE+"/admin/user-kyc", "{\"idType\":\"ID_CARD\",\"idNumber\":\"110101199001011234\",\"realName\":\"张三\",\"frontImageUrl\":\"frontImageUrl\",\"backImageUrl\":\"backImageUrl\",\"handheldPhotoUrl\":\"handheldPhotoUrl\",\"issueDate\":\"1784049848\",\"expireDate\":\"1784049848\"}", clientToken);
+            checkCode(r, 0);
+
+            r = putCall(BASE+"/admin/user-kyc/review/"+userId+"?result=REJECTED", "");
+            checkCode(r, 0);
+
+        });        
+        test("UM-09-01", "关停账户", () -> {
+            String phone = "+8613800000901";
+            String username = "TU"+ P + "u0901";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
+
+            r = postCall(BASE+"/admin/user/"+userId+"/close", "");
+            checkCode(r, 0);
+        });
+        test("UM-09-02", "关停后无法登录", () -> {
+            String phone = "+8613800000902";
+            String username = "TU"+ P + "u0902";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
+
+            r = postCall(BASE+"/admin/user/"+userId+"/close", "");
+            checkCode(r, 0);
+
+            String clientToken = login(username, password);
+            checkTrue(clientToken == null || clientToken.trim().isEmpty(), "用户已经被关停，应该禁止登录");
+        });
+        test("UM-09-03", "恢复账户", () -> {
+            String phone = "+8613800000903";
+            String username = "TU"+ P + "u0903";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
+
+            r = postCall(BASE+"/admin/user/"+userId+"/close", "");
+            checkCode(r, 0);
+
+            r = postCall(BASE+"/admin/user/"+userId+"/restore", "");
+            checkCode(r, 0);
+        });
+        test("UM-09-04", "恢复后可登录", () -> {
+            String phone = "+8613800000904";
+            String username = "TU"+ P + "u0904";
+            String email = username+"@gmail.com";
+            String r = postJson(BASE+"/admin/user", "{\"username\":\""+username+"\",\"name\":\"测试02\",\"phone\":\"" +phone+ "\",\"password\":\"" +password+ "\",\"tenantId\":1,\"roles\":[],\"clientIds\":[\"" +CLIENT_ID+ "\"], \"email\":\""+email+"\",\"avatar\":\"https://duie.com/11.png\",\"nickname\":\"测试01\"}");
+            checkCode(r, 0);
+            String userId = extractField(r, "userId");
+
+            r = postCall(BASE+"/admin/user/"+userId+"/close", "");
+            checkCode(r, 0);
+
+            r = postCall(BASE+"/admin/user/"+userId+"/restore", "");
+            checkCode(r, 0);
+
+            String clientToken = login(username, password);
+            checkTrue(clientToken != null && !clientToken.trim().isEmpty(), "用户账号已恢复,应该可以正常登录");
+        });
+
         // ===== Report =====
         System.out.println("\n========== TEST REPORT ==========");
         System.out.println("Date: " + LocalDateTime.now());
@@ -359,6 +577,12 @@ public class SysUserTest {
     static String postJson(String url, String body) throws Exception {
         HttpRequest req = HttpRequest.newBuilder().uri(URI.create(url))
             .header("Authorization", "Bearer "+TOKEN).header("client_id",CLIENT_NAME).header("Content-Type","application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(body)).build();
+        return CLIENT.send(req, HttpResponse.BodyHandlers.ofString()).body();
+    }
+    static String postJson(String url, String body, String token) throws Exception {
+        HttpRequest req = HttpRequest.newBuilder().uri(URI.create(url))
+            .header("Authorization", "Bearer "+token).header("client_id",CLIENT_NAME).header("Content-Type","application/json")
             .POST(HttpRequest.BodyPublishers.ofString(body)).build();
         return CLIENT.send(req, HttpResponse.BodyHandlers.ofString()).body();
     }

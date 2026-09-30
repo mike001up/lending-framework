@@ -62,6 +62,7 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <!-- 指定 Lombok 与 MapStruct 的绑定处理器版本 -->
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
+        <rocket-mq.version>2024.0.1.0</rocket-mq.version>
     </properties>
 
     <!-- 以下依赖 全局所有的模块都会引入  -->

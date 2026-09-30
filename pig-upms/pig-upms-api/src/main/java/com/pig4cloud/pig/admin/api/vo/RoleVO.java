@@ -17,6 +17,9 @@
 
 package com.pig4cloud.pig.admin.api.vo;
 
+import java.io.Serializable;
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -26,16 +29,27 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "前端角色展示对象")
-public class RoleVO {
+public class RoleVO implements Serializable{
 
 	/**
 	 * 角色id
 	 */
 	private Long roleId;
-
+	/**
+	 * 角色代码
+	 */
+	private String roleCode;
+	/**
+	 * 角色名称
+	 */
+	private String roleName;
+	/**
+	 * 角色描述
+	 */
+	private String roleDesc;
 	/**
 	 * 权限列表
 	 */
-	private String permissionIds;
+	private List<String> permissionIds;
 
 }
