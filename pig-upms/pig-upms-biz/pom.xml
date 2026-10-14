@@ -111,6 +111,10 @@
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-mq</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.pig4cloud</groupId>
+            <artifactId>pig-common-data</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

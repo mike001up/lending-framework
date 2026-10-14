@@ -19,6 +19,7 @@ package com.pig4cloud.pig.common.mybatis;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.DataPermissionInterceptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pig4cloud.pig.common.mybatis.config.MybatisPlusMetaObjectHandler;
 import com.pig4cloud.pig.common.mybatis.plugins.PigPaginationInnerInterceptor;
@@ -26,6 +27,7 @@ import com.pig4cloud.pig.common.mybatis.plugins.PigPaginationInnerInterceptor;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +43,8 @@ import org.springframework.context.annotation.Configuration;
 public class MybatisAutoConfiguration {
 	@Autowired
     private ObjectMapper objectMapper;
+	@Autowired
+	private ObjectProvider<DataPermissionInterceptor> dataPermissionInterceptorProvider;
 
     @PostConstruct
     public void init() {
@@ -55,6 +59,10 @@ public class MybatisAutoConfiguration {
 	@Bean
 	public MybatisPlusInterceptor mybatisPlusInterceptor() {
 		MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+
+		// 数据权限拦截器必须放在分页之前
+        dataPermissionInterceptorProvider.ifAvailable(interceptor::addInnerInterceptor);
+
 		interceptor.addInnerInterceptor(new PigPaginationInnerInterceptor());
 		return interceptor;
 	}

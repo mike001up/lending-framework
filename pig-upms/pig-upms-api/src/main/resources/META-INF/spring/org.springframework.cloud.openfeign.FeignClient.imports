@@ -2,3 +2,4 @@ com.pig4cloud.pig.admin.api.feign.RemoteClientDetailsService
 com.pig4cloud.pig.admin.api.feign.RemoteDictService
 com.pig4cloud.pig.admin.api.feign.RemoteParamService
 com.pig4cloud.pig.admin.api.feign.RemoteUserService
+com.pig4cloud.pig.admin.api.provider.RemoteDataScopeAutoConfiguration

@@ -43,5 +43,6 @@
         <module>pig-common-xss</module>
         <module>pig-common-excel</module>
         <module>pig-common-mq</module>
+        <module>pig-common-data</module>
     </modules>
 </project>

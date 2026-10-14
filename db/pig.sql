@@ -496,8 +496,34 @@ CREATE TABLE `sys_role` (
 -- Records of sys_role
 -- ----------------------------
 BEGIN;
-INSERT INTO `sys_role` VALUES (1, '管理员', 'ROLE_ADMIN', '管理员', '', 'admin', '2017-10-29 15:45:51', '2023-07-07 14:55:07', '0');
-INSERT INTO `sys_role` VALUES (2, '普通用户', 'GENERAL_USER', '普通用户', '', 'admin', '2022-03-31 17:03:15', '2023-04-03 02:28:51', '0');
+INSERT INTO sys_role (role_id, role_code, role_name, remark) VALUES
+
+-- ============ 平台层 ============
+(1,  'SUPER_ADMIN',           '超级管理员',   '平台级，跨租户'),
+
+-- ============ 租户管理层 ============
+(10, 'TENANT_ADMIN',          '租户管理员',   '租户内部最高权限'),
+
+-- ============ 业务线 ============
+(20, 'REGION_MANAGER',        '区域经理',     '管理区域业务和催收'),
+(21, 'BIZ_MANAGER',           '业务经理',     '管理业务员'),
+(22, 'BIZ_STAFF',             '业务员',       '开拓客户、提交申请'),
+
+-- ============ 风控线 ============
+(30, 'RISK_MANAGER',          '风控经理',     '审核策略制定、终审'),
+(31, 'RISK_STAFF',            '风控专员',     '初审申请'),
+
+-- ============ 财务线 ============
+(40, 'FINANCE_MANAGER',       '财务经理',     '财务全局、审批'),
+(41, 'FINANCE_STAFF',         '财务专员',     '放款、收款、对账'),
+
+-- ============ 催收线 ============
+(50, 'COLLECTION_MANAGER',    '催收经理',     '管理催收团队'),
+(51, 'COLLECTION_LEADER',     '催收组长',     '管理催收小组'),
+(52, 'COLLECTION_STAFF',      '催收员',       '跟进逾期客户'),
+
+-- ============ 客服 ============
+(60, 'CUSTOMER_SERVICE',      '客服',         '客户咨询与工单');
 COMMIT;
 
 -- ----------------------------
@@ -1098,3 +1124,100 @@ CREATE TABLE `gen_template_group` (
 ) ENGINE=InnoDB  COMMENT='模板分组关联表';
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- 1. 角色数据权限
+CREATE TABLE `sys_role_data_scope` (
+  `id`             bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `role_id`        bigint       NOT NULL COMMENT '角色ID',
+  `business_table` varchar(64)  NOT NULL COMMENT '业务表名',
+  `scope_type`     varchar(32)  NOT NULL COMMENT 'ALL/SELF/SELF_AND_CHILD/CUSTOM',
+  `owner_column`   varchar(64)  DEFAULT NULL COMMENT '归属人字段（SELF/SELF_AND_CHILD 必填）',
+  `hierarchy_type` varchar(32)  DEFAULT NULL COMMENT 'SELF_AND_CHILD 时的层级类型',
+  `custom_sql`     varchar(512) DEFAULT NULL COMMENT 'CUSTOM 时的自定义SQL',
+  `create_by`      varchar(64)  NOT NULL DEFAULT ' ',
+  `create_time`    datetime     DEFAULT CURRENT_TIMESTAMP,
+  `update_by`      varchar(64)  NOT NULL DEFAULT ' ',
+  `update_time`    datetime     DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_role_table` (`role_id`, `business_table`),
+  KEY `idx_role_id` (`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色数据权限';
+
+-- 3. 初始化数据
+INSERT INTO sys_role_data_scope 
+  (role_id, business_table, scope_type, owner_column, hierarchy_type) VALUES
+
+-- ============ SUPER_ADMIN (1) ============
+(1, 'sys_user',          'ALL', NULL, NULL),
+(1, 'loan_order',        'ALL', NULL, NULL),
+(1, 'loan_customer',     'ALL', NULL, NULL),
+(1, 'risk_review',       'ALL', NULL, NULL),
+(1, 'finance_record',    'ALL', NULL, NULL),
+(1, 'collection_record', 'ALL', NULL, NULL),
+
+-- ============ TENANT_ADMIN (10) ============
+(10, 'sys_user',          'ALL', NULL, NULL),
+(10, 'loan_order',        'ALL', NULL, NULL),
+(10, 'loan_customer',     'ALL', NULL, NULL),
+(10, 'risk_review',       'ALL', NULL, NULL),
+(10, 'finance_record',    'ALL', NULL, NULL),
+(10, 'collection_record', 'ALL', NULL, NULL),
+
+-- ============ REGION_MANAGER (20) ============
+(20, 'sys_user',          'SELF_AND_CHILD', 'user_id',      'org'),
+(20, 'loan_order',        'SELF_AND_CHILD', 'create_by',    'org'),
+(20, 'loan_customer',     'SELF_AND_CHILD', 'owner_id',     'org'),
+(20, 'collection_record', 'SELF_AND_CHILD', 'collector_id', 'org'),
+
+-- ============ BIZ_MANAGER (21) ============
+(21, 'sys_user',      'SELF_AND_CHILD', 'user_id',   'org'),
+(21, 'loan_order',    'SELF_AND_CHILD', 'create_by', 'org'),
+(21, 'loan_customer', 'SELF_AND_CHILD', 'owner_id',  'org'),
+
+-- ============ BIZ_STAFF (22) ============
+(22, 'sys_user',      'SELF', 'user_id',        NULL),
+(22, 'loan_order',    'SELF', 'create_by',        NULL),
+(22, 'loan_customer', 'SELF', 'owner_id',        NULL),
+
+-- ============ RISK_MANAGER (30) ============
+(30, 'sys_user',      'SELF_AND_CHILD', 'user_id',   'org'),
+(30, 'loan_order',    'ALL',            NULL,        NULL),      -- 风控要看全部订单
+(30, 'loan_customer', 'ALL',            NULL,        NULL),
+(30, 'risk_review',   'ALL',            NULL,        NULL),
+
+-- ============ RISK_STAFF (31) ============
+(31, 'sys_user',      'SELF',           'user_id',        NULL),
+(31, 'loan_order',    'SELF_AND_CHILD', 'create_by', 'org'),     -- 需要看分配的下级数据
+(31, 'loan_customer', 'SELF_AND_CHILD', 'owner_id',  'org'),
+(31, 'risk_review',   'SELF',           'reviewer_id',        NULL),          -- 只看自己审核的
+
+-- ============ FINANCE_MANAGER (40) ============
+(40, 'loan_order',     'ALL', NULL, NULL),                       -- 财务要看全部订单
+(40, 'finance_record','ALL', NULL, NULL),
+
+-- ============ FINANCE_STAFF (41) ============
+(41, 'sys_user',       'SELF', 'user_id',        NULL),
+(41, 'finance_record', 'SELF', 'create_by',        NULL),
+
+-- ============ COLLECTION_MANAGER (50) ============
+(50, 'sys_user',          'SELF_AND_CHILD', 'user_id',      'org'),
+(50, 'loan_order',        'SELF_AND_CHILD', 'create_by',    'org'),
+(50, 'loan_customer',     'SELF_AND_CHILD', 'owner_id',     'org'),
+(50, 'collection_record', 'SELF_AND_CHILD', 'collector_id', 'org'),
+
+-- ============ COLLECTION_LEADER (51) ============
+(51, 'sys_user',          'SELF_AND_CHILD', 'user_id',      'org'),
+(51, 'loan_order',        'SELF_AND_CHILD', 'create_by',    'org'),
+(51, 'loan_customer',     'SELF_AND_CHILD', 'owner_id',     'org'),
+(51, 'collection_record', 'SELF_AND_CHILD', 'collector_id', 'org'),
+
+-- ============ COLLECTION_STAFF (52) ============
+(52, 'sys_user',          'SELF', 'user_id',        NULL),
+(52, 'loan_order',        'SELF', 'create_by',        NULL),
+(52, 'loan_customer',     'SELF', 'owner_id',        NULL),
+(52, 'collection_record', 'SELF', 'collector_id',        NULL),
+
+-- ============ CUSTOMER_SERVICE (60) ============
+(60, 'sys_user',      'SELF', 'user_id',        NULL),
+(60, 'loan_order',    'SELF', 'create_by',        NULL),
+(60, 'loan_customer', 'ALL',  NULL,        NULL);

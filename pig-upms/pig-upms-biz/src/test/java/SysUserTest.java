@@ -1,5 +1,6 @@
 import java.net.URI;
 import java.net.http.*;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -29,6 +30,11 @@ public class SysUserTest {
     static String CLIENT_NAME="pig-upms";
 
     public static void main(String[] args) throws Exception {
+        String oriPlainTxt = password;
+        // String encryptPasswor = encrypt(oriPlainTxt);
+        String encryptPasswor = "3cbf0057aefcc4fc";
+        String plainTxt = decrypt(encryptPasswor);
+        System.out.println("enctype password - > "+encryptPasswor+"  plainTxt->"+plainTxt);
         String tokenResp = postForm(BASE + "/auth/oauth2/token",
             "username=admin&password=3cbf0057aefcc4fc&grant_type=password&scope=server",
             "Basic cGlnLXVwbXM6cGln", CLIENT_NAME);
@@ -625,6 +631,19 @@ public class SysUserTest {
         byte[] encrypted = cipher.doFinal(password.getBytes());
         return Base64.getEncoder().encodeToString(encrypted);
     }
+    static String decrypt(String encryptedBase64) throws Exception {
+        // 使用相同的密钥和 IV
+        SecretKeySpec keySpec = new SecretKeySpec(ENCODE_KEY.getBytes(StandardCharsets.UTF_8), "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec(ENCODE_KEY.getBytes(StandardCharsets.UTF_8));
+        Cipher cipher = Cipher.getInstance("AES/CFB/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+        
+        // Base64 解码
+        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedBase64);
+        byte[] decrypted = cipher.doFinal(encryptedBytes);
+        
+        return new String(decrypted, StandardCharsets.UTF_8);
+    }
     static String putCall(String url, String body, String token) throws Exception {
         HttpRequest req = HttpRequest.newBuilder().uri(URI.create(url))
             .header("Authorization", "Bearer "+token).header("client_id",CLIENT_NAME).header("Content-Type","application/json")
@@ -633,12 +652,13 @@ public class SysUserTest {
     }
     static String login(String username, String password) throws Exception {
         String encrytPassword = encrypt(password);
-        
+        String plainTxt = decrypt(encrytPassword);
         String tokenResp = postForm(BASE + "/auth/oauth2/token",
             "username="+username+"&password=" +encrytPassword+ "&grant_type=password&scope=server",
             "Basic cGlnLXVwbXM6cGln", CLIENT_NAME);
         String token = extractField(tokenResp, "access_token");
         System.out.println(String.format("当前用户->%s \r\n请求密码->%s  \r\n请求url->%s,  \r\n request body->%s \r\n response-> %s", username, password, BASE + "/auth/oauth2/token", "username="+username+"&password=" +encrytPassword+ "&grant_type=password&scope=server", tokenResp));
+        System.out.println(String.format("经过解密后的明文密码->%s", plainTxt));
         return token;
     }
     @FunctionalInterface

@@ -1,0 +1,2 @@
+com.pig4cloud.pig.common.data.config.DataScopeAutoConfiguration
+com.pig4cloud.pig.common.data.remote.RemoteDataScopeAutoConfiguration
